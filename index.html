@@ -114,22 +114,32 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
     <div class="out-card">
       <div class="icon">📊</div>
       <h3>Sales Floor Full Report</h3>
-      <p>AOV leaderboard + transaction breakdown (2 sheets)</p>
+      <p>6-column AOV leaderboard (POS/Pickup/Combined × Before/After tax) + transaction breakdown</p>
     </div>
     <div class="out-card">
       <div class="icon">🚗</div>
       <h3>Delivery Full Report</h3>
-      <p>AOV leaderboard + transaction breakdown (2 sheets)</p>
+      <p>Delivery AOV leaderboard + transaction breakdown (2 sheets)</p>
     </div>
     <div class="out-card">
-      <div class="icon">📋</div>
-      <h3>Sales Floor AOV Chart</h3>
-      <p>Name · AOV before tax · # transactions</p>
+      <div class="icon">🏆</div>
+      <h3>Sales Floor AOV Contest</h3>
+      <p>$63+ → $100 cash · $65+ → $250 + $100 DoorDash GC · Min 60 txns</p>
     </div>
     <div class="out-card">
-      <div class="icon">📋</div>
-      <h3>Delivery AOV Chart</h3>
-      <p>Dispatcher · AOV before tax · # deliveries</p>
+      <div class="icon">🏆</div>
+      <h3>Delivery AOV Contest</h3>
+      <p>$90+ → $100 cash · $100+ → $250 + $100 DoorDash GC · Min 60 txns</p>
+    </div>
+    <div class="out-card">
+      <div class="icon">📅</div>
+      <h3>Daily Hourly Traffic</h3>
+      <p>Transactions per hour per day · Sales Floor & Delivery · heat map grid</p>
+    </div>
+    <div class="out-card">
+      <div class="icon">⏱️</div>
+      <h3>Customer Dwell Time</h3>
+      <p>Avg minutes per customer per hour per day · POS in-store time</p>
     </div>
   </div>
 
@@ -237,283 +247,513 @@ function processCSV(file) {
 }
 
 function generateReports(rows, fileName) {
-  // Detect date range
-  const dateCol = Object.keys(rows[0]).find(k => k.toLowerCase().includes('date open') || k.toLowerCase().includes('date_open'));
+  const dateCol = Object.keys(rows[0]).find(k => k.toLowerCase().includes('date open'));
   const dates   = rows.map(r => r[dateCol]).filter(Boolean).sort();
-  const d1      = dates[0]   || '';
-  const d2      = dates[dates.length-1] || '';
-  const dateLabel = d1 === d2 ? fmtDate(d1) : `${fmtDate(d1)} to ${fmtDate(d2)}`;
+  const d1 = dates[0] || '', d2 = dates[dates.length-1] || '';
+  const dateLabel  = d1 === d2 ? fmtDate(d1) : `${fmtDate(d1)} to ${fmtDate(d2)}`;
   const fileSuffix = d1 ? `_${d1.replace(/\//g,'-')}_${d2.replace(/\//g,'-')}` : '';
 
-  // ── Filter
-  const saleSF  = rows.filter(r => ['POS','PICKUP'].includes((r['Ticket Type']||'').toUpperCase()) && r['Type'] === 'Sale');
-  const retSF   = rows.filter(r => ['POS','PICKUP'].includes((r['Ticket Type']||'').toUpperCase()) && r['Type'] === 'Return');
-  const saleDL  = rows.filter(r => (r['Ticket Type']||'').toUpperCase() === 'DELIVERY' && r['Type'] === 'Sale');
-  const retDL   = rows.filter(r => (r['Ticket Type']||'').toUpperCase() === 'DELIVERY' && r['Type'] === 'Return');
+  // ── Filter rows
+  const saleSF = rows.filter(r => ['POS','PICKUP'].includes((r['Ticket Type']||'').toUpperCase()) && r['Type']==='Sale');
+  const retSF  = rows.filter(r => ['POS','PICKUP'].includes((r['Ticket Type']||'').toUpperCase()) && r['Type']==='Return');
+  const saleDL = rows.filter(r => (r['Ticket Type']||'').toUpperCase()==='DELIVERY' && r['Type']==='Sale');
+  const retDL  = rows.filter(r => (r['Ticket Type']||'').toUpperCase()==='DELIVERY' && r['Type']==='Return');
 
-  // ── Dedupe SF tickets
+  // ── Dedupe SF by Ticket ID
   const sfTickets = {};
   for (const r of saleSF) {
-    const tid = (r['Ticket ID']||'').trim();
-    const cashier = (r['Cashier']||'').trim();
+    const tid = (r['Ticket ID']||'').trim(), cashier = (r['Cashier']||'').trim();
     const ttype = (r['Ticket Type']||'').toUpperCase();
-    const net   = parseFloat(r['Net Sales']||0);
-    const gross = parseFloat(r['Gross Receipts']||0);
-    if (!tid || !cashier) continue;
+    const net = parseFloat(r['Net Sales']||0), gross = parseFloat(r['Gross Receipts']||0);
+    if (!tid||!cashier) continue;
     if (!sfTickets[tid]) sfTickets[tid] = {cashier, type:ttype, net:0, gross:0};
-    sfTickets[tid].net   += net;
-    sfTickets[tid].gross += gross;
+    sfTickets[tid].net += net; sfTickets[tid].gross += gross;
   }
 
-  // ── Dedupe DL tickets
+  // ── Dedupe DL by Ticket ID
   const dlTickets = {};
   for (const r of saleDL) {
-    const tid   = (r['Ticket ID']||'').trim();
-    const note  = (r['Ticket Notes']||'').trim();
-    const net   = parseFloat(r['Net Sales']||0);
-    const gross = parseFloat(r['Gross Receipts']||0);
+    const tid = (r['Ticket ID']||'').trim(), note = (r['Ticket Notes']||'').trim();
+    const net = parseFloat(r['Net Sales']||0), gross = parseFloat(r['Gross Receipts']||0);
     if (!tid) continue;
     if (!dlTickets[tid]) dlTickets[tid] = {name: extractName(note), net:0, gross:0};
-    dlTickets[tid].net   += net;
-    dlTickets[tid].gross += gross;
+    dlTickets[tid].net += net; dlTickets[tid].gross += gross;
   }
 
   // ── Return counts
   const sfRet = {};
   for (const r of retSF) {
-    const cashier = (r['Cashier']||'').trim();
-    const tid = (r['Ticket ID']||'').trim();
-    const ttype = (r['Ticket Type']||'').toUpperCase();
+    const cashier=(r['Cashier']||'').trim(), tid=(r['Ticket ID']||'').trim(), ttype=(r['Ticket Type']||'').toUpperCase();
     if (!cashier||!tid) continue;
-    if (!sfRet[cashier]) sfRet[cashier] = {pos:new Set(), pu:new Set()};
+    if (!sfRet[cashier]) sfRet[cashier]={pos:new Set(),pu:new Set()};
     ttype==='POS' ? sfRet[cashier].pos.add(tid) : sfRet[cashier].pu.add(tid);
   }
   const dlRet = {};
   for (const r of retDL) {
-    const name = extractName((r['Ticket Notes']||'').trim());
-    const tid  = (r['Ticket ID']||'').trim();
+    const name=extractName((r['Ticket Notes']||'').trim()), tid=(r['Ticket ID']||'').trim();
     if (!tid) continue;
-    if (!dlRet[name]) dlRet[name] = new Set();
+    if (!dlRet[name]) dlRet[name]=new Set();
     dlRet[name].add(tid);
   }
 
-  // ── Build SF employee stats
+  // ── SF employee stats (split POS/Pickup)
   const sfEmp = {};
   for (const t of Object.values(sfTickets)) {
-    if (t.net <= 0) continue;
-    if (!sfEmp[t.cashier]) sfEmp[t.cashier] = {posNet:[],posGross:[],puNet:[],puGross:[]};
+    if (t.net<=0) continue;
+    const skip = /register|sanctuary/i.test(t.cashier);
+    if (skip) continue;
+    if (!sfEmp[t.cashier]) sfEmp[t.cashier]={posNet:[],posGross:[],puNet:[],puGross:[]};
     if (t.type==='POS') { sfEmp[t.cashier].posNet.push(t.net); sfEmp[t.cashier].posGross.push(t.gross); }
     else                { sfEmp[t.cashier].puNet.push(t.net);  sfEmp[t.cashier].puGross.push(t.gross); }
   }
-  const skipNames = n => /register|sanctuary/i.test(n);
-  const sfResults = Object.entries(sfEmp)
-    .filter(([n]) => !skipNames(n))
-    .map(([name, d]) => {
-      const allNet = [...d.posNet,...d.puNet];
-      const allGross = [...d.posGross,...d.puGross];
-      const ret = sfRet[name]||{pos:new Set(),pu:new Set()};
-      return {
-        name,
-        posTxns:d.posNet.length, puTxns:d.puNet.length,
-        totalTxns:allNet.length,
-        posBefore:avg(d.posNet), puBefore:avg(d.puNet), combBefore:avg(allNet),
-        posAfter:avg(d.posGross), puAfter:avg(d.puGross), combAfter:avg(allGross),
-        netTotal:sum(allNet), grossTotal:sum(allGross),
-        retPos:ret.pos.size, retPu:ret.pu.size, retTotal:ret.pos.size+ret.pu.size,
-        minBefore:allNet.length?Math.min(...allNet):0,
-        maxBefore:allNet.length?Math.max(...allNet):0,
-      };
-    })
-    .sort((a,b) => b.combBefore - a.combBefore);
+  const sfResults = Object.entries(sfEmp).map(([name,d]) => {
+    const allNet=[...d.posNet,...d.puNet], allGross=[...d.posGross,...d.puGross];
+    const ret = sfRet[name]||{pos:new Set(),pu:new Set()};
+    return {
+      name, posTxns:d.posNet.length, puTxns:d.puNet.length, totalTxns:allNet.length,
+      posBefore:avg(d.posNet),  puBefore:avg(d.puNet),  combBefore:avg(allNet),
+      posAfter:avg(d.posGross), puAfter:avg(d.puGross), combAfter:avg(allGross),
+      netTotal:sum(allNet), grossTotal:sum(allGross),
+      minBefore:allNet.length?Math.min(...allNet):0, maxBefore:allNet.length?Math.max(...allNet):0,
+      retPos:ret.pos.size, retPu:ret.pu.size, retTotal:ret.pos.size+ret.pu.size,
+    };
+  }).sort((a,b)=>b.combBefore-a.combBefore);
 
-  // ── Build DL employee stats
+  // ── DL employee stats
   const dlEmp = {};
   for (const t of Object.values(dlTickets)) {
-    if (t.net <= 0) continue;
-    if (!dlEmp[t.name]) dlEmp[t.name] = {net:[],gross:[]};
-    dlEmp[t.name].net.push(t.net);
-    dlEmp[t.name].gross.push(t.gross);
+    if (t.net<=0) continue;
+    if (!dlEmp[t.name]) dlEmp[t.name]={net:[],gross:[]};
+    dlEmp[t.name].net.push(t.net); dlEmp[t.name].gross.push(t.gross);
   }
-  const dlResults = Object.entries(dlEmp)
-    .map(([name, d]) => ({
-      name, count:d.net.length,
-      aovBefore:avg(d.net), aovAfter:avg(d.gross),
-      netTotal:sum(d.net), grossTotal:sum(d.gross),
-      retCount:(dlRet[name]||new Set()).size,
-      minBefore:d.net.length?Math.min(...d.net):0,
-      maxBefore:d.net.length?Math.max(...d.net):0,
-    }))
-    .sort((a,b) => {
-      if (a.name==='No Dispatcher Listed') return 1;
-      if (b.name==='No Dispatcher Listed') return -1;
-      return b.aovBefore - a.aovBefore;
-    });
+  const dlResults = Object.entries(dlEmp).map(([name,d]) => ({
+    name, count:d.net.length, aovBefore:avg(d.net), aovAfter:avg(d.gross),
+    netTotal:sum(d.net), grossTotal:sum(d.gross),
+    retCount:(dlRet[name]||new Set()).size,
+    minBefore:d.net.length?Math.min(...d.net):0, maxBefore:d.net.length?Math.max(...d.net):0,
+  })).sort((a,b)=>{
+    if (a.name==='No Dispatcher Listed') return 1;
+    if (b.name==='No Dispatcher Listed') return -1;
+    return b.aovBefore-a.aovBefore;
+  });
 
-  // ── Store averages
-  const sfAllNet = sfResults.map(r=>r.netTotal).reduce((a,b)=>a+b,0);
-  const sfAllTxns = sfResults.reduce((a,r)=>a+r.totalTxns,0);
-  const sfAvgBef = sfAllNet/sfAllTxns;
-  const sfAvgAft = sfResults.map(r=>r.grossTotal).reduce((a,b)=>a+b,0)/sfAllTxns;
+  // ── Averages
+  const sfAllNet=sum(sfResults.map(r=>r.netTotal)), sfAllTxns=sum(sfResults.map(r=>r.totalTxns));
+  const sfAvgBef=sfAllNet/sfAllTxns, sfAvgAft=sum(sfResults.map(r=>r.grossTotal))/sfAllTxns;
+  const dlNamed=dlResults.filter(r=>r.name!=='No Dispatcher Listed');
+  const dlAvgBef=sum(dlNamed.map(r=>r.netTotal))/sum(dlNamed.map(r=>r.count));
+  const dlAvgAft=sum(dlNamed.map(r=>r.grossTotal))/sum(dlNamed.map(r=>r.count));
 
-  const dlNamed   = dlResults.filter(r=>r.name!=='No Dispatcher Listed');
-  const dlNetNamed= dlNamed.reduce((a,r)=>a+r.netTotal,0);
-  const dlTxnNamed= dlNamed.reduce((a,r)=>a+r.count,0);
-  const dlAvgBef  = dlNetNamed/dlTxnNamed;
-  const dlAvgAft  = dlNamed.reduce((a,r)=>a+r.grossTotal,0)/dlTxnNamed;
-  const dlTotalTxns = dlResults.reduce((a,r)=>a+r.count,0);
+  // Prize helpers
+  const MIN_TXN=60, SF_T1=63, SF_T2=65, DL_T1=90, DL_T2=100;
+  const prizeSF=(a,t)=>t<MIN_TXN?null:a>=SF_T2?'$250 Cash + $100 DoorDash Gift Card':a>=SF_T1?'$100 Cash':null;
+  const prizeDL=(a,t)=>t<MIN_TXN?null:a>=DL_T2?'$250 Cash + $100 DoorDash Gift Card':a>=DL_T1?'$100 Cash':null;
 
-  setStatus('processing', 'Building Excel files…', true);
+  setStatus('processing','Building Excel files…',true);
   setTimeout(() => {
     try {
-      // ── FILE 1: Sales Floor Full Report
+
+      // ════════════════════════════════════════════
+      // FILE 1 — Sales Floor Full Report
+      // ════════════════════════════════════════════
       const wb1 = XLSX.utils.book_new();
-      // Sheet 1: AOV Leaderboard
-      const sfHdr1 = ['SALES FLOOR AOV REPORT — ' + dateLabel.toUpperCase()];
-      const sfHdr2 = ['POS & Pickup only | Returns excluded | Sorted highest to lowest | Before Tax = Net Sales'];
-      const sfBlank = [''];
-      const sfColHdr = ['#','Budtender','AOV Before Tax','Min (Pre-Tax)','Max (Pre-Tax)','AOV After Tax','POS Txns','Pickup Txns','Total Txns','Net Total','Gross Total'];
-      const sfData1 = sfResults.map((r,i) => [
-        `#${i+1}`, r.name,
-        r.combBefore, r.minBefore, r.maxBefore, r.combAfter,
-        r.posTxns, r.puTxns, r.totalTxns,
-        r.netTotal, r.grossTotal,
-      ]);
-      sfData1.push(['','Store Average', sfAvgBef,'','',sfAvgAft,'','',sfAllTxns, sfAllNet, sfResults.reduce((a,r)=>a+r.grossTotal,0)]);
-      const sfWs1 = XLSX.utils.aoa_to_sheet([sfHdr1, sfHdr2, sfBlank, sfColHdr, ...sfData1]);
-      sfWs1['!cols'] = [{wch:5},{wch:26},{wch:16},{wch:14},{wch:14},{wch:15},{wch:10},{wch:12},{wch:11},{wch:14},{wch:14}];
-      applyCurrency(sfWs1, sfData1.length+4, [2,3,4,5,9,10]);
-      XLSX.utils.book_append_sheet(wb1, sfWs1, 'AOV Leaderboard');
+
+      // Sheet 1: 6-column AOV leaderboard
+      const sf_lb_rows = [
+        ['SALES FLOOR AOV REPORT — '+dateLabel.toUpperCase()],
+        ['POS & Pickup only  |  Returns excluded from all AOV  |  Before Tax = Net Sales column  |  Sorted highest → lowest'],
+        [''],
+        ['Contest Rules:  Min '+MIN_TXN+' transactions  |  $'+SF_T1+'+ AOV → $100 Cash  |  $'+SF_T2+'+ AOV → $250 Cash + $100 DoorDash GC'],
+        [''],
+        ['#','Budtender','POS AOV\nBef. Tax','Pickup AOV\nBef. Tax','Combined AOV\nBef. Tax','POS AOV\nAft. Tax','Pickup AOV\nAft. Tax','Combined AOV\nAft. Tax','Min\n(Pre-Tax)','Max\n(Pre-Tax)','POS Txns','Pickup Txns','Total Txns','Net Total','Gross Total'],
+      ];
+      sfResults.forEach((r,i)=>{
+        sf_lb_rows.push([
+          `#${i+1}`, r.name,
+          r.posBefore||'—', r.puBefore||'—', r.combBefore,
+          r.posAfter||'—',  r.puAfter||'—',  r.combAfter,
+          r.minBefore, r.maxBefore,
+          r.posTxns, r.puTxns, r.totalTxns,
+          r.netTotal, r.grossTotal,
+        ]);
+      });
+      sf_lb_rows.push(['','Store Average','','',sfAvgBef,'','',sfAvgAft,'','','','',sfAllTxns,sfAllNet,sum(sfResults.map(r=>r.grossTotal))]);
+      sf_lb_rows.push(['']);
+      sf_lb_rows.push(['* Combined AOV = all POS + Pickup tickets  |  "—" = no transactions of that type  |  AOV = Net Sales ÷ tickets (before tax)']);
+      const ws1a = XLSX.utils.aoa_to_sheet(sf_lb_rows);
+      ws1a['!cols']=[{wch:5},{wch:26},{wch:13},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:12},{wch:12},{wch:10},{wch:12},{wch:11},{wch:14},{wch:14}];
+      applyCurr(ws1a, sf_lb_rows.length, [2,3,4,5,6,7,8,9,13,14]);
+      XLSX.utils.book_append_sheet(wb1, ws1a, 'AOV Leaderboard');
 
       // Sheet 2: Transaction Breakdown
-      const sfColHdr2 = ['Budtender','POS Sales','Pickup Sales','Total Sales','POS Returns','Pickup Returns','Total Returns'];
-      const sfData2 = [...sfResults]
-        .sort((a,b)=>a.name.split(' ')[0].localeCompare(b.name.split(' ')[0]))
-        .map(r => [r.name, r.posTxns, r.puTxns, r.totalTxns, r.retPos, r.retPu, r.retTotal]);
-      const sfRetNote = [`* ${sfResults.reduce((a,r)=>a+r.retTotal,0)} total return transactions — excluded from all AOV calculations above`];
-      const sfWs2 = XLSX.utils.aoa_to_sheet([
-        ['SALES FLOOR TRANSACTION BREAKDOWN — ' + dateLabel.toUpperCase()],
+      const sf_txn_rows = [
+        ['SALES FLOOR TRANSACTION BREAKDOWN — '+dateLabel.toUpperCase()],
         ['Returns listed for reference only — NOT included in any AOV calculation'],
         [''],
-        sfColHdr2, ...sfData2, [''], sfRetNote
-      ]);
-      sfWs2['!cols'] = [{wch:26},{wch:12},{wch:14},{wch:13},{wch:13},{wch:16},{wch:14}];
-      XLSX.utils.book_append_sheet(wb1, sfWs2, 'Transaction Breakdown');
+        ['NOTE ON RETURNS: Return transactions are listed below for reference only. They were NOT included in any AOV calculations above. AOV is based exclusively on Sale orders.'],
+        [''],
+        ['Budtender','POS Sales','Pickup Sales','Total Sales','POS Returns','Pickup Returns','Total Returns'],
+      ];
+      [...sfResults].sort((a,b)=>a.name.split(' ')[0].localeCompare(b.name.split(' ')[0]))
+        .forEach(r=>sf_txn_rows.push([r.name,r.posTxns,r.puTxns,r.totalTxns,r.retPos||'—',r.retPu||'—',r.retTotal||'—']));
+      const sfTotalRet=sum(sfResults.map(r=>r.retTotal));
+      sf_txn_rows.push(['TOTALS',sum(sfResults.map(r=>r.posTxns)),sum(sfResults.map(r=>r.puTxns)),sfAllTxns,'','',sfTotalRet||'—']);
+      sf_txn_rows.push(['']);
+      sf_txn_rows.push([`* ${sfTotalRet} return transactions excluded from all AOV calculations on the AOV Leaderboard sheet`]);
+      const ws1b = XLSX.utils.aoa_to_sheet(sf_txn_rows);
+      ws1b['!cols']=[{wch:26},{wch:12},{wch:14},{wch:13},{wch:13},{wch:16},{wch:14}];
+      XLSX.utils.book_append_sheet(wb1, ws1b, 'Transaction Breakdown');
       XLSX.writeFile(wb1, `SalesFloor_Report${fileSuffix}.xlsx`);
 
-      // ── FILE 2: Delivery Full Report
+      // ════════════════════════════════════════════
+      // FILE 2 — Delivery Full Report
+      // ════════════════════════════════════════════
       const wb2 = XLSX.utils.book_new();
-      const dlColHdr1 = ['#','Dispatcher','AOV Before Tax','Min (Pre-Tax)','Max (Pre-Tax)','AOV After Tax','Deliveries','Net Total','Gross Total'];
-      const dlData1 = dlResults.map((r,i) => [
-        r.name==='No Dispatcher Listed'?'—':`#${i+1}`,
-        r.name, r.aovBefore, r.minBefore, r.maxBefore, r.aovAfter,
-        r.count, r.netTotal, r.grossTotal,
-      ]);
-      dlData1.push(['','Channel Average (named only)', dlAvgBef,'','',dlAvgAft, dlTxnNamed, dlNetNamed, dlNamed.reduce((a,r)=>a+r.grossTotal,0)]);
-      const dlWs1 = XLSX.utils.aoa_to_sheet([
-        ['DELIVERY AOV REPORT — ' + dateLabel.toUpperCase()],
-        ['Dispatcher credited from Order Notes only | Returns excluded | "No Dispatcher Listed" = no name found in notes'],
+      const dl_lb_rows = [
+        ['DELIVERY AOV REPORT — '+dateLabel.toUpperCase()],
+        ['Dispatcher credited from Order Notes (Ticket Notes column) only  |  Returns excluded  |  Name variations combined'],
+        ['Name variations: Ash/Ashtyn/Ashyn → Ashtyn  |  Donavn → Donavan  |  Rich/Richard → Richard'],
         [''],
-        dlColHdr1, ...dlData1
-      ]);
-      dlWs1['!cols'] = [{wch:5},{wch:26},{wch:16},{wch:14},{wch:14},{wch:15},{wch:11},{wch:14},{wch:14}];
-      applyCurrency(dlWs1, dlData1.length+4, [2,3,4,5,7,8]);
-      XLSX.utils.book_append_sheet(wb2, dlWs1, 'Delivery AOV');
+        ['#','Dispatcher','AOV Before Tax','AOV After Tax','Min (Pre-Tax)','Max (Pre-Tax)','Deliveries','Net Total','Gross Total'],
+      ];
+      dlResults.forEach((r,i)=>{
+        dl_lb_rows.push([
+          r.name==='No Dispatcher Listed'?'—':`#${i+1}`,
+          r.name, r.aovBefore, r.aovAfter, r.minBefore, r.maxBefore,
+          r.count, r.netTotal, r.grossTotal,
+        ]);
+      });
+      dl_lb_rows.push(['','Channel Average (named only)',dlAvgBef,dlAvgAft,'','',sum(dlNamed.map(r=>r.count)),sum(dlNamed.map(r=>r.netTotal)),sum(dlNamed.map(r=>r.grossTotal))]);
+      dl_lb_rows.push(['']);
+      dl_lb_rows.push(['"No Dispatcher Listed" = no recognized name found in Order Notes  |  Excluded from channel average']);
+      const ws2a = XLSX.utils.aoa_to_sheet(dl_lb_rows);
+      ws2a['!cols']=[{wch:5},{wch:26},{wch:16},{wch:15},{wch:14},{wch:14},{wch:12},{wch:14},{wch:14}];
+      applyCurr(ws2a, dl_lb_rows.length, [2,3,4,5,7,8]);
+      XLSX.utils.book_append_sheet(wb2, ws2a, 'Delivery AOV');
 
-      // DL Sheet 2: Breakdown
-      const dlColHdr2 = ['Dispatcher','Deliveries','Net Total','Gross Total','Return Txns','Note'];
-      const dlData2 = [...dlResults]
-        .sort((a,b)=>{
-          if(a.name==='No Dispatcher Listed') return 1;
-          if(b.name==='No Dispatcher Listed') return -1;
-          return a.name.localeCompare(b.name);
-        })
-        .map(r => [r.name, r.count, r.netTotal, r.grossTotal, r.retCount||'—',
-                   r.name==='No Dispatcher Listed'?'No name found in Order Notes':'']);
-      const dlRetNote = [`* Return transactions and "No Dispatcher Listed" orders excluded from AOV calculations`];
-      const dlWs2 = XLSX.utils.aoa_to_sheet([
-        ['DELIVERY TRANSACTION BREAKDOWN — ' + dateLabel.toUpperCase()],
-        ['Name variations combined: Ash/Ashtyn/Ashyn → Ashtyn | Donavn → Donavan | Rich/Richard → Richard'],
+      const dl_txn_rows = [
+        ['DELIVERY TRANSACTION BREAKDOWN — '+dateLabel.toUpperCase()],
+        ['NOTE: Return transactions listed for reference only — NOT included in any AOV calculations. AOV = Sale orders only.'],
         [''],
-        dlColHdr2, ...dlData2, [''], dlRetNote
-      ]);
-      dlWs2['!cols'] = [{wch:26},{wch:12},{wch:14},{wch:14},{wch:13},{wch:36}];
-      applyCurrency(dlWs2, dlData2.length+4, [2,3]);
-      XLSX.utils.book_append_sheet(wb2, dlWs2, 'Transaction Breakdown');
+        ['Dispatcher','Deliveries','Net Total','Gross Total','Return Txns','Note'],
+      ];
+      [...dlResults].sort((a,b)=>{
+        if(a.name==='No Dispatcher Listed') return 1;
+        if(b.name==='No Dispatcher Listed') return -1;
+        return a.name.localeCompare(b.name);
+      }).forEach(r=>dl_txn_rows.push([
+        r.name, r.count, r.netTotal, r.grossTotal, r.retCount||'—',
+        r.name==='No Dispatcher Listed'?'No name found in Order Notes':'',
+      ]));
+      dl_txn_rows.push(['TOTALS',sum(dlResults.map(r=>r.count)),sum(dlResults.map(r=>r.netTotal)),sum(dlResults.map(r=>r.grossTotal)),sum(dlResults.map(r=>r.retCount))||'—','']);
+      const ws2b = XLSX.utils.aoa_to_sheet(dl_txn_rows);
+      ws2b['!cols']=[{wch:26},{wch:12},{wch:14},{wch:14},{wch:13},{wch:36}];
+      applyCurr(ws2b, dl_txn_rows.length, [2,3]);
+      XLSX.utils.book_append_sheet(wb2, ws2b, 'Transaction Breakdown');
       XLSX.writeFile(wb2, `Delivery_Report${fileSuffix}.xlsx`);
 
-      // ── FILE 3: Sales Floor AOV Chart
+      // ════════════════════════════════════════════
+      // FILE 3 — Sales Floor AOV Contest
+      // ════════════════════════════════════════════
       const wb3 = XLSX.utils.book_new();
-      const sfChartHdr = ['#','Budtender','AOV Before Tax','# Transactions'];
-      const sfChartData = sfResults.map((r,i) => [`#${i+1}`, r.name, r.combBefore, r.totalTxns]);
-      sfChartData.push(['','Store Average', sfAvgBef, sfAllTxns]);
-      sfChartData.push(['']);
-      sfChartData.push([`* Green = above store avg  |  Red = below store avg  |  AOV = Net Sales ÷ Transactions (before tax)`]);
-      const sfChartWs = XLSX.utils.aoa_to_sheet([
-        ['SALES FLOOR AOV — BEFORE TAX — ' + dateLabel.toUpperCase()],
-        ['POS & Pickup | Sales only | Returns excluded | Sorted highest to lowest'],
-        [''],
-        sfChartHdr, ...sfChartData
-      ]);
-      sfChartWs['!cols'] = [{wch:5},{wch:26},{wch:18},{wch:16}];
-      applyCurrency(sfChartWs, sfChartData.length+4, [2]);
-      XLSX.utils.book_append_sheet(wb3, sfChartWs, 'Sales Floor AOV');
-      XLSX.writeFile(wb3, `SalesFloor_AOV_Chart${fileSuffix}.xlsx`);
+      const sfNamed = sfResults; // already excludes registers
+      const sfT2 = sfNamed.filter(r=>r.totalTxns>=MIN_TXN && r.combBefore>=SF_T2);
+      const sfT1 = sfNamed.filter(r=>r.totalTxns>=MIN_TXN && r.combBefore>=SF_T1 && r.combBefore<SF_T2);
+      const sfBelowAOV = sfNamed.filter(r=>r.totalTxns>=MIN_TXN && r.combBefore<SF_T1);
+      const sfDNQ = sfNamed.filter(r=>r.totalTxns<MIN_TXN).sort((a,b)=>b.combBefore-a.combBefore);
+      const sfPool = sfNamed.filter(r=>r.totalTxns>=MIN_TXN);
+      const sfChanAvg = sfPool.length ? sum(sfPool.map(r=>r.netTotal))/sum(sfPool.map(r=>r.totalTxns)) : 0;
 
-      // ── FILE 4: Delivery AOV Chart
+      const sf_contest = [
+        ['SALES FLOOR AOV CONTEST — '+dateLabel.toUpperCase()],
+        ['POS & Pickup  |  Minimum '+MIN_TXN+' transactions required  |  AOV Before Tax  |  Sales only'],
+        [''],
+        ['CONTEST RULES:'],
+        ['  $'+SF_T2.toFixed(2)+'+ AOV  +  '+MIN_TXN+'+ transactions  →  $250 Cash + $100 DoorDash Gift Card'],
+        ['  $'+SF_T1.toFixed(2)+'+ AOV  +  '+MIN_TXN+'+ transactions  →  $100 Cash'],
+        [''],
+      ];
+
+      // Tier 2
+      sf_contest.push(['TOP PRIZE — $250 Cash + $100 DoorDash Gift Card  |  >= $'+SF_T2+' AOV  |  '+sfT2.length+' qualifier(s)']);
+      sf_contest.push(['#','Budtender','AOV Before Tax','# Transactions','Prize']);
+      let rank=1;
+      sfT2.forEach(r=>sf_contest.push([`#${rank++}`,r.name,r.combBefore,r.totalTxns,prizeSF(r.combBefore,r.totalTxns)]));
+
+      // Tier 1
+      sf_contest.push(['']);
+      sf_contest.push(['$100 CASH — >= $'+SF_T1+' AOV  |  '+sfT1.length+' qualifier(s)']);
+      sf_contest.push(['#','Budtender','AOV Before Tax','# Transactions','Prize']);
+      sfT1.forEach(r=>sf_contest.push([`#${rank++}`,r.name,r.combBefore,r.totalTxns,prizeSF(r.combBefore,r.totalTxns)]));
+
+      // Below AOV threshold (enough txns)
+      if (sfBelowAOV.length) {
+        sf_contest.push(['']);
+        sf_contest.push(['ENOUGH TRANSACTIONS — BELOW PRIZE THRESHOLD  |  '+sfBelowAOV.length+' employee(s)']);
+        sf_contest.push(['#','Budtender','AOV Before Tax','# Transactions','']);
+        sfBelowAOV.forEach(r=>sf_contest.push([`#${rank++}`,r.name,r.combBefore,r.totalTxns,'Does not qualify — below $'+SF_T1+' AOV']));
+      }
+
+      // Channel avg
+      sf_contest.push(['']);
+      sf_contest.push(['Floor Average (>='+MIN_TXN+' txn pool)','',sfChanAvg,sum(sfPool.map(r=>r.totalTxns)),'']);
+
+      // DNQ
+      if (sfDNQ.length) {
+        sf_contest.push(['']);
+        sf_contest.push(['DID NOT QUALIFY — fewer than '+MIN_TXN+' transactions  |  '+sfDNQ.length+' employee(s)']);
+        sf_contest.push(['','Budtender','AOV Before Tax','# Transactions','']);
+        sfDNQ.forEach(r=>sf_contest.push(['—',r.name,r.combBefore,r.totalTxns,'Does not qualify — fewer than '+MIN_TXN+' transactions']));
+      }
+      sf_contest.push(['']);
+      sf_contest.push(['* AOV = Net Sales ÷ Transactions (before tax)  |  Returns excluded  |  Min '+MIN_TXN+' transactions required to qualify for any prize']);
+
+      const ws3 = XLSX.utils.aoa_to_sheet(sf_contest);
+      ws3['!cols']=[{wch:5},{wch:26},{wch:16},{wch:16},{wch:38}];
+      applyCurr(ws3, sf_contest.length, [2]);
+      XLSX.utils.book_append_sheet(wb3, ws3, 'Sales Floor Contest');
+      XLSX.writeFile(wb3, `SalesFloor_AOV_Contest${fileSuffix}.xlsx`);
+
+      // ════════════════════════════════════════════
+      // FILE 4 — Delivery AOV Contest
+      // ════════════════════════════════════════════
       const wb4 = XLSX.utils.book_new();
-      const dlChartHdr = ['#','Dispatcher','AOV Before Tax','# Deliveries'];
-      const dlChartData = dlResults.map((r,i) => [
-        r.name==='No Dispatcher Listed'?'—':`#${i+1}`,
-        r.name, r.aovBefore, r.count
-      ]);
-      dlChartData.push(['','Channel Average (named only)', dlAvgBef, dlTxnNamed]);
-      dlChartData.push(['']);
-      dlChartData.push([`* "No Dispatcher Listed" = no recognized name in Order Notes | excluded from channel average`]);
-      const dlChartWs = XLSX.utils.aoa_to_sheet([
-        ['DELIVERY AOV — BEFORE TAX — ' + dateLabel.toUpperCase()],
-        ['Dispatcher from Order Notes only | Sales only | Returns excluded | Sorted highest to lowest'],
-        [''],
-        dlChartHdr, ...dlChartData
-      ]);
-      dlChartWs['!cols'] = [{wch:5},{wch:26},{wch:18},{wch:14}];
-      applyCurrency(dlChartWs, dlChartData.length+4, [2]);
-      XLSX.utils.book_append_sheet(wb4, dlChartWs, 'Delivery AOV');
-      XLSX.writeFile(wb4, `Delivery_AOV_Chart${fileSuffix}.xlsx`);
+      const dlNamedOnly = dlResults.filter(r=>r.name!=='No Dispatcher Listed');
+      const dlNoName    = dlResults.filter(r=>r.name==='No Dispatcher Listed');
+      const dlT2 = dlNamedOnly.filter(r=>r.count>=MIN_TXN && r.aovBefore>=DL_T2);
+      const dlT1 = dlNamedOnly.filter(r=>r.count>=MIN_TXN && r.aovBefore>=DL_T1 && r.aovBefore<DL_T2);
+      const dlBelowAOV = dlNamedOnly.filter(r=>r.count>=MIN_TXN && r.aovBefore<DL_T1);
+      const dlDNQ = [...dlNamedOnly.filter(r=>r.count<MIN_TXN),...dlNoName].sort((a,b)=>b.aovBefore-a.aovBefore);
+      const dlPool = dlNamedOnly.filter(r=>r.count>=MIN_TXN);
+      const dlChanAvg = dlPool.length ? sum(dlPool.map(r=>r.netTotal))/sum(dlPool.map(r=>r.count)) : 0;
 
-      const sfTxnCount = sfAllTxns.toLocaleString();
-      const dlTxnCount = dlTotalTxns.toLocaleString();
+      const dl_contest = [
+        ['DELIVERY AOV CONTEST — '+dateLabel.toUpperCase()],
+        ['Dispatcher from Order Notes only  |  Minimum '+MIN_TXN+' deliveries required  |  AOV Before Tax  |  Sales only'],
+        [''],
+        ['CONTEST RULES:'],
+        ['  $'+DL_T2.toFixed(2)+'+ AOV  +  '+MIN_TXN+'+ deliveries  →  $250 Cash + $100 DoorDash Gift Card'],
+        ['  $'+DL_T1.toFixed(2)+'+ AOV  +  '+MIN_TXN+'+ deliveries  →  $100 Cash'],
+        [''],
+      ];
+
+      dl_contest.push(['TOP PRIZE — $250 Cash + $100 DoorDash Gift Card  |  >= $'+DL_T2+' AOV  |  '+dlT2.length+' qualifier(s)']);
+      dl_contest.push(['#','Dispatcher','AOV Before Tax','# Deliveries','Prize']);
+      let dlRank=1;
+      dlT2.forEach(r=>dl_contest.push([`#${dlRank++}`,r.name,r.aovBefore,r.count,prizeDL(r.aovBefore,r.count)]));
+
+      dl_contest.push(['']);
+      dl_contest.push(['$100 CASH — >= $'+DL_T1+' AOV  |  '+dlT1.length+' qualifier(s)']);
+      dl_contest.push(['#','Dispatcher','AOV Before Tax','# Deliveries','Prize']);
+      dlT1.forEach(r=>dl_contest.push([`#${dlRank++}`,r.name,r.aovBefore,r.count,prizeDL(r.aovBefore,r.count)]));
+
+      if (dlBelowAOV.length) {
+        dl_contest.push(['']);
+        dl_contest.push(['ENOUGH DELIVERIES — BELOW PRIZE THRESHOLD  |  '+dlBelowAOV.length+' dispatcher(s)']);
+        dl_contest.push(['#','Dispatcher','AOV Before Tax','# Deliveries','']);
+        dlBelowAOV.forEach(r=>dl_contest.push([`#${dlRank++}`,r.name,r.aovBefore,r.count,'Does not qualify — below $'+DL_T1+' AOV']));
+      }
+
+      dl_contest.push(['']);
+      dl_contest.push(['Delivery Average (>='+MIN_TXN+' delivery pool)','',dlChanAvg,sum(dlPool.map(r=>r.count)),'']);
+
+      if (dlDNQ.length) {
+        dl_contest.push(['']);
+        dl_contest.push(['DID NOT QUALIFY — fewer than '+MIN_TXN+' deliveries  |  '+dlDNQ.length+' dispatcher(s)']);
+        dl_contest.push(['','Dispatcher','AOV Before Tax','# Deliveries','']);
+        dlDNQ.forEach(r=>dl_contest.push(['—',r.name,r.aovBefore,r.count,
+          r.name==='No Dispatcher Listed'?'No name in Order Notes':'Does not qualify — fewer than '+MIN_TXN+' deliveries']));
+      }
+      dl_contest.push(['']);
+      dl_contest.push(['* AOV = Net Sales ÷ Deliveries (before tax)  |  Returns excluded  |  Dispatcher from Order Notes only  |  Min '+MIN_TXN+' deliveries required']);
+
+      const ws4 = XLSX.utils.aoa_to_sheet(dl_contest);
+      ws4['!cols']=[{wch:5},{wch:26},{wch:16},{wch:16},{wch:38}];
+      applyCurr(ws4, dl_contest.length, [2]);
+      XLSX.utils.book_append_sheet(wb4, ws4, 'Delivery Contest');
+      XLSX.writeFile(wb4, `Delivery_AOV_Contest${fileSuffix}.xlsx`);
+
+      // ════════════════════════════════════════════
+      // FILE 5 — Daily Hourly Traffic (Floor + Delivery)
+      // ════════════════════════════════════════════
+      const wb5 = XLSX.utils.book_new();
+
+      // Build date list + per-date-hour counts from raw tickets
+      const trafficByDateHour = {}; // date -> hour -> {floor, delivery}
+      const trafficDates = {};      // date -> {dow, label}
+      for (const t of Object.values(sfTickets)) {
+        if (t.net <= 0) continue;
+        const r0 = [...saleSF].find(r => (r['Ticket ID']||'').trim() === Object.keys(sfTickets).find(k=>sfTickets[k]===t));
+      }
+      // Rebuild from raw rows — dedupe by ticket, capture date+hour+channel
+      const trafficTix = {};
+      for (const r of rows) {
+        if (r['Type'] !== 'Sale') continue;
+        const tid   = (r['Ticket ID']||'').trim();
+        const ttype = (r['Ticket Type']||'').toUpperCase();
+        const dOpen = r['Date Open']||'';
+        const tOpen = r['Time Opened']||'';
+        if (!tid || !dOpen || !tOpen) continue;
+        if (tid in trafficTix) continue;
+        const [mo,dy,yr] = dOpen.split('/');
+        const [hh] = tOpen.split(':');
+        const hour = parseInt(hh, 10);
+        const dow  = new Date(`${yr}-${mo}-${dy}`).getDay(); // 0=Sun
+        const ch   = ['POS','PICKUP'].includes(ttype) ? 'floor' : ttype==='DELIVERY' ? 'delivery' : null;
+        if (!ch || isNaN(hour)) continue;
+        trafficTix[tid] = { date: dOpen, hour, dow, channel: ch };
+      }
+
+      for (const t of Object.values(trafficTix)) {
+        if (!trafficByDateHour[t.date]) trafficByDateHour[t.date] = {};
+        if (!trafficByDateHour[t.date][t.hour]) trafficByDateHour[t.date][t.hour] = {floor:0,delivery:0};
+        trafficByDateHour[t.date][t.hour][t.channel]++;
+        if (!trafficDates[t.date]) {
+          const [mo,dy,yr] = t.date.split('/');
+          const dt = new Date(`${yr}-${mo}-${dy}`);
+          const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+          trafficDates[t.date] = { dow: dt.getDay(), label: `${+mo}/${+dy}`, day: dows[dt.getDay()] };
+        }
+      }
+
+      const tDates  = Object.keys(trafficDates).sort((a,b)=>new Date(a.split('/')[2]+'-'+a.split('/')[0]+'-'+a.split('/')[1])-new Date(b.split('/')[2]+'-'+b.split('/')[0]+'-'+b.split('/')[1]));
+      const tHours  = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+
+      function buildTrafficSheet(wb, channel, sheetName) {
+        const data = [];
+        // Header rows
+        data.push([sheetName.toUpperCase() + ' — DAILY HOURLY TRAFFIC — ' + dateLabel.toUpperCase()]);
+        data.push(['Unique transactions per hour per day  ·  Sales only  ·  ' + dateLabel]);
+        data.push(['']);
+        const hdrRow = ['Hour', ...tDates.map(d => `${trafficDates[d].day}\n${trafficDates[d].label}`), 'Avg/Day'];
+        data.push(hdrRow);
+        for (const h of tHours) {
+          const row = [`${h}:00`];
+          const vals = [];
+          for (const d of tDates) {
+            const v = (trafficByDateHour[d]&&trafficByDateHour[d][h]) ? trafficByDateHour[d][h][channel] : 0;
+            row.push(v || '');
+            if (v > 0) vals.push(v);
+          }
+          row.push(vals.length ? parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1)) : '');
+          data.push(row);
+        }
+        // Day totals
+        const totRow = ['Day Total'];
+        for (const d of tDates) {
+          const tot = tHours.reduce((s,h)=>s+((trafficByDateHour[d]&&trafficByDateHour[d][h])?trafficByDateHour[d][h][channel]:0),0);
+          totRow.push(tot);
+        }
+        totRow.push('');
+        data.push(totRow);
+        data.push(['']);
+        data.push(['* Each cell = unique tickets opened that hour  ·  Apr 20 = 420 Day']);
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [{wch:8}, ...tDates.map(()=>({wch:7})), {wch:8}];
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      }
+
+      buildTrafficSheet(wb5, 'floor',    'Sales Floor');
+      buildTrafficSheet(wb5, 'delivery', 'Delivery');
+      XLSX.writeFile(wb5, `Daily_Hourly_Traffic${fileSuffix}.xlsx`);
+
+      // ════════════════════════════════════════════
+      // FILE 6 — Customer Dwell Time by Day + Hour
+      // ════════════════════════════════════════════
+      const wb6 = XLSX.utils.book_new();
+
+      // Build dwell times from raw rows — POS only
+      const dwellTix = {};
+      for (const r of rows) {
+        if (r['Type'] !== 'Sale') continue;
+        if ((r['Ticket Type']||'').toUpperCase() !== 'POS') continue;
+        const tid   = (r['Ticket ID']||'').trim();
+        const dOpen = r['Date Open']||'';
+        const tOpen = r['Time Opened']||'';
+        const dClose= r['Date Closed']||'';
+        const tClose= r['Time Closed']||'';
+        if (!tid||!tOpen||!tClose||tid in dwellTix) continue;
+        try {
+          const parse = s => { const [d,t]=s.split(' '); const [mo,dy,yr]=d.split('/'); return new Date(`${yr}-${mo}-${dy}T${t}`); };
+          const dur = (parse(dClose+' '+tClose) - parse(dOpen+' '+tOpen)) / 60000;
+          if (dur < 0 || dur > 120) continue;
+          const [mo,dy,yr] = dOpen.split('/'); const [hh] = tOpen.split(':');
+          dwellTix[tid] = { date: dOpen, hour: parseInt(hh,10), dur };
+        } catch(e) {}
+      }
+
+      const dwellByDateHour = {}; // date -> hour -> [durations]
+      for (const t of Object.values(dwellTix)) {
+        if (!dwellByDateHour[t.date]) dwellByDateHour[t.date] = {};
+        if (!dwellByDateHour[t.date][t.hour]) dwellByDateHour[t.date][t.hour] = [];
+        dwellByDateHour[t.date][t.hour].push(t.dur);
+      }
+
+      const dData = [];
+      dData.push(['CUSTOMER AVG TIME IN STORE (POS ONLY) — ' + dateLabel.toUpperCase()]);
+      dData.push(['Avg minutes per customer per hour  ·  Ticket Open → Close  ·  Tickets >120 min excluded']);
+      dData.push(['']);
+      dData.push(['Hour', ...tDates.map(d=>`${trafficDates[d]?.day||''}\n${trafficDates[d]?.label||d}`), 'Avg']);
+      for (const h of tHours) {
+        const row = [`${h}:00`];
+        const allVals = [];
+        for (const d of tDates) {
+          const vals = dwellByDateHour[d]?.[h];
+          if (vals && vals.length) {
+            const a = parseFloat((vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1));
+            row.push(a);
+            allVals.push(a);
+          } else {
+            row.push('');
+          }
+        }
+        row.push(allVals.length ? parseFloat((allVals.reduce((a,b)=>a+b,0)/allVals.length).toFixed(1)) : '');
+        dData.push(row);
+      }
+      // Day avg row
+      const dayAvgRow = ['Day Avg'];
+      for (const d of tDates) {
+        const allDayVals = tHours.flatMap(h => dwellByDateHour[d]?.[h] || []);
+        dayAvgRow.push(allDayVals.length ? parseFloat((allDayVals.reduce((a,b)=>a+b,0)/allDayVals.length).toFixed(1)) : '');
+      }
+      const allValsTotal = Object.values(dwellTix).map(t=>t.dur);
+      dayAvgRow.push(parseFloat((allValsTotal.reduce((a,b)=>a+b,0)/allValsTotal.length).toFixed(1)));
+      dData.push(dayAvgRow);
+      dData.push(['']);
+      dData.push(['* Numbers = avg minutes at register  ·  POS only  ·  Apr 20 = 420 Day  ·  "—" = no transactions']);
+
+      const ws6 = XLSX.utils.aoa_to_sheet(dData);
+      ws6['!cols'] = [{wch:8}, ...tDates.map(()=>({wch:7})), {wch:8}];
+      XLSX.utils.book_append_sheet(wb6, ws6, 'Avg Time in Store');
+      XLSX.writeFile(wb6, `Customer_Dwell_Time${fileSuffix}.xlsx`);
+
       setStatus('success',
-        `✅ 4 files downloaded — ${sfResults.length} floor staff · ${sfTxnCount} floor txns · ` +
-        `${dlResults.length} dispatchers · ${dlTxnCount} deliveries · Period: ${dateLabel}`);
+        `✅ 6 files downloaded  ·  ${sfResults.length} floor staff · ${sfAllTxns.toLocaleString()} floor txns  ·  ` +
+        `${dlResults.length} dispatchers · ${sum(dlResults.map(r=>r.count)).toLocaleString()} deliveries  ·  ${dateLabel}`);
     } catch(e) {
-      setStatus('error', '❌ Error generating files: ' + e.message);
+      setStatus('error','❌ Error: '+e.message);
     }
   }, 80);
 }
 
-// ── Apply currency format to specific columns in a sheet
-function applyCurrency(ws, maxRow, colIndexes) {
+// ── Currency format helper
+function applyCurr(ws, maxRow, cols) {
   const fmt = '"$"#,##0.00';
-  for (let r = 5; r <= maxRow; r++) {
-    for (const c of colIndexes) {
-      const addr = XLSX.utils.encode_cell({r: r-1, c});
-      if (ws[addr] && typeof ws[addr].v === 'number') ws[addr].z = fmt;
+  for (let r=1; r<=maxRow; r++) {
+    for (const c of cols) {
+      const addr = XLSX.utils.encode_cell({r:r-1, c});
+      if (ws[addr] && typeof ws[addr].v==='number') ws[addr].z = fmt;
     }
   }
 }
-
-// ── Helpers
-function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
-function sum(arr) { return arr.reduce((a,b)=>a+b,0); }
-function fmtDate(d) {
-  if (!d) return '';
-  const [m,day,y] = d.split('/');
-  const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${months[+m]||m} ${+day} ${y}`;
+function avg(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
+function fmtDate(d){
+  if(!d) return '';
+  const [m,day,y]=d.split('/');
+  const mo=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${mo[+m]||m} ${+day} ${y}`;
 }
-
-// Clear data on tab close
-window.addEventListener('beforeunload', () => {});
 </script>
 </body>
 </html>
