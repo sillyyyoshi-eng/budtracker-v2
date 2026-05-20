@@ -74,6 +74,38 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 
 .logout-btn{background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;margin-top:20px;display:block;width:100%;text-align:center;padding:8px}
 .logout-btn:hover{color:var(--text)}
+
+/* TABS */
+.tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border)}
+.tab-btn{background:none;border:none;padding:10px 22px;font-size:0.86rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all 0.15s;border-radius:6px 6px 0 0}
+.tab-btn:hover{color:var(--g700);background:var(--g50)}
+.tab-btn.active{color:var(--g800);border-bottom-color:var(--g700);background:var(--g50)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* REPORT OPTIONS */
+.report-opts{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px}
+.report-opts h3{font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.opt{display:flex;align-items:flex-start;gap:9px;cursor:pointer}
+.opt input{margin-top:2px;accent-color:var(--g700);width:14px;height:14px;cursor:pointer;flex-shrink:0}
+.opt-lbl strong{display:block;font-size:0.81rem;color:var(--text);font-weight:600}
+.opt-lbl span{font-size:0.72rem;color:var(--muted)}
+
+/* SCHEDULE SECTION */
+.sched-preview{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;display:none}
+.sched-preview h3{font-size:0.82rem;font-weight:700;margin-bottom:12px;color:var(--text)}
+.sched-table{width:100%;border-collapse:collapse;font-size:0.78rem}
+.sched-table th{background:var(--g800);color:var(--g100);padding:7px 10px;text-align:left;font-size:0.72rem;letter-spacing:.04em;font-weight:600}
+.sched-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.sched-table tr:last-child td{border-bottom:none}
+.sched-table tr:nth-child(even) td{background:var(--g50)}
+.sched-actions{display:flex;gap:10px;margin-top:12px}
+.blue-btn{background:#1050a0;color:#fff;border:none;border-radius:7px;padding:9px 22px;font-size:0.82rem;font-weight:600;cursor:pointer}
+.blue-btn:hover{background:#0c3a80}
+#sched-status{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:13px 16px;font-size:0.82rem;color:var(--muted);min-height:46px;display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#sched-status.processing{border-color:var(--g400);color:var(--g700);background:var(--g50)}
+#sched-status.success{border-color:var(--g500);color:#1e5030;background:var(--g50)}
+#sched-status.error{border-color:var(--red);color:var(--red);background:#fff0f0}
 </style>
 </head>
 <body>
@@ -98,8 +130,16 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
 <div id="app-screen">
   <div class="app-header">
     <h1>Report Generator</h1>
-    <p>Drop in a Treez Product Summary CSV — 4 Excel files will download automatically</p>
+    <p>The Sanctuary — Management Tools</p>
   </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('reports')">📊 Sales Reports</button>
+    <button class="tab-btn" onclick="switchTab('schedule')">📋 Break Schedule</button>
+  </div>
+
+  <!-- SALES REPORTS TAB -->
+  <div id="tab-reports" class="tab-pane active">
 
   <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-in').click()">
     <div class="drop-icon">📂</div>
@@ -143,9 +183,48 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--te
     </div>
   </div>
 
+  <div class="report-opts">
+    <h3>Select Reports to Generate</h3>
+    <div class="opts-grid">
+      <label class="opt"><input type="checkbox" id="opt-aov" checked><div class="opt-lbl"><strong>📊 AOV Reports</strong><span>Sales Floor + Delivery</span></div></label>
+      <label class="opt"><input type="checkbox" id="opt-weekly" checked><div class="opt-lbl"><strong>📈 Monthly Breakdown</strong><span>AOV by week + overall</span></div></label>
+      <label class="opt"><input type="checkbox" id="opt-coaching" checked><div class="opt-lbl"><strong>🎯 Coaching Report</strong><span>Yesterday vs MTD per employee</span></div></label>
+      <label class="opt"><input type="checkbox" id="opt-contest" checked><div class="opt-lbl"><strong>🏆 Contest Reports</strong><span>SF + Delivery prize tiers</span></div></label>
+      <label class="opt"><input type="checkbox" id="opt-traffic" checked><div class="opt-lbl"><strong>📅 Hourly Traffic</strong><span>Transactions per hour per day</span></div></label>
+      <label class="opt"><input type="checkbox" id="opt-dwell" checked><div class="opt-lbl"><strong>⏱ Dwell Time</strong><span>Avg minutes in store</span></div></label>
+    </div>
+  </div>
+
   <div id="status-bar">
     <span>Ready — waiting for CSV file</span>
   </div>
+
+  </div><!-- /tab-reports -->
+
+  <!-- SCHEDULE TAB -->
+  <div id="tab-schedule" class="tab-pane">
+
+  <div class="drop-zone" id="sched-drop" onclick="document.getElementById('sched-in').click()">
+    <div class="drop-icon">🗓️</div>
+    <h2>Drop Schedule HTML File</h2>
+    <p>Export your schedule as HTML from Wurk or any scheduling tool<br/>
+    Employee names and shift times will be extracted automatically</p>
+    <button class="blue-btn" onclick="event.stopPropagation();document.getElementById('sched-in').click()">Choose File</button>
+    <input type="file" id="sched-in" accept=".html,.htm" style="display:none"/>
+  </div>
+
+  <div class="sched-preview" id="sched-preview">
+    <h3 id="sched-title">Detected Schedule</h3>
+    <div id="sched-table-wrap"></div>
+    <div class="sched-actions">
+      <button class="choose-btn" onclick="generateBreakSheet()">⬇ Download Break Sheet</button>
+      <button class="choose-btn" style="background:var(--muted)" onclick="clearSched()">Clear</button>
+    </div>
+  </div>
+
+  <div id="sched-status"><span>Ready — waiting for schedule HTML file</span></div>
+
+  </div><!-- /tab-schedule -->
 
   <button class="logout-btn" onclick="doLogout()">← Sign Out</button>
 </div>
@@ -403,7 +482,7 @@ function generateReports(rows, fileName) {
       const ws1b = XLSX.utils.aoa_to_sheet(sf_txn_rows);
       ws1b['!cols']=[{wch:26},{wch:12},{wch:14},{wch:13},{wch:13},{wch:16},{wch:14}];
       XLSX.utils.book_append_sheet(wb1, ws1b, 'Transaction Breakdown');
-      XLSX.writeFile(wb1, `SalesFloor_Report${fileSuffix}.xlsx`);
+      if(document.getElementById('opt-aov').checked) XLSX.writeFile(wb1, `SalesFloor_Report${fileSuffix}.xlsx`);
 
       // ════════════════════════════════════════════
       // FILE 2 — Delivery Full Report
@@ -450,7 +529,7 @@ function generateReports(rows, fileName) {
       ws2b['!cols']=[{wch:26},{wch:12},{wch:14},{wch:14},{wch:13},{wch:36}];
       applyCurr(ws2b, dl_txn_rows.length, [2,3]);
       XLSX.utils.book_append_sheet(wb2, ws2b, 'Transaction Breakdown');
-      XLSX.writeFile(wb2, `Delivery_Report${fileSuffix}.xlsx`);
+      if(document.getElementById('opt-aov').checked) XLSX.writeFile(wb2, `Delivery_Report${fileSuffix}.xlsx`);
 
       // ════════════════════════════════════════════
       // FILE 3 — Sales Floor AOV Contest
@@ -512,7 +591,7 @@ function generateReports(rows, fileName) {
       ws3['!cols']=[{wch:5},{wch:26},{wch:16},{wch:16},{wch:38}];
       applyCurr(ws3, sf_contest.length, [2]);
       XLSX.utils.book_append_sheet(wb3, ws3, 'Sales Floor Contest');
-      XLSX.writeFile(wb3, `SalesFloor_AOV_Contest${fileSuffix}.xlsx`);
+      if(document.getElementById('opt-contest').checked) XLSX.writeFile(wb3, `SalesFloor_AOV_Contest${fileSuffix}.xlsx`);
 
       // ════════════════════════════════════════════
       // FILE 4 — Delivery AOV Contest
@@ -571,7 +650,7 @@ function generateReports(rows, fileName) {
       ws4['!cols']=[{wch:5},{wch:26},{wch:16},{wch:16},{wch:38}];
       applyCurr(ws4, dl_contest.length, [2]);
       XLSX.utils.book_append_sheet(wb4, ws4, 'Delivery Contest');
-      XLSX.writeFile(wb4, `Delivery_AOV_Contest${fileSuffix}.xlsx`);
+      if(document.getElementById('opt-contest').checked) XLSX.writeFile(wb4, `Delivery_AOV_Contest${fileSuffix}.xlsx`);
 
       // ════════════════════════════════════════════
       // FILE 5 — Daily Hourly Traffic (Floor + Delivery)
@@ -655,7 +734,7 @@ function generateReports(rows, fileName) {
 
       buildTrafficSheet(wb5, 'floor',    'Sales Floor');
       buildTrafficSheet(wb5, 'delivery', 'Delivery');
-      XLSX.writeFile(wb5, `Daily_Hourly_Traffic${fileSuffix}.xlsx`);
+      if(document.getElementById('opt-traffic').checked) XLSX.writeFile(wb5, `Daily_Hourly_Traffic${fileSuffix}.xlsx`);
 
       // ════════════════════════════════════════════
       // FILE 6 — Customer Dwell Time by Day + Hour
@@ -725,10 +804,21 @@ function generateReports(rows, fileName) {
       const ws6 = XLSX.utils.aoa_to_sheet(dData);
       ws6['!cols'] = [{wch:8}, ...tDates.map(()=>({wch:7})), {wch:8}];
       XLSX.utils.book_append_sheet(wb6, ws6, 'Avg Time in Store');
-      XLSX.writeFile(wb6, `Customer_Dwell_Time${fileSuffix}.xlsx`);
+      if(document.getElementById('opt-dwell').checked) XLSX.writeFile(wb6, `Customer_Dwell_Time${fileSuffix}.xlsx`);
 
+      // Extra reports
+      if(document.getElementById('opt-coaching').checked) generateCoachingReport(rows, fileSuffix, dateLabel);
+      if(document.getElementById('opt-weekly').checked)   generateWeeklyAOV(rows, fileSuffix, dateLabel);
+      const fcount=[
+        document.getElementById('opt-aov').checked?2:0,
+        document.getElementById('opt-contest').checked?2:0,
+        document.getElementById('opt-traffic').checked?1:0,
+        document.getElementById('opt-dwell').checked?1:0,
+        document.getElementById('opt-coaching').checked?1:0,
+        document.getElementById('opt-weekly').checked?1:0,
+      ].reduce((a,b)=>a+b,0);
       setStatus('success',
-        `✅ 6 files downloaded  ·  ${sfResults.length} floor staff · ${sfAllTxns.toLocaleString()} floor txns  ·  ` +
+        `✅ ${fcount} files downloaded  ·  ${sfResults.length} floor staff · ${sfAllTxns.toLocaleString()} floor txns  ·  ` +
         `${dlResults.length} dispatchers · ${sum(dlResults.map(r=>r.count)).toLocaleString()} deliveries  ·  ${dateLabel}`);
     } catch(e) {
       setStatus('error','❌ Error: '+e.message);
@@ -754,6 +844,343 @@ function fmtDate(d){
   const mo=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${mo[+m]||m} ${+day} ${y}`;
 }
+// ═══ TABS ═══
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ═══ SCHEDULE ═══
+var schedData = [];
+
+(function(){
+  var sdz = document.getElementById('sched-drop');
+  if(!sdz) return;
+  ['dragenter','dragover'].forEach(function(ev){ sdz.addEventListener(ev, function(e){ e.preventDefault(); sdz.classList.add('over'); }); });
+  ['dragleave','drop'].forEach(function(ev){ sdz.addEventListener(ev, function(e){ e.preventDefault(); sdz.classList.remove('over'); }); });
+  sdz.addEventListener('drop', function(e){ var f=e.dataTransfer.files[0]; if(f) handleSchedule(f); });
+  document.getElementById('sched-in').addEventListener('change', function(e){ if(e.target.files[0]) handleSchedule(e.target.files[0]); });
+})();
+
+function setSchedStatus(type, msg, spin) {
+  var sb = document.getElementById('sched-status');
+  sb.className = type; sb.innerHTML = '';
+  if(spin){ var s=document.createElement('div'); s.className='spinner'; sb.appendChild(s); }
+  var t=document.createElement('span'); t.textContent=msg; sb.appendChild(t);
+}
+
+function handleSchedule(file) {
+  setSchedStatus('processing', 'Reading schedule...', true);
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      schedData = parseScheduleHTML(e.target.result);
+      if(!schedData.length){ setSchedStatus('error','No schedule data found. Check that the file contains employee names and shift times.'); return; }
+      renderSchedPreview(schedData);
+      setSchedStatus('success','Found ' + schedData.length + ' employees — review the table below then download.');
+    } catch(ex){ setSchedStatus('error','Error: ' + ex.message); }
+  };
+  reader.readAsText(file);
+}
+
+function parseScheduleHTML(html) {
+  var parser = new DOMParser();
+  var doc = parser.parseFromString(html, 'text/html');
+  var results = [];
+  var seen = new Set();
+  var timeRe = /\b(1[0-2]|[1-9]):[0-5]\d\s?[AP]M\b/gi;
+
+  // Strategy 1: table rows
+  var rows = doc.querySelectorAll('tr');
+  rows.forEach(function(row){
+    var cells = Array.from(row.querySelectorAll('td,th')).map(function(c){ return c.textContent.trim(); });
+    var rowText = cells.join(' ');
+    var times = rowText.match(timeRe);
+    var nameCell = cells.find(function(c){ return /^[A-Z][a-z]+\s+[A-Z][a-z]+/.test(c.trim()); });
+    if(nameCell && times && times.length >= 2 && !seen.has(nameCell.trim())){
+      seen.add(nameCell.trim());
+      results.push({name:nameCell.trim(), start:times[0], end:times[times.length-1]});
+    }
+  });
+
+  // Strategy 2: line by line
+  if(!results.length){
+    var body = doc.body ? (doc.body.innerText || doc.body.textContent) : html.replace(/<[^>]+>/g,' ');
+    var lines = body.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+    lines.forEach(function(line){
+      var nm = line.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
+      var times = line.match(timeRe);
+      if(nm && times && times.length >= 2 && !seen.has(nm[1])){
+        seen.add(nm[1]);
+        results.push({name:nm[1], start:times[0], end:times[times.length-1]});
+      }
+    });
+  }
+  return results;
+}
+
+function calcBreaks(startStr, endStr) {
+  function parseTime(s) {
+    if(!s) return null;
+    var m = s.match(/(\d+):(\d+)\s*([AP]M)/i);
+    if(!m) return null;
+    var h=parseInt(m[1]), min=parseInt(m[2]), pm=m[3].toUpperCase()==='PM';
+    if(pm && h!==12) h+=12;
+    if(!pm && h===12) h=0;
+    return h*60+min;
+  }
+  function fmtTime(mins) {
+    if(mins===null) return '—';
+    var h=Math.floor(mins/60), m=mins%60;
+    var ampm=h>=12?'PM':'AM', h12=h%12||12;
+    return h12+':'+(m<10?'0':'')+m+' '+ampm;
+  }
+  var st=parseTime(startStr), en=parseTime(endStr);
+  if(!st||!en) return {b1:'—',lunch:'—',b2:'—'};
+  var dur=en-st;
+  return {
+    b1:   dur>=240 ? fmtTime(st+120)         : '—',
+    lunch: dur>=300 ? fmtTime(st+Math.floor(dur/2)) : '—',
+    b2:   dur>=420 ? fmtTime(en-120)         : '—',
+  };
+}
+
+function renderSchedPreview(data) {
+  var wrap = document.getElementById('sched-table-wrap');
+  var html = '<table class="sched-table"><thead><tr><th>Employee</th><th>Start</th><th>1st Break</th><th>Lunch</th><th>2nd Break</th><th>End</th></tr></thead><tbody>';
+  data.forEach(function(r){
+    var b = calcBreaks(r.start, r.end);
+    html += '<tr><td><strong>'+r.name+'</strong></td><td>'+r.start+'</td><td>'+b.b1+'</td><td>'+b.lunch+'</td><td>'+b.b2+'</td><td>'+r.end+'</td></tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  document.getElementById('sched-title').textContent = 'Detected Schedule — ' + data.length + ' employees';
+  document.getElementById('sched-preview').style.display = 'block';
+}
+
+function clearSched() {
+  schedData = [];
+  document.getElementById('sched-preview').style.display = 'none';
+  setSchedStatus('ready','Ready — waiting for schedule HTML file');
+  document.getElementById('sched-in').value = '';
+}
+
+function generateBreakSheet() {
+  if(!schedData.length){ setSchedStatus('error','No schedule data loaded.'); return; }
+  var wb = XLSX.utils.book_new();
+  var today = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  var rows = [
+    ['THE SANCTUARY — BREAK SCHEDULE','','','','',''],
+    [today,'','','','',''],
+    [''],
+    ['Employee','Shift Start','1st Break','Lunch','2nd Break','Shift End'],
+  ];
+  schedData.forEach(function(r){
+    var b = calcBreaks(r.start, r.end);
+    rows.push([r.name, r.start, b.b1, b.lunch, b.b2, r.end]);
+  });
+  rows.push(['']);
+  rows.push(['* Break times are estimates based on shift length. Adjust as needed.']);
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:24},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Break Schedule');
+  XLSX.writeFile(wb, 'Break_Schedule_' + today.replace(/[,\s]+/g,'_') + '.xlsx');
+  setSchedStatus('success','Break sheet downloaded.');
+}
+
+// ═══ COACHING REPORT ═══
+function generateCoachingReport(rows, fileSuffix, dateLabel) {
+  var FLOOR = ['POS','PICKUP'];
+  var dates = Array.from(new Set(rows.map(function(r){ return r['Date Open']; }).filter(Boolean))).sort();
+  if(dates.length < 2) return;
+  var yesterday = dates[dates.length-1];
+  var mtdDates = dates.slice(0,-1);
+
+  function buildEmp(subset) {
+    var tix = {};
+    subset.forEach(function(r){
+      if(!FLOOR.includes((r['Ticket Type']||'').toUpperCase()) || r['Type']!=='Sale') return;
+      var tid=(r['Ticket ID']||'').trim(), ch=(r['Cashier']||'').trim();
+      if(!tid||!ch||/register|sanctuary/i.test(ch)) return;
+      var net=parseFloat(r['Net Sales']||0), gross=parseFloat(r['Gross Receipts']||0);
+      var ia=/add.?on/i.test(r['Product Name']||'');
+      if(!tix[tid]) tix[tid]={cashier:ch,net:0,gross:0,addon:0};
+      tix[tid].net+=net; tix[tid].gross+=gross; if(ia) tix[tid].addon+=net;
+    });
+    var emp = {};
+    Object.values(tix).forEach(function(t){
+      if(t.net<=0) return;
+      if(!emp[t.cashier]) emp[t.cashier]={net:0,gross:0,addon:0,txns:0};
+      emp[t.cashier].net+=t.net; emp[t.cashier].gross+=t.gross;
+      emp[t.cashier].addon+=t.addon; emp[t.cashier].txns++;
+    });
+    var res = {};
+    Object.entries(emp).forEach(function(e){
+      var nm=e[0],d=e[1];
+      res[nm]={txns:d.txns,aov:d.net/d.txns,addon_pct:d.net>0?d.addon/d.net*100:0,net:d.net};
+    });
+    return res;
+  }
+
+  var mtd  = buildEmp(rows.filter(function(r){ return mtdDates.includes(r['Date Open']); }));
+  var yest = buildEmp(rows.filter(function(r){ return r['Date Open']===yesterday; }));
+  var full = buildEmp(rows);
+
+  var storeNet=Object.values(full).reduce(function(s,d){ return s+d.net; },0);
+  var storeTxn=Object.values(full).reduce(function(s,d){ return s+d.txns; },0);
+  var storeAOV=storeNet/storeTxn;
+  var storeAddon=storeNet>0?Object.values(full).reduce(function(s,d){ return s+d.net*d.addon_pct/100; },0)/storeNet*100:0;
+
+  var allNames = Array.from(new Set(Object.keys(full).concat(Object.keys(yest)))).filter(function(n){ return !/register|sanctuary/i.test(n); });
+  allNames.sort(function(a,b){ return (full[b]?full[b].aov:0)-(full[a]?full[a].aov:0); });
+
+  var AOV_GOAL=65, ADD_GOAL=4;
+  var aoa = [
+    ['THE SANCTUARY — DAILY COACHING REPORT','','','','','','',''],
+    [dateLabel+'  ·  Yesterday: '+yesterday+'  ·  Goals: $65 AOV · 4% add-on','','','','','','',''],
+    ['Store MTD AOV: $'+storeAOV.toFixed(2)+'  ·  Add-on: '+storeAddon.toFixed(1)+'%  ·  '+storeTxn.toLocaleString()+' transactions','','','','','','',''],
+    [''],
+    ['Employee','MTD AOV','MTD Add-On %','MTD Txns','Yesterday AOV','Yesterday Txns','Status','Coaching Note'],
+  ];
+
+  allNames.forEach(function(nm){
+    var m=mtd[nm]||null, y=yest[nm]||null;
+    var mAov=m?m.aov:0, mAdd=m?m.addon_pct:0, mTxn=m?m.txns:0;
+    var yAov=y?y.aov:0, yTxn=y?y.txns:0;
+    var fn=nm.split(' ')[0];
+    var status='', note='';
+    if(!m||mTxn<3){ status='Small Sample'; note=fn+' has limited MTD data. Monitor over a full shift.'; }
+    else if(yTxn>0&&yTxn<6){ status='Small Sample'; note=fn+' had only '+yTxn+' transaction(s) yesterday — too small to read.'; }
+    else if(yTxn>=6){
+      if(yAov>=AOV_GOAL&&mAdd>=ADD_GOAL){ status='On Target'; note=fn+' hit both goals yesterday ($'+yAov.toFixed(2)+' AOV, '+mAdd.toFixed(1)+'% add-on). Call it out.'; }
+      else if(yAov>=AOV_GOAL){ status='Strong AOV'; note=fn+' hit the AOV goal ($'+yAov.toFixed(2)+' yesterday). Add-on at '+mAdd.toFixed(1)+'% — remind them to offer one add-on per ticket.'; }
+      else if(yAov>=mAov*1.04){ status='Trending Up'; note=fn+' ran above their average yesterday ($'+yAov.toFixed(2)+' vs $'+mAov.toFixed(2)+' MTD). Acknowledge it.'; }
+      else if(yAov<mAov*0.91){ status='Check In'; note=fn+' dropped to $'+yAov.toFixed(2)+' yesterday vs $'+mAov.toFixed(2)+' MTD. Quick check-in — not a call-out.'; }
+      else if(mAov>=62){ status='Almost There'; note=fn+' at $'+yAov.toFixed(2)+' — $'+(AOV_GOAL-yAov).toFixed(2)+' from the goal. One trade-up per customer closes it.'; }
+      else{ status='Needs Push'; note=fn+' at $'+yAov.toFixed(2)+' — $'+(AOV_GOAL-yAov).toFixed(2)+' below goal. Product pairing conversation today.'; }
+    } else {
+      if(mAov>=AOV_GOAL&&mAdd>=ADD_GOAL){ status='On Target (MTD)'; note=fn+' hitting both goals MTD. Recognize it next shift.'; }
+      else if(mAov>=AOV_GOAL){ status='Strong AOV (MTD)'; note=fn+' at $'+mAov.toFixed(2)+' MTD. Add-on at '+mAdd.toFixed(1)+'% — push toward 4%.'; }
+      else if(mAov>=62){ status='Almost There (MTD)'; note=fn+' at $'+mAov.toFixed(2)+' MTD — $'+(AOV_GOAL-mAov).toFixed(2)+' from goal.'; }
+      else{ status='Below Goal (MTD)'; note=fn+' at $'+mAov.toFixed(2)+' MTD — $'+(AOV_GOAL-mAov).toFixed(2)+' below goal. Coaching conversation this week.'; }
+    }
+    aoa.push([nm, mAov?parseFloat(mAov.toFixed(2)):'', mAdd?parseFloat((mAdd/100).toFixed(4)):'', mTxn||0, yAov?parseFloat(yAov.toFixed(2)):'', yTxn||'—', status, note]);
+  });
+
+  aoa.push(['']);
+  aoa.push(['* MTD excludes yesterday ('+yesterday+')  ·  Goals: $65 AOV · 4% add-on']);
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:26},{wch:11},{wch:12},{wch:10},{wch:14},{wch:14},{wch:20},{wch:72}];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Coaching Report');
+  XLSX.writeFile(wb, 'Coaching_Report'+fileSuffix+'.xlsx');
+}
+
+// ═══ WEEKLY AOV BREAKDOWN ═══
+function generateWeeklyAOV(rows, fileSuffix, dateLabel) {
+  var FLOOR = ['POS','PICKUP'];
+  var NAME_PATTERNS = [
+    [/\bashtyn\b|\bashyn\b|\bash\b/i,'Ashtyn'],[/\brayven\b/i,'Rayven'],[/\bdonavn\b|\bdonavan\b/i,'Donavan'],
+    [/\bdenelle\b/i,'Denelle'],[/\bparit\b/i,'Parit'],[/\bkathleen\b|\bkat\b/i,'Kat / Kathleen'],
+    [/\brichard\b|\brich\b/i,'Richard'],[/\bstas\b/i,'Stas'],[/\bjosh(ua)?\b/i,'Josh'],
+    [/\bnorma\b/i,'Norma'],[/\balyssa\b/i,'Alyssa'],[/\bcassie\b/i,'Cassie'],
+  ];
+  function xname(n){ for(var i=0;i<NAME_PATTERNS.length;i++) if(NAME_PATTERNS[i][0].test(n)) return NAME_PATTERNS[i][1]; return 'No Dispatcher Listed'; }
+
+  var allDates = Array.from(new Set(rows.map(function(r){ return r['Date Open']; }).filter(Boolean))).sort();
+  var weeks = {}, weekKeys = [];
+  allDates.forEach(function(d){
+    var dt=new Date(d), dow=dt.getDay();
+    var mon=new Date(dt); mon.setDate(dt.getDate()-((dow+6)%7));
+    var sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    var lbl=(mon.getMonth()+1)+'/'+mon.getDate()+'-'+(sun.getMonth()+1)+'/'+sun.getDate();
+    if(!weeks[lbl]){ weeks[lbl]=[]; weekKeys.push(lbl); }
+    weeks[lbl].push(d);
+  });
+
+  function buildSF(subset) {
+    var tix={};
+    subset.forEach(function(r){
+      if(!FLOOR.includes((r['Ticket Type']||'').toUpperCase())||r['Type']!=='Sale') return;
+      var tid=(r['Ticket ID']||'').trim(), ch=(r['Cashier']||'').trim();
+      if(!tid||!ch||/register|sanctuary/i.test(ch)) return;
+      var net=parseFloat(r['Net Sales']||0), gross=parseFloat(r['Gross Receipts']||0);
+      var ia=/add.?on/i.test(r['Product Name']||'');
+      if(!tix[tid]) tix[tid]={cashier:ch,net:0,gross:0,addon:0};
+      tix[tid].net+=net; tix[tid].gross+=gross; if(ia) tix[tid].addon+=net;
+    });
+    var emp={};
+    Object.values(tix).forEach(function(t){
+      if(t.net<=0) return;
+      if(!emp[t.cashier]) emp[t.cashier]={net:0,gross:0,addon:0,txns:0};
+      emp[t.cashier].net+=t.net; emp[t.cashier].gross+=t.gross; emp[t.cashier].addon+=t.addon; emp[t.cashier].txns++;
+    });
+    var res={};
+    Object.entries(emp).forEach(function(e){ var nm=e[0],d=e[1]; res[nm]={txns:d.txns,aov:d.net/d.txns,addon_pct:d.net>0?d.addon/d.net*100:0,net:d.net}; });
+    return res;
+  }
+
+  function buildDL(subset) {
+    var tix={};
+    subset.forEach(function(r){
+      if((r['Ticket Type']||'').toUpperCase()!=='DELIVERY'||r['Type']!=='Sale') return;
+      var tid=(r['Ticket ID']||'').trim(), note=(r['Ticket Notes']||'').trim();
+      var net=parseFloat(r['Net Sales']||0); var ia=/add.?on/i.test(r['Product Name']||'');
+      if(!tid) return;
+      if(!tix[tid]) tix[tid]={name:xname(note),net:0,addon:0};
+      tix[tid].net+=net; if(ia) tix[tid].addon+=net;
+    });
+    var emp={};
+    Object.values(tix).forEach(function(t){
+      if(t.net<=0) return;
+      if(!emp[t.name]) emp[t.name]={net:0,addon:0,txns:0};
+      emp[t.name].net+=t.net; emp[t.name].addon+=t.addon; emp[t.name].txns++;
+    });
+    var res={};
+    Object.entries(emp).forEach(function(e){ var nm=e[0],d=e[1]; res[nm]={txns:d.txns,aov:d.net/d.txns,addon_pct:d.net>0?d.addon/d.net*100:0,net:d.net}; });
+    return res;
+  }
+
+  var fullSF=buildSF(rows), fullDL=buildDL(rows);
+  var wkSF=weekKeys.map(function(k){ return buildSF(rows.filter(function(r){ return weeks[k].includes(r['Date Open']); })); });
+  var wkDL=weekKeys.map(function(k){ return buildDL(rows.filter(function(r){ return weeks[k].includes(r['Date Open']); })); });
+
+  function saov(d){ var n=Object.values(d).reduce(function(s,x){ return s+x.net; },0); var t=Object.values(d).reduce(function(s,x){ return s+x.txns; },0); return t?n/t:0; }
+
+  var sfSorted=Object.entries(fullSF).sort(function(a,b){ return b[1].aov-a[1].aov; });
+  var dlSorted=Object.entries(fullDL).filter(function(e){ return e[0]!=='No Dispatcher Listed'; }).sort(function(a,b){ return b[1].aov-a[1].aov; });
+
+  var wb=XLSX.utils.book_new();
+
+  // SF sheet
+  var sfHdr=['Rank','Budtender'].concat(weekKeys.map(function(k){ return 'Wk '+k; })).concat(['Monthly AOV','Add-On %','Total Txns']);
+  var sfRows=[['THE SANCTUARY — SALES FLOOR WEEKLY AOV'],[''],sfHdr];
+  sfSorted.forEach(function(e,i){
+    var nm=e[0],d=e[1];
+    sfRows.push([i+1,nm].concat(weekKeys.map(function(_,wi){ var w=wkSF[wi][nm]; return w&&w.txns>=2?parseFloat(w.aov.toFixed(2)):'—'; })).concat([parseFloat(d.aov.toFixed(2)),parseFloat((d.addon_pct/100).toFixed(4)),d.txns]));
+  });
+  sfRows.push([]);
+  sfRows.push(['Store Avg',''].concat(weekKeys.map(function(_,wi){ return parseFloat(saov(wkSF[wi]).toFixed(2)); })).concat([parseFloat(saov(fullSF).toFixed(2)),'',Object.values(fullSF).reduce(function(s,d){ return s+d.txns; },0)]));
+  var wsSF=XLSX.utils.aoa_to_sheet(sfRows);
+  wsSF['!cols']=[{wch:6},{wch:26}].concat(weekKeys.map(function(){ return {wch:16}; })).concat([{wch:13},{wch:11},{wch:10}]);
+  XLSX.utils.book_append_sheet(wb,wsSF,'Sales Floor');
+
+  // DL sheet
+  var dlHdr=['Rank','Dispatcher'].concat(weekKeys.map(function(k){ return 'Wk '+k; })).concat(['Monthly AOV','Add-On %','Deliveries']);
+  var dlRows=[['THE SANCTUARY — DELIVERY WEEKLY AOV'],[''],dlHdr];
+  dlSorted.concat(Object.entries(fullDL).filter(function(e){ return e[0]==='No Dispatcher Listed'; })).forEach(function(e,i){
+    var nm=e[0],d=e[1],isNo=nm==='No Dispatcher Listed';
+    dlRows.push([isNo?'—':i+1,nm].concat(weekKeys.map(function(_,wi){ var w=wkDL[wi][nm]; return w&&w.txns>=1?parseFloat(w.aov.toFixed(2)):'—'; })).concat([parseFloat(d.aov.toFixed(2)),parseFloat((d.addon_pct/100).toFixed(4)),d.txns]));
+  });
+  var wsDL=XLSX.utils.aoa_to_sheet(dlRows);
+  wsDL['!cols']=[{wch:6},{wch:24}].concat(weekKeys.map(function(){ return {wch:16}; })).concat([{wch:13},{wch:11},{wch:10}]);
+  XLSX.utils.book_append_sheet(wb,wsDL,'Delivery');
+
+  XLSX.writeFile(wb,'AOV_Weekly_Breakdown'+fileSuffix+'.xlsx');
+}
+
 </script>
 </body>
 </html>
