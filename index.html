@@ -8,1177 +8,438 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --g900:#0d3320;--g800:#155230;--g700:#1e7040;--g500:#2e9455;--g400:#4caf72;
-  --g100:#d5eddb;--g50:#f0f7f2;
-  --gold:#e8a020;--gold-bg:#fff8ec;
-  --red:#c8392a;--red-bg:#fff0f0;
-  --text:#1a2620;--muted:#6b8070;--border:#e4e9e5;--bg:#f0f4f2;--white:#fff;
-}
-body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f2;color:#1a2620;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid #e4e9e5;border-radius:14px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(0,0,0,0.07)}
+.card-header{background:#155230;padding:26px 28px 20px;text-align:center}
+.card-header h1{font-size:1.35rem;font-weight:700;color:#fff;margin-bottom:4px}
+.card-header p{font-size:0.78rem;color:#9ab0a0}
+.card-body{padding:28px}
 
-/* ── LOGIN ── */
-#login-screen{width:100%;max-width:380px;padding:24px}
-.login-card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
-.login-header{background:var(--g800);padding:28px 28px 22px;text-align:center}
-.login-header h1{font-size:1.4rem;color:#fff;font-weight:700;margin-bottom:4px}
-.login-header p{font-size:0.78rem;color:var(--g100)}
-.login-body{padding:28px}
-.login-body label{display:block;font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
-.login-body input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:7px;font-size:0.9rem;outline:none;transition:border 0.15s}
-.login-body input:focus{border-color:var(--g400)}
-.login-btn{margin-top:16px;width:100%;background:var(--g800);color:#fff;border:none;border-radius:7px;padding:11px;font-size:0.88rem;font-weight:600;cursor:pointer;transition:background 0.15s}
-.login-btn:hover{background:var(--g700)}
-.login-err{margin-top:10px;font-size:0.78rem;color:var(--red);text-align:center;min-height:18px}
+/* LOGIN */
+.field label{display:block;font-size:0.72rem;font-weight:700;color:#6b8070;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.field input{width:100%;padding:10px 14px;border:1.5px solid #e4e9e5;border-radius:8px;font-size:0.9rem;outline:none;transition:border .15s}
+.field input:focus{border-color:#4caf72}
+.btn{margin-top:14px;width:100%;background:#155230;color:#fff;border:none;border-radius:8px;padding:11px;font-size:0.88rem;font-weight:600;cursor:pointer;transition:background .15s}
+.btn:hover{background:#1e7040}
+.err{margin-top:8px;font-size:0.76rem;color:#c8392a;text-align:center;min-height:18px}
 
-/* ── MAIN APP ── */
-#app-screen{display:none;width:100%;max-width:680px;padding:28px 20px 60px}
+/* APP */
+#app{display:none}
+.drop-zone{border:2px dashed #d5eddb;border-radius:12px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:18px}
+.drop-zone:hover,.drop-zone.over{border-color:#2e9455;background:#f0f7f2}
+.drop-zone .icon{font-size:2rem;margin-bottom:10px}
+.drop-zone h2{font-size:1rem;font-weight:600;margin-bottom:6px}
+.drop-zone p{font-size:0.76rem;color:#6b8070;margin-bottom:14px;line-height:1.6}
+.drop-btn{background:#155230;color:#fff;border:none;border-radius:7px;padding:9px 22px;font-size:0.82rem;font-weight:600;cursor:pointer}
+.drop-btn:hover{background:#1e7040}
 
-.app-header{text-align:center;margin-bottom:36px}
-.app-header h1{font-size:1.6rem;font-weight:700;color:var(--g800);margin-bottom:6px}
-.app-header p{font-size:0.82rem;color:var(--muted)}
+.outputs{background:#f0f7f2;border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.outputs p{font-size:0.76rem;color:#6b8070;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.out-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #d5eddb;font-size:0.82rem;color:#1a2620}
+.out-item:last-child{border-bottom:none}
+.out-item span{font-size:1rem}
 
-/* ── DROP ZONE ── */
-.drop-zone{
-  background:var(--white);border:2px dashed var(--border);border-radius:12px;
-  padding:48px 28px;text-align:center;cursor:pointer;transition:all 0.2s;
-  margin-bottom:24px;
-}
-.drop-zone:hover,.drop-zone.over{border-color:var(--g400);background:var(--g50)}
-.drop-icon{font-size:2.2rem;margin-bottom:12px}
-.drop-zone h2{font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:6px}
-.drop-zone p{font-size:0.8rem;color:var(--muted);margin-bottom:18px;line-height:1.6}
-.drop-zone p em{color:var(--g500);font-style:normal;font-weight:600}
-.choose-btn{background:var(--g800);color:#fff;border:none;border-radius:7px;padding:10px 24px;font-size:0.84rem;font-weight:600;cursor:pointer;transition:background 0.15s}
-.choose-btn:hover{background:var(--g700)}
-#file-in{display:none}
-
-/* ── OUTPUT CARDS ── */
-.output-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
-.out-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
-.out-card .icon{font-size:1.4rem;margin-bottom:8px}
-.out-card h3{font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:3px}
-.out-card p{font-size:0.72rem;color:var(--muted)}
-
-/* ── STATUS ── */
-#status-bar{
-  background:var(--white);border:1px solid var(--border);border-radius:10px;
-  padding:14px 18px;font-size:0.82rem;color:var(--muted);min-height:50px;
-  display:flex;align-items:center;gap:10px;
-}
-#status-bar.processing{border-color:var(--g400);color:var(--g700);background:var(--g50)}
-#status-bar.success{border-color:#2e9455;color:#1e5030;background:var(--g50)}
-#status-bar.error{border-color:var(--red);color:var(--red);background:var(--red-bg)}
-.spinner{width:16px;height:16px;border:2px solid var(--g100);border-top-color:var(--g500);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+#status{background:#fff;border:1px solid #e4e9e5;border-radius:10px;padding:12px 16px;font-size:0.82rem;color:#6b8070;display:flex;align-items:center;gap:10px;min-height:44px}
+#status.processing{border-color:#4caf72;background:#f0f7f2;color:#155230}
+#status.success{border-color:#2e9455;background:#f0f7f2;color:#1e5030}
+#status.error{border-color:#c8392a;background:#fff0f0;color:#c8392a}
+.spinner{width:14px;height:14px;border:2px solid #d5eddb;border-top-color:#2e9455;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-.logout-btn{background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;margin-top:20px;display:block;width:100%;text-align:center;padding:8px}
-.logout-btn:hover{color:var(--text)}
-
-/* TABS */
-.tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border)}
-.tab-btn{background:none;border:none;padding:10px 22px;font-size:0.86rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all 0.15s;border-radius:6px 6px 0 0}
-.tab-btn:hover{color:var(--g700);background:var(--g50)}
-.tab-btn.active{color:var(--g800);border-bottom-color:var(--g700);background:var(--g50)}
-.tab-pane{display:none}.tab-pane.active{display:block}
-
-/* REPORT OPTIONS */
-.report-opts{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px}
-.report-opts h3{font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
-.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.opt{display:flex;align-items:flex-start;gap:9px;cursor:pointer}
-.opt input{margin-top:2px;accent-color:var(--g700);width:14px;height:14px;cursor:pointer;flex-shrink:0}
-.opt-lbl strong{display:block;font-size:0.81rem;color:var(--text);font-weight:600}
-.opt-lbl span{font-size:0.72rem;color:var(--muted)}
-
-/* SCHEDULE SECTION */
-.sched-preview{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;display:none}
-.sched-preview h3{font-size:0.82rem;font-weight:700;margin-bottom:12px;color:var(--text)}
-.sched-table{width:100%;border-collapse:collapse;font-size:0.78rem}
-.sched-table th{background:var(--g800);color:var(--g100);padding:7px 10px;text-align:left;font-size:0.72rem;letter-spacing:.04em;font-weight:600}
-.sched-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text)}
-.sched-table tr:last-child td{border-bottom:none}
-.sched-table tr:nth-child(even) td{background:var(--g50)}
-.sched-actions{display:flex;gap:10px;margin-top:12px}
-.blue-btn{background:#1050a0;color:#fff;border:none;border-radius:7px;padding:9px 22px;font-size:0.82rem;font-weight:600;cursor:pointer}
-.blue-btn:hover{background:#0c3a80}
-#sched-status{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:13px 16px;font-size:0.82rem;color:var(--muted);min-height:46px;display:flex;align-items:center;gap:10px;margin-bottom:10px}
-#sched-status.processing{border-color:var(--g400);color:var(--g700);background:var(--g50)}
-#sched-status.success{border-color:var(--g500);color:#1e5030;background:var(--g50)}
-#sched-status.error{border-color:var(--red);color:var(--red);background:#fff0f0}
+.sign-out{background:none;border:none;color:#9ab0a0;font-size:0.74rem;cursor:pointer;margin-top:14px;display:block;width:100%;text-align:center;padding:6px}
+.sign-out:hover{color:#1a2620}
 </style>
 </head>
 <body>
 
-<!-- ═══ LOGIN ═══ -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="login-header">
-      <h1>The Sanctuary</h1>
-      <p>Report Generator — Authorized Staff Only</p>
-    </div>
-    <div class="login-body">
-      <label>Password</label>
-      <input type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()"/>
-      <button class="login-btn" onclick="doLogin()">Sign In</button>
-      <div class="login-err" id="login-err"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ APP ═══ -->
-<div id="app-screen">
-  <div class="app-header">
+<div id="app" class="card" style="display:block">
+  <div class="card-header">
     <h1>Report Generator</h1>
-    <p>The Sanctuary — Management Tools</p>
+    <p>The Sanctuary &mdash; Management</p>
   </div>
+  <div class="card-body">
+    <div class="drop-zone" id="dz" onclick="document.getElementById('fi').click()">
+      <div class="icon">📂</div>
+      <h2>Drop Treez Product Summary CSV</h2>
+      <p>Generates two files automatically when dropped</p>
+      <button class="drop-btn" onclick="event.stopPropagation();document.getElementById('fi').click()">Choose File</button>
+      <input type="file" id="fi" accept=".csv" style="display:none"/>
+    </div>
 
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('reports')">📊 Sales Reports</button>
-    <button class="tab-btn" onclick="switchTab('schedule')">📋 Break Schedule</button>
+    <div class="outputs">
+      <p>Generates</p>
+      <div class="out-item"><span>📊</span> AOV Report &mdash; Sales Floor + Delivery (Excel)</div>
+      <div class="out-item"><span>🎯</span> Coaching Report &mdash; Last shift vs monthly avg (Excel)</div>
+    </div>
+
+    <div id="status"><span>Ready &mdash; waiting for file</span></div>
   </div>
-
-  <!-- SALES REPORTS TAB -->
-  <div id="tab-reports" class="tab-pane active">
-
-  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-in').click()">
-    <div class="drop-icon">📂</div>
-    <h2>Drop your Treez Product Summary CSV here</h2>
-    <p>Drag & drop or click to browse<br/>
-    Needs: <em>Ticket Type</em> · <em>Ticket Notes</em> · <em>Type</em> · <em>Ticket ID</em> · <em>Net Sales</em> · <em>Gross Receipts</em> · <em>Cashier</em></p>
-    <button class="choose-btn" onclick="event.stopPropagation();document.getElementById('file-in').click()">Choose File</button>
-    <input type="file" id="file-in" accept=".csv"/>
-  </div>
-
-  <div class="output-cards">
-    <div class="out-card">
-      <div class="icon">📊</div>
-      <h3>Sales Floor Full Report</h3>
-      <p>6-column AOV leaderboard (POS/Pickup/Combined × Before/After tax) + transaction breakdown</p>
-    </div>
-    <div class="out-card">
-      <div class="icon">🚗</div>
-      <h3>Delivery Full Report</h3>
-      <p>Delivery AOV leaderboard + transaction breakdown (2 sheets)</p>
-    </div>
-    <div class="out-card">
-      <div class="icon">🏆</div>
-      <h3>Sales Floor AOV Contest</h3>
-      <p>$63+ → $100 cash · $65+ → $250 + $100 DoorDash GC · Min 60 txns</p>
-    </div>
-    <div class="out-card">
-      <div class="icon">🏆</div>
-      <h3>Delivery AOV Contest</h3>
-      <p>$90+ → $100 cash · $100+ → $250 + $100 DoorDash GC · Min 60 txns</p>
-    </div>
-    <div class="out-card">
-      <div class="icon">📅</div>
-      <h3>Daily Hourly Traffic</h3>
-      <p>Transactions per hour per day · Sales Floor & Delivery · heat map grid</p>
-    </div>
-    <div class="out-card">
-      <div class="icon">⏱️</div>
-      <h3>Customer Dwell Time</h3>
-      <p>Avg minutes per customer per hour per day · POS in-store time</p>
-    </div>
-  </div>
-
-  <div class="report-opts">
-    <h3>Select Reports to Generate</h3>
-    <div class="opts-grid">
-      <label class="opt"><input type="checkbox" id="opt-aov" checked><div class="opt-lbl"><strong>📊 AOV Reports</strong><span>Sales Floor + Delivery</span></div></label>
-      <label class="opt"><input type="checkbox" id="opt-weekly" checked><div class="opt-lbl"><strong>📈 Monthly Breakdown</strong><span>AOV by week + overall</span></div></label>
-      <label class="opt"><input type="checkbox" id="opt-coaching" checked><div class="opt-lbl"><strong>🎯 Coaching Report</strong><span>Yesterday vs MTD per employee</span></div></label>
-      <label class="opt"><input type="checkbox" id="opt-contest" checked><div class="opt-lbl"><strong>🏆 Contest Reports</strong><span>SF + Delivery prize tiers</span></div></label>
-      <label class="opt"><input type="checkbox" id="opt-traffic" checked><div class="opt-lbl"><strong>📅 Hourly Traffic</strong><span>Transactions per hour per day</span></div></label>
-      <label class="opt"><input type="checkbox" id="opt-dwell" checked><div class="opt-lbl"><strong>⏱ Dwell Time</strong><span>Avg minutes in store</span></div></label>
-    </div>
-  </div>
-
-  <div id="status-bar">
-    <span>Ready — waiting for CSV file</span>
-  </div>
-
-  </div><!-- /tab-reports -->
-
-  <!-- SCHEDULE TAB -->
-  <div id="tab-schedule" class="tab-pane">
-
-  <div class="drop-zone" id="sched-drop" onclick="document.getElementById('sched-in').click()">
-    <div class="drop-icon">🗓️</div>
-    <h2>Drop Schedule HTML File</h2>
-    <p>Export your schedule as HTML from Wurk or any scheduling tool<br/>
-    Employee names and shift times will be extracted automatically</p>
-    <button class="blue-btn" onclick="event.stopPropagation();document.getElementById('sched-in').click()">Choose File</button>
-    <input type="file" id="sched-in" accept=".html,.htm" style="display:none"/>
-  </div>
-
-  <div class="sched-preview" id="sched-preview">
-    <h3 id="sched-title">Detected Schedule</h3>
-    <div id="sched-table-wrap"></div>
-    <div class="sched-actions">
-      <button class="choose-btn" onclick="generateBreakSheet()">⬇ Download Break Sheet</button>
-      <button class="choose-btn" style="background:var(--muted)" onclick="clearSched()">Clear</button>
-    </div>
-  </div>
-
-  <div id="sched-status"><span>Ready — waiting for schedule HTML file</span></div>
-
-  </div><!-- /tab-schedule -->
-
-  <button class="logout-btn" onclick="doLogout()">← Sign Out</button>
 </div>
 
 <script>
-// ═══ AUTH ═══════════════════════════════════════════
-const PASSWORD = 'Sanctuary2020';
+var dz=document.getElementById('dz');
+['dragenter','dragover'].forEach(function(ev){ dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add('over');}); });
+['dragleave','drop'].forEach(function(ev){ dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove('over');}); });
+dz.addEventListener('drop',function(e){ var f=e.dataTransfer.files[0]; if(f&&f.name.endsWith('.csv')) handleFile(f); else setStatus('error','Please drop a .csv file'); });
+document.getElementById('fi').addEventListener('change',function(e){ if(e.target.files[0]) handleFile(e.target.files[0]); });
 
-function doLogin() {
-  const pw = document.getElementById('pw-input').value;
-  if (pw === PASSWORD) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display   = 'block';
-    document.body.style.justifyContent = 'flex-start';
-    document.body.style.paddingTop = '24px';
-    document.getElementById('pw-input').value = '';
-  } else {
-    document.getElementById('login-err').textContent = 'Incorrect password. Please try again.';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-  }
+function handleFile(file){
+  setStatus('processing','Reading file…',true);
+  Papa.parse(file,{
+    header:true, skipEmptyLines:true,
+    complete:function(res){
+      if(!res.data||!res.data.length){setStatus('error','File appears empty.');return;}
+      runReports(res.data, file.name);
+    },
+    error:function(){ setStatus('error','Could not read file.'); }
+  });
 }
 
-function doLogout() {
-  document.getElementById('app-screen').style.display   = 'none';
-  document.getElementById('login-screen').style.display = 'block';
-  document.body.style.justifyContent = 'center';
-  document.body.style.paddingTop = '0';
-  setStatus('ready', 'Ready — waiting for CSV file');
+function setStatus(type,msg,spin){
+  var el=document.getElementById('status');
+  el.className=type; el.innerHTML='';
+  if(spin){var s=document.createElement('div');s.className='spinner';el.appendChild(s);}
+  var t=document.createElement('span');t.textContent=msg;el.appendChild(t);
 }
+</script>
 
-// ═══ DRAG & DROP ════════════════════════════════════
-const dz = document.getElementById('drop-zone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-dz.addEventListener('drop', e => {
-  e.preventDefault(); dz.classList.remove('over');
-  const f = e.dataTransfer.files[0];
-  if (f?.name.endsWith('.csv')) processCSV(f);
-  else setStatus('error', '❌ Please drop a .csv file');
-});
-document.getElementById('file-in').addEventListener('change', e => {
-  if (e.target.files[0]) processCSV(e.target.files[0]);
-  e.target.value = '';
-});
-
-// ═══ STATUS ═════════════════════════════════════════
-function setStatus(type, msg, spinner=false) {
-  const el = document.getElementById('status-bar');
-  el.className = 'status-bar ' + (type === 'processing' ? 'processing' : type === 'success' ? 'success' : type === 'error' ? 'error' : '');
-  el.innerHTML = (spinner ? '<div class="spinner"></div>' : '') + `<span>${msg}</span>`;
-}
-
-// ═══ DELIVERY NAME EXTRACTION ════════════════════════
-const NAME_PATTERNS = [
-  [/\bashtyn\b|\bashyn\b/i,          'Ashtyn'],
-  [/\bash\b/i,                        'Ashtyn'],
-  [/\brayven\b/i,                     'Rayven'],
-  [/\bdonavn\b|\bdonavan\b/i,         'Donavan'],
-  [/\bmelinda\b/i,                    'Melinda'],
-  [/\bdenelle\b/i,                    'Denelle'],
-  [/\bparit\b/i,                      'Parit'],
-  [/\bkat\b/i,                        'Kat'],
-  [/\brichard\b|\brich\b/i,           'Richard'],
-  [/\bstas\b/i,                       'Stas'],
-  [/\bjosh(?:ua)?\b/i,                'Josh'],
-  [/\bnorma\b/i,                      'Norma'],
+<script>
+// ── Name normalizer (delivery dispatchers)
+var NAME_MAP = [
+  [/\bashtyn\b|\bashyn\b|\bash\b/i,'Ashtyn'],[/\brayven\b/i,'Rayven'],
+  [/\bdonavn\b|\bdonavan\b/i,'Donavan'],[/\bdenelle\b/i,'Denelle'],
+  [/\bparit\b/i,'Parit'],[/\bkathleen\b|\bkat\b/i,'Kat / Kathleen'],
+  [/\brichard\b|\brich\b/i,'Richard'],[/\bstas\b/i,'Stas'],
+  [/\bjosh(ua)?\b/i,'Josh'],[/\bnorma\b/i,'Norma'],
+  [/\balyssa\b/i,'Alyssa'],[/\bcassie\b/i,'Cassie'],
 ];
-function extractName(note) {
-  for (const [re, name] of NAME_PATTERNS) {
-    if (re.test(note)) return name;
-  }
+function dispName(n) {
+  for (var i=0;i<NAME_MAP.length;i++) if (NAME_MAP[i][0].test(n)) return NAME_MAP[i][1];
   return 'No Dispatcher Listed';
 }
 
-// ═══ MAIN PROCESSING ════════════════════════════════
-function processCSV(file) {
-  setStatus('processing', 'Parsing CSV…', true);
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: result => {
-      try {
-        setStatus('processing', 'Processing data…', true);
-        setTimeout(() => {
-          try {
-            const rows = result.data;
-            generateReports(rows, file.name);
-          } catch(e) {
-            setStatus('error', '❌ Error processing data: ' + e.message);
-          }
-        }, 50);
-      } catch(e) {
-        setStatus('error', '❌ Parse error: ' + e.message);
-      }
-    },
-    error: () => setStatus('error', '❌ Could not read file')
-  });
-}
+// ── Parse CSV into ticket maps
+function parseCSV(rows) {
+  var FLOOR = {POS:1, PICKUP:1};
+  // Sales floor tickets keyed by (date, cashier) -> tid -> {net, gross, addon}
+  var sfByDayCashier = {};
+  // Delivery tickets -> tid -> {dispatcher, net, gross, addon}
+  var dlTix = {};
 
-function generateReports(rows, fileName) {
-  const dateCol = Object.keys(rows[0]).find(k => k.toLowerCase().includes('date open'));
-  const dates   = rows.map(r => r[dateCol]).filter(Boolean).sort();
-  const d1 = dates[0] || '', d2 = dates[dates.length-1] || '';
-  const dateLabel  = d1 === d2 ? fmtDate(d1) : `${fmtDate(d1)} to ${fmtDate(d2)}`;
-  const fileSuffix = d1 ? `_${d1.replace(/\//g,'-')}_${d2.replace(/\//g,'-')}` : '';
+  rows.forEach(function(r) {
+    var ttype = (r['Ticket Type']||'').toUpperCase().trim();
+    var rtype = (r['Type']||'').trim();
+    var tid   = (r['Ticket ID']||'').trim();
+    var date  = (r['Date Open']||'').trim();
+    if (!tid || !date) return;
 
-  // ── Filter rows
-  const saleSF = rows.filter(r => ['POS','PICKUP'].includes((r['Ticket Type']||'').toUpperCase()) && r['Type']==='Sale');
-  const retSF  = rows.filter(r => ['POS','PICKUP'].includes((r['Ticket Type']||'').toUpperCase()) && r['Type']==='Return');
-  const saleDL = rows.filter(r => (r['Ticket Type']||'').toUpperCase()==='DELIVERY' && r['Type']==='Sale');
-  const retDL  = rows.filter(r => (r['Ticket Type']||'').toUpperCase()==='DELIVERY' && r['Type']==='Return');
+    var net   = parseFloat(r['Net Sales']||0) || 0;
+    var gross = parseFloat(r['Gross Receipts']||0) || 0;
+    var isAddon = /add.?on/i.test(r['Product Name']||'');
 
-  // ── Dedupe SF by Ticket ID
-  const sfTickets = {};
-  for (const r of saleSF) {
-    const tid = (r['Ticket ID']||'').trim(), cashier = (r['Cashier']||'').trim();
-    const ttype = (r['Ticket Type']||'').toUpperCase();
-    const net = parseFloat(r['Net Sales']||0), gross = parseFloat(r['Gross Receipts']||0);
-    if (!tid||!cashier) continue;
-    if (!sfTickets[tid]) sfTickets[tid] = {cashier, type:ttype, net:0, gross:0};
-    sfTickets[tid].net += net; sfTickets[tid].gross += gross;
-  }
-
-  // ── Dedupe DL by Ticket ID
-  const dlTickets = {};
-  for (const r of saleDL) {
-    const tid = (r['Ticket ID']||'').trim(), note = (r['Ticket Notes']||'').trim();
-    const net = parseFloat(r['Net Sales']||0), gross = parseFloat(r['Gross Receipts']||0);
-    if (!tid) continue;
-    if (!dlTickets[tid]) dlTickets[tid] = {name: extractName(note), net:0, gross:0};
-    dlTickets[tid].net += net; dlTickets[tid].gross += gross;
-  }
-
-  // ── Return counts
-  const sfRet = {};
-  for (const r of retSF) {
-    const cashier=(r['Cashier']||'').trim(), tid=(r['Ticket ID']||'').trim(), ttype=(r['Ticket Type']||'').toUpperCase();
-    if (!cashier||!tid) continue;
-    if (!sfRet[cashier]) sfRet[cashier]={pos:new Set(),pu:new Set()};
-    ttype==='POS' ? sfRet[cashier].pos.add(tid) : sfRet[cashier].pu.add(tid);
-  }
-  const dlRet = {};
-  for (const r of retDL) {
-    const name=extractName((r['Ticket Notes']||'').trim()), tid=(r['Ticket ID']||'').trim();
-    if (!tid) continue;
-    if (!dlRet[name]) dlRet[name]=new Set();
-    dlRet[name].add(tid);
-  }
-
-  // ── SF employee stats (split POS/Pickup)
-  const sfEmp = {};
-  for (const t of Object.values(sfTickets)) {
-    if (t.net<=0) continue;
-    const skip = /register|sanctuary/i.test(t.cashier);
-    if (skip) continue;
-    if (!sfEmp[t.cashier]) sfEmp[t.cashier]={posNet:[],posGross:[],puNet:[],puGross:[]};
-    if (t.type==='POS') { sfEmp[t.cashier].posNet.push(t.net); sfEmp[t.cashier].posGross.push(t.gross); }
-    else                { sfEmp[t.cashier].puNet.push(t.net);  sfEmp[t.cashier].puGross.push(t.gross); }
-  }
-  const sfResults = Object.entries(sfEmp).map(([name,d]) => {
-    const allNet=[...d.posNet,...d.puNet], allGross=[...d.posGross,...d.puGross];
-    const ret = sfRet[name]||{pos:new Set(),pu:new Set()};
-    return {
-      name, posTxns:d.posNet.length, puTxns:d.puNet.length, totalTxns:allNet.length,
-      posBefore:avg(d.posNet),  puBefore:avg(d.puNet),  combBefore:avg(allNet),
-      posAfter:avg(d.posGross), puAfter:avg(d.puGross), combAfter:avg(allGross),
-      netTotal:sum(allNet), grossTotal:sum(allGross),
-      minBefore:allNet.length?Math.min(...allNet):0, maxBefore:allNet.length?Math.max(...allNet):0,
-      retPos:ret.pos.size, retPu:ret.pu.size, retTotal:ret.pos.size+ret.pu.size,
-    };
-  }).sort((a,b)=>b.combBefore-a.combBefore);
-
-  // ── DL employee stats
-  const dlEmp = {};
-  for (const t of Object.values(dlTickets)) {
-    if (t.net<=0) continue;
-    if (!dlEmp[t.name]) dlEmp[t.name]={net:[],gross:[]};
-    dlEmp[t.name].net.push(t.net); dlEmp[t.name].gross.push(t.gross);
-  }
-  const dlResults = Object.entries(dlEmp).map(([name,d]) => ({
-    name, count:d.net.length, aovBefore:avg(d.net), aovAfter:avg(d.gross),
-    netTotal:sum(d.net), grossTotal:sum(d.gross),
-    retCount:(dlRet[name]||new Set()).size,
-    minBefore:d.net.length?Math.min(...d.net):0, maxBefore:d.net.length?Math.max(...d.net):0,
-  })).sort((a,b)=>{
-    if (a.name==='No Dispatcher Listed') return 1;
-    if (b.name==='No Dispatcher Listed') return -1;
-    return b.aovBefore-a.aovBefore;
-  });
-
-  // ── Averages
-  const sfAllNet=sum(sfResults.map(r=>r.netTotal)), sfAllTxns=sum(sfResults.map(r=>r.totalTxns));
-  const sfAvgBef=sfAllNet/sfAllTxns, sfAvgAft=sum(sfResults.map(r=>r.grossTotal))/sfAllTxns;
-  const dlNamed=dlResults.filter(r=>r.name!=='No Dispatcher Listed');
-  const dlAvgBef=sum(dlNamed.map(r=>r.netTotal))/sum(dlNamed.map(r=>r.count));
-  const dlAvgAft=sum(dlNamed.map(r=>r.grossTotal))/sum(dlNamed.map(r=>r.count));
-
-  // Prize helpers
-  const MIN_TXN=60, SF_T1=63, SF_T2=65, DL_T1=90, DL_T2=100;
-  const prizeSF=(a,t)=>t<MIN_TXN?null:a>=SF_T2?'$250 Cash + $100 DoorDash Gift Card':a>=SF_T1?'$100 Cash':null;
-  const prizeDL=(a,t)=>t<MIN_TXN?null:a>=DL_T2?'$250 Cash + $100 DoorDash Gift Card':a>=DL_T1?'$100 Cash':null;
-
-  setStatus('processing','Building Excel files…',true);
-  setTimeout(() => {
-    try {
-
-      // ════════════════════════════════════════════
-      // FILE 1 — Sales Floor Full Report
-      // ════════════════════════════════════════════
-      const wb1 = XLSX.utils.book_new();
-
-      // Sheet 1: 6-column AOV leaderboard
-      const sf_lb_rows = [
-        ['SALES FLOOR AOV REPORT — '+dateLabel.toUpperCase()],
-        ['POS & Pickup only  |  Returns excluded from all AOV  |  Before Tax = Net Sales column  |  Sorted highest → lowest'],
-        [''],
-        ['Contest Rules:  Min '+MIN_TXN+' transactions  |  $'+SF_T1+'+ AOV → $100 Cash  |  $'+SF_T2+'+ AOV → $250 Cash + $100 DoorDash GC'],
-        [''],
-        ['#','Budtender','POS AOV\nBef. Tax','Pickup AOV\nBef. Tax','Combined AOV\nBef. Tax','POS AOV\nAft. Tax','Pickup AOV\nAft. Tax','Combined AOV\nAft. Tax','Min\n(Pre-Tax)','Max\n(Pre-Tax)','POS Txns','Pickup Txns','Total Txns','Net Total','Gross Total'],
-      ];
-      sfResults.forEach((r,i)=>{
-        sf_lb_rows.push([
-          `#${i+1}`, r.name,
-          r.posBefore||'—', r.puBefore||'—', r.combBefore,
-          r.posAfter||'—',  r.puAfter||'—',  r.combAfter,
-          r.minBefore, r.maxBefore,
-          r.posTxns, r.puTxns, r.totalTxns,
-          r.netTotal, r.grossTotal,
-        ]);
-      });
-      sf_lb_rows.push(['','Store Average','','',sfAvgBef,'','',sfAvgAft,'','','','',sfAllTxns,sfAllNet,sum(sfResults.map(r=>r.grossTotal))]);
-      sf_lb_rows.push(['']);
-      sf_lb_rows.push(['* Combined AOV = all POS + Pickup tickets  |  "—" = no transactions of that type  |  AOV = Net Sales ÷ tickets (before tax)']);
-      const ws1a = XLSX.utils.aoa_to_sheet(sf_lb_rows);
-      ws1a['!cols']=[{wch:5},{wch:26},{wch:13},{wch:13},{wch:15},{wch:13},{wch:13},{wch:15},{wch:12},{wch:12},{wch:10},{wch:12},{wch:11},{wch:14},{wch:14}];
-      applyCurr(ws1a, sf_lb_rows.length, [2,3,4,5,6,7,8,9,13,14]);
-      XLSX.utils.book_append_sheet(wb1, ws1a, 'AOV Leaderboard');
-
-      // Sheet 2: Transaction Breakdown
-      const sf_txn_rows = [
-        ['SALES FLOOR TRANSACTION BREAKDOWN — '+dateLabel.toUpperCase()],
-        ['Returns listed for reference only — NOT included in any AOV calculation'],
-        [''],
-        ['NOTE ON RETURNS: Return transactions are listed below for reference only. They were NOT included in any AOV calculations above. AOV is based exclusively on Sale orders.'],
-        [''],
-        ['Budtender','POS Sales','Pickup Sales','Total Sales','POS Returns','Pickup Returns','Total Returns'],
-      ];
-      [...sfResults].sort((a,b)=>a.name.split(' ')[0].localeCompare(b.name.split(' ')[0]))
-        .forEach(r=>sf_txn_rows.push([r.name,r.posTxns,r.puTxns,r.totalTxns,r.retPos||'—',r.retPu||'—',r.retTotal||'—']));
-      const sfTotalRet=sum(sfResults.map(r=>r.retTotal));
-      sf_txn_rows.push(['TOTALS',sum(sfResults.map(r=>r.posTxns)),sum(sfResults.map(r=>r.puTxns)),sfAllTxns,'','',sfTotalRet||'—']);
-      sf_txn_rows.push(['']);
-      sf_txn_rows.push([`* ${sfTotalRet} return transactions excluded from all AOV calculations on the AOV Leaderboard sheet`]);
-      const ws1b = XLSX.utils.aoa_to_sheet(sf_txn_rows);
-      ws1b['!cols']=[{wch:26},{wch:12},{wch:14},{wch:13},{wch:13},{wch:16},{wch:14}];
-      XLSX.utils.book_append_sheet(wb1, ws1b, 'Transaction Breakdown');
-      if(document.getElementById('opt-aov').checked) XLSX.writeFile(wb1, `SalesFloor_Report${fileSuffix}.xlsx`);
-
-      // ════════════════════════════════════════════
-      // FILE 2 — Delivery Full Report
-      // ════════════════════════════════════════════
-      const wb2 = XLSX.utils.book_new();
-      const dl_lb_rows = [
-        ['DELIVERY AOV REPORT — '+dateLabel.toUpperCase()],
-        ['Dispatcher credited from Order Notes (Ticket Notes column) only  |  Returns excluded  |  Name variations combined'],
-        ['Name variations: Ash/Ashtyn/Ashyn → Ashtyn  |  Donavn → Donavan  |  Rich/Richard → Richard'],
-        [''],
-        ['#','Dispatcher','AOV Before Tax','AOV After Tax','Min (Pre-Tax)','Max (Pre-Tax)','Deliveries','Net Total','Gross Total'],
-      ];
-      dlResults.forEach((r,i)=>{
-        dl_lb_rows.push([
-          r.name==='No Dispatcher Listed'?'—':`#${i+1}`,
-          r.name, r.aovBefore, r.aovAfter, r.minBefore, r.maxBefore,
-          r.count, r.netTotal, r.grossTotal,
-        ]);
-      });
-      dl_lb_rows.push(['','Channel Average (named only)',dlAvgBef,dlAvgAft,'','',sum(dlNamed.map(r=>r.count)),sum(dlNamed.map(r=>r.netTotal)),sum(dlNamed.map(r=>r.grossTotal))]);
-      dl_lb_rows.push(['']);
-      dl_lb_rows.push(['"No Dispatcher Listed" = no recognized name found in Order Notes  |  Excluded from channel average']);
-      const ws2a = XLSX.utils.aoa_to_sheet(dl_lb_rows);
-      ws2a['!cols']=[{wch:5},{wch:26},{wch:16},{wch:15},{wch:14},{wch:14},{wch:12},{wch:14},{wch:14}];
-      applyCurr(ws2a, dl_lb_rows.length, [2,3,4,5,7,8]);
-      XLSX.utils.book_append_sheet(wb2, ws2a, 'Delivery AOV');
-
-      const dl_txn_rows = [
-        ['DELIVERY TRANSACTION BREAKDOWN — '+dateLabel.toUpperCase()],
-        ['NOTE: Return transactions listed for reference only — NOT included in any AOV calculations. AOV = Sale orders only.'],
-        [''],
-        ['Dispatcher','Deliveries','Net Total','Gross Total','Return Txns','Note'],
-      ];
-      [...dlResults].sort((a,b)=>{
-        if(a.name==='No Dispatcher Listed') return 1;
-        if(b.name==='No Dispatcher Listed') return -1;
-        return a.name.localeCompare(b.name);
-      }).forEach(r=>dl_txn_rows.push([
-        r.name, r.count, r.netTotal, r.grossTotal, r.retCount||'—',
-        r.name==='No Dispatcher Listed'?'No name found in Order Notes':'',
-      ]));
-      dl_txn_rows.push(['TOTALS',sum(dlResults.map(r=>r.count)),sum(dlResults.map(r=>r.netTotal)),sum(dlResults.map(r=>r.grossTotal)),sum(dlResults.map(r=>r.retCount))||'—','']);
-      const ws2b = XLSX.utils.aoa_to_sheet(dl_txn_rows);
-      ws2b['!cols']=[{wch:26},{wch:12},{wch:14},{wch:14},{wch:13},{wch:36}];
-      applyCurr(ws2b, dl_txn_rows.length, [2,3]);
-      XLSX.utils.book_append_sheet(wb2, ws2b, 'Transaction Breakdown');
-      if(document.getElementById('opt-aov').checked) XLSX.writeFile(wb2, `Delivery_Report${fileSuffix}.xlsx`);
-
-      // ════════════════════════════════════════════
-      // FILE 3 — Sales Floor AOV Contest
-      // ════════════════════════════════════════════
-      const wb3 = XLSX.utils.book_new();
-      const sfNamed = sfResults; // already excludes registers
-      const sfT2 = sfNamed.filter(r=>r.totalTxns>=MIN_TXN && r.combBefore>=SF_T2);
-      const sfT1 = sfNamed.filter(r=>r.totalTxns>=MIN_TXN && r.combBefore>=SF_T1 && r.combBefore<SF_T2);
-      const sfBelowAOV = sfNamed.filter(r=>r.totalTxns>=MIN_TXN && r.combBefore<SF_T1);
-      const sfDNQ = sfNamed.filter(r=>r.totalTxns<MIN_TXN).sort((a,b)=>b.combBefore-a.combBefore);
-      const sfPool = sfNamed.filter(r=>r.totalTxns>=MIN_TXN);
-      const sfChanAvg = sfPool.length ? sum(sfPool.map(r=>r.netTotal))/sum(sfPool.map(r=>r.totalTxns)) : 0;
-
-      const sf_contest = [
-        ['SALES FLOOR AOV CONTEST — '+dateLabel.toUpperCase()],
-        ['POS & Pickup  |  Minimum '+MIN_TXN+' transactions required  |  AOV Before Tax  |  Sales only'],
-        [''],
-        ['CONTEST RULES:'],
-        ['  $'+SF_T2.toFixed(2)+'+ AOV  +  '+MIN_TXN+'+ transactions  →  $250 Cash + $100 DoorDash Gift Card'],
-        ['  $'+SF_T1.toFixed(2)+'+ AOV  +  '+MIN_TXN+'+ transactions  →  $100 Cash'],
-        [''],
-      ];
-
-      // Tier 2
-      sf_contest.push(['TOP PRIZE — $250 Cash + $100 DoorDash Gift Card  |  >= $'+SF_T2+' AOV  |  '+sfT2.length+' qualifier(s)']);
-      sf_contest.push(['#','Budtender','AOV Before Tax','# Transactions','Prize']);
-      let rank=1;
-      sfT2.forEach(r=>sf_contest.push([`#${rank++}`,r.name,r.combBefore,r.totalTxns,prizeSF(r.combBefore,r.totalTxns)]));
-
-      // Tier 1
-      sf_contest.push(['']);
-      sf_contest.push(['$100 CASH — >= $'+SF_T1+' AOV  |  '+sfT1.length+' qualifier(s)']);
-      sf_contest.push(['#','Budtender','AOV Before Tax','# Transactions','Prize']);
-      sfT1.forEach(r=>sf_contest.push([`#${rank++}`,r.name,r.combBefore,r.totalTxns,prizeSF(r.combBefore,r.totalTxns)]));
-
-      // Below AOV threshold (enough txns)
-      if (sfBelowAOV.length) {
-        sf_contest.push(['']);
-        sf_contest.push(['ENOUGH TRANSACTIONS — BELOW PRIZE THRESHOLD  |  '+sfBelowAOV.length+' employee(s)']);
-        sf_contest.push(['#','Budtender','AOV Before Tax','# Transactions','']);
-        sfBelowAOV.forEach(r=>sf_contest.push([`#${rank++}`,r.name,r.combBefore,r.totalTxns,'Does not qualify — below $'+SF_T1+' AOV']));
-      }
-
-      // Channel avg
-      sf_contest.push(['']);
-      sf_contest.push(['Floor Average (>='+MIN_TXN+' txn pool)','',sfChanAvg,sum(sfPool.map(r=>r.totalTxns)),'']);
-
-      // DNQ
-      if (sfDNQ.length) {
-        sf_contest.push(['']);
-        sf_contest.push(['DID NOT QUALIFY — fewer than '+MIN_TXN+' transactions  |  '+sfDNQ.length+' employee(s)']);
-        sf_contest.push(['','Budtender','AOV Before Tax','# Transactions','']);
-        sfDNQ.forEach(r=>sf_contest.push(['—',r.name,r.combBefore,r.totalTxns,'Does not qualify — fewer than '+MIN_TXN+' transactions']));
-      }
-      sf_contest.push(['']);
-      sf_contest.push(['* AOV = Net Sales ÷ Transactions (before tax)  |  Returns excluded  |  Min '+MIN_TXN+' transactions required to qualify for any prize']);
-
-      const ws3 = XLSX.utils.aoa_to_sheet(sf_contest);
-      ws3['!cols']=[{wch:5},{wch:26},{wch:16},{wch:16},{wch:38}];
-      applyCurr(ws3, sf_contest.length, [2]);
-      XLSX.utils.book_append_sheet(wb3, ws3, 'Sales Floor Contest');
-      if(document.getElementById('opt-contest').checked) XLSX.writeFile(wb3, `SalesFloor_AOV_Contest${fileSuffix}.xlsx`);
-
-      // ════════════════════════════════════════════
-      // FILE 4 — Delivery AOV Contest
-      // ════════════════════════════════════════════
-      const wb4 = XLSX.utils.book_new();
-      const dlNamedOnly = dlResults.filter(r=>r.name!=='No Dispatcher Listed');
-      const dlNoName    = dlResults.filter(r=>r.name==='No Dispatcher Listed');
-      const dlT2 = dlNamedOnly.filter(r=>r.count>=MIN_TXN && r.aovBefore>=DL_T2);
-      const dlT1 = dlNamedOnly.filter(r=>r.count>=MIN_TXN && r.aovBefore>=DL_T1 && r.aovBefore<DL_T2);
-      const dlBelowAOV = dlNamedOnly.filter(r=>r.count>=MIN_TXN && r.aovBefore<DL_T1);
-      const dlDNQ = [...dlNamedOnly.filter(r=>r.count<MIN_TXN),...dlNoName].sort((a,b)=>b.aovBefore-a.aovBefore);
-      const dlPool = dlNamedOnly.filter(r=>r.count>=MIN_TXN);
-      const dlChanAvg = dlPool.length ? sum(dlPool.map(r=>r.netTotal))/sum(dlPool.map(r=>r.count)) : 0;
-
-      const dl_contest = [
-        ['DELIVERY AOV CONTEST — '+dateLabel.toUpperCase()],
-        ['Dispatcher from Order Notes only  |  Minimum '+MIN_TXN+' deliveries required  |  AOV Before Tax  |  Sales only'],
-        [''],
-        ['CONTEST RULES:'],
-        ['  $'+DL_T2.toFixed(2)+'+ AOV  +  '+MIN_TXN+'+ deliveries  →  $250 Cash + $100 DoorDash Gift Card'],
-        ['  $'+DL_T1.toFixed(2)+'+ AOV  +  '+MIN_TXN+'+ deliveries  →  $100 Cash'],
-        [''],
-      ];
-
-      dl_contest.push(['TOP PRIZE — $250 Cash + $100 DoorDash Gift Card  |  >= $'+DL_T2+' AOV  |  '+dlT2.length+' qualifier(s)']);
-      dl_contest.push(['#','Dispatcher','AOV Before Tax','# Deliveries','Prize']);
-      let dlRank=1;
-      dlT2.forEach(r=>dl_contest.push([`#${dlRank++}`,r.name,r.aovBefore,r.count,prizeDL(r.aovBefore,r.count)]));
-
-      dl_contest.push(['']);
-      dl_contest.push(['$100 CASH — >= $'+DL_T1+' AOV  |  '+dlT1.length+' qualifier(s)']);
-      dl_contest.push(['#','Dispatcher','AOV Before Tax','# Deliveries','Prize']);
-      dlT1.forEach(r=>dl_contest.push([`#${dlRank++}`,r.name,r.aovBefore,r.count,prizeDL(r.aovBefore,r.count)]));
-
-      if (dlBelowAOV.length) {
-        dl_contest.push(['']);
-        dl_contest.push(['ENOUGH DELIVERIES — BELOW PRIZE THRESHOLD  |  '+dlBelowAOV.length+' dispatcher(s)']);
-        dl_contest.push(['#','Dispatcher','AOV Before Tax','# Deliveries','']);
-        dlBelowAOV.forEach(r=>dl_contest.push([`#${dlRank++}`,r.name,r.aovBefore,r.count,'Does not qualify — below $'+DL_T1+' AOV']));
-      }
-
-      dl_contest.push(['']);
-      dl_contest.push(['Delivery Average (>='+MIN_TXN+' delivery pool)','',dlChanAvg,sum(dlPool.map(r=>r.count)),'']);
-
-      if (dlDNQ.length) {
-        dl_contest.push(['']);
-        dl_contest.push(['DID NOT QUALIFY — fewer than '+MIN_TXN+' deliveries  |  '+dlDNQ.length+' dispatcher(s)']);
-        dl_contest.push(['','Dispatcher','AOV Before Tax','# Deliveries','']);
-        dlDNQ.forEach(r=>dl_contest.push(['—',r.name,r.aovBefore,r.count,
-          r.name==='No Dispatcher Listed'?'No name in Order Notes':'Does not qualify — fewer than '+MIN_TXN+' deliveries']));
-      }
-      dl_contest.push(['']);
-      dl_contest.push(['* AOV = Net Sales ÷ Deliveries (before tax)  |  Returns excluded  |  Dispatcher from Order Notes only  |  Min '+MIN_TXN+' deliveries required']);
-
-      const ws4 = XLSX.utils.aoa_to_sheet(dl_contest);
-      ws4['!cols']=[{wch:5},{wch:26},{wch:16},{wch:16},{wch:38}];
-      applyCurr(ws4, dl_contest.length, [2]);
-      XLSX.utils.book_append_sheet(wb4, ws4, 'Delivery Contest');
-      if(document.getElementById('opt-contest').checked) XLSX.writeFile(wb4, `Delivery_AOV_Contest${fileSuffix}.xlsx`);
-
-      // ════════════════════════════════════════════
-      // FILE 5 — Daily Hourly Traffic (Floor + Delivery)
-      // ════════════════════════════════════════════
-      const wb5 = XLSX.utils.book_new();
-
-      // Build date list + per-date-hour counts from raw tickets
-      const trafficByDateHour = {}; // date -> hour -> {floor, delivery}
-      const trafficDates = {};      // date -> {dow, label}
-      for (const t of Object.values(sfTickets)) {
-        if (t.net <= 0) continue;
-        const r0 = [...saleSF].find(r => (r['Ticket ID']||'').trim() === Object.keys(sfTickets).find(k=>sfTickets[k]===t));
-      }
-      // Rebuild from raw rows — dedupe by ticket, capture date+hour+channel
-      const trafficTix = {};
-      for (const r of rows) {
-        if (r['Type'] !== 'Sale') continue;
-        const tid   = (r['Ticket ID']||'').trim();
-        const ttype = (r['Ticket Type']||'').toUpperCase();
-        const dOpen = r['Date Open']||'';
-        const tOpen = r['Time Opened']||'';
-        if (!tid || !dOpen || !tOpen) continue;
-        if (tid in trafficTix) continue;
-        const [mo,dy,yr] = dOpen.split('/');
-        const [hh] = tOpen.split(':');
-        const hour = parseInt(hh, 10);
-        const dow  = new Date(`${yr}-${mo}-${dy}`).getDay(); // 0=Sun
-        const ch   = ['POS','PICKUP'].includes(ttype) ? 'floor' : ttype==='DELIVERY' ? 'delivery' : null;
-        if (!ch || isNaN(hour)) continue;
-        trafficTix[tid] = { date: dOpen, hour, dow, channel: ch };
-      }
-
-      for (const t of Object.values(trafficTix)) {
-        if (!trafficByDateHour[t.date]) trafficByDateHour[t.date] = {};
-        if (!trafficByDateHour[t.date][t.hour]) trafficByDateHour[t.date][t.hour] = {floor:0,delivery:0};
-        trafficByDateHour[t.date][t.hour][t.channel]++;
-        if (!trafficDates[t.date]) {
-          const [mo,dy,yr] = t.date.split('/');
-          const dt = new Date(`${yr}-${mo}-${dy}`);
-          const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-          trafficDates[t.date] = { dow: dt.getDay(), label: `${+mo}/${+dy}`, day: dows[dt.getDay()] };
-        }
-      }
-
-      const tDates  = Object.keys(trafficDates).sort((a,b)=>new Date(a.split('/')[2]+'-'+a.split('/')[0]+'-'+a.split('/')[1])-new Date(b.split('/')[2]+'-'+b.split('/')[0]+'-'+b.split('/')[1]));
-      const tHours  = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
-
-      function buildTrafficSheet(wb, channel, sheetName) {
-        const data = [];
-        // Header rows
-        data.push([sheetName.toUpperCase() + ' — DAILY HOURLY TRAFFIC — ' + dateLabel.toUpperCase()]);
-        data.push(['Unique transactions per hour per day  ·  Sales only  ·  ' + dateLabel]);
-        data.push(['']);
-        const hdrRow = ['Hour', ...tDates.map(d => `${trafficDates[d].day}\n${trafficDates[d].label}`), 'Avg/Day'];
-        data.push(hdrRow);
-        for (const h of tHours) {
-          const row = [`${h}:00`];
-          const vals = [];
-          for (const d of tDates) {
-            const v = (trafficByDateHour[d]&&trafficByDateHour[d][h]) ? trafficByDateHour[d][h][channel] : 0;
-            row.push(v || '');
-            if (v > 0) vals.push(v);
-          }
-          row.push(vals.length ? parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1)) : '');
-          data.push(row);
-        }
-        // Day totals
-        const totRow = ['Day Total'];
-        for (const d of tDates) {
-          const tot = tHours.reduce((s,h)=>s+((trafficByDateHour[d]&&trafficByDateHour[d][h])?trafficByDateHour[d][h][channel]:0),0);
-          totRow.push(tot);
-        }
-        totRow.push('');
-        data.push(totRow);
-        data.push(['']);
-        data.push(['* Each cell = unique tickets opened that hour  ·  Apr 20 = 420 Day']);
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        ws['!cols'] = [{wch:8}, ...tDates.map(()=>({wch:7})), {wch:8}];
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
-      }
-
-      buildTrafficSheet(wb5, 'floor',    'Sales Floor');
-      buildTrafficSheet(wb5, 'delivery', 'Delivery');
-      if(document.getElementById('opt-traffic').checked) XLSX.writeFile(wb5, `Daily_Hourly_Traffic${fileSuffix}.xlsx`);
-
-      // ════════════════════════════════════════════
-      // FILE 6 — Customer Dwell Time by Day + Hour
-      // ════════════════════════════════════════════
-      const wb6 = XLSX.utils.book_new();
-
-      // Build dwell times from raw rows — POS only
-      const dwellTix = {};
-      for (const r of rows) {
-        if (r['Type'] !== 'Sale') continue;
-        if ((r['Ticket Type']||'').toUpperCase() !== 'POS') continue;
-        const tid   = (r['Ticket ID']||'').trim();
-        const dOpen = r['Date Open']||'';
-        const tOpen = r['Time Opened']||'';
-        const dClose= r['Date Closed']||'';
-        const tClose= r['Time Closed']||'';
-        if (!tid||!tOpen||!tClose||tid in dwellTix) continue;
-        try {
-          const parse = s => { const [d,t]=s.split(' '); const [mo,dy,yr]=d.split('/'); return new Date(`${yr}-${mo}-${dy}T${t}`); };
-          const dur = (parse(dClose+' '+tClose) - parse(dOpen+' '+tOpen)) / 60000;
-          if (dur < 0 || dur > 120) continue;
-          const [mo,dy,yr] = dOpen.split('/'); const [hh] = tOpen.split(':');
-          dwellTix[tid] = { date: dOpen, hour: parseInt(hh,10), dur };
-        } catch(e) {}
-      }
-
-      const dwellByDateHour = {}; // date -> hour -> [durations]
-      for (const t of Object.values(dwellTix)) {
-        if (!dwellByDateHour[t.date]) dwellByDateHour[t.date] = {};
-        if (!dwellByDateHour[t.date][t.hour]) dwellByDateHour[t.date][t.hour] = [];
-        dwellByDateHour[t.date][t.hour].push(t.dur);
-      }
-
-      const dData = [];
-      dData.push(['CUSTOMER AVG TIME IN STORE (POS ONLY) — ' + dateLabel.toUpperCase()]);
-      dData.push(['Avg minutes per customer per hour  ·  Ticket Open → Close  ·  Tickets >120 min excluded']);
-      dData.push(['']);
-      dData.push(['Hour', ...tDates.map(d=>`${trafficDates[d]?.day||''}\n${trafficDates[d]?.label||d}`), 'Avg']);
-      for (const h of tHours) {
-        const row = [`${h}:00`];
-        const allVals = [];
-        for (const d of tDates) {
-          const vals = dwellByDateHour[d]?.[h];
-          if (vals && vals.length) {
-            const a = parseFloat((vals.reduce((s,v)=>s+v,0)/vals.length).toFixed(1));
-            row.push(a);
-            allVals.push(a);
-          } else {
-            row.push('');
-          }
-        }
-        row.push(allVals.length ? parseFloat((allVals.reduce((a,b)=>a+b,0)/allVals.length).toFixed(1)) : '');
-        dData.push(row);
-      }
-      // Day avg row
-      const dayAvgRow = ['Day Avg'];
-      for (const d of tDates) {
-        const allDayVals = tHours.flatMap(h => dwellByDateHour[d]?.[h] || []);
-        dayAvgRow.push(allDayVals.length ? parseFloat((allDayVals.reduce((a,b)=>a+b,0)/allDayVals.length).toFixed(1)) : '');
-      }
-      const allValsTotal = Object.values(dwellTix).map(t=>t.dur);
-      dayAvgRow.push(parseFloat((allValsTotal.reduce((a,b)=>a+b,0)/allValsTotal.length).toFixed(1)));
-      dData.push(dayAvgRow);
-      dData.push(['']);
-      dData.push(['* Numbers = avg minutes at register  ·  POS only  ·  Apr 20 = 420 Day  ·  "—" = no transactions']);
-
-      const ws6 = XLSX.utils.aoa_to_sheet(dData);
-      ws6['!cols'] = [{wch:8}, ...tDates.map(()=>({wch:7})), {wch:8}];
-      XLSX.utils.book_append_sheet(wb6, ws6, 'Avg Time in Store');
-      if(document.getElementById('opt-dwell').checked) XLSX.writeFile(wb6, `Customer_Dwell_Time${fileSuffix}.xlsx`);
-
-      // Extra reports
-      if(document.getElementById('opt-coaching').checked) generateCoachingReport(rows, fileSuffix, dateLabel);
-      if(document.getElementById('opt-weekly').checked)   generateWeeklyAOV(rows, fileSuffix, dateLabel);
-      const fcount=[
-        document.getElementById('opt-aov').checked?2:0,
-        document.getElementById('opt-contest').checked?2:0,
-        document.getElementById('opt-traffic').checked?1:0,
-        document.getElementById('opt-dwell').checked?1:0,
-        document.getElementById('opt-coaching').checked?1:0,
-        document.getElementById('opt-weekly').checked?1:0,
-      ].reduce((a,b)=>a+b,0);
-      setStatus('success',
-        `✅ ${fcount} files downloaded  ·  ${sfResults.length} floor staff · ${sfAllTxns.toLocaleString()} floor txns  ·  ` +
-        `${dlResults.length} dispatchers · ${sum(dlResults.map(r=>r.count)).toLocaleString()} deliveries  ·  ${dateLabel}`);
-    } catch(e) {
-      setStatus('error','❌ Error: '+e.message);
+    if (FLOOR[ttype] && rtype === 'Sale') {
+      var ch = (r['Cashier']||'').trim();
+      if (!ch || /register|sanctuary/i.test(ch)) return;
+      var key = date + '||' + ch;
+      if (!sfByDayCashier[key]) sfByDayCashier[key] = {};
+      if (!sfByDayCashier[key][tid]) sfByDayCashier[key][tid] = {cashier:ch, date:date, net:0, gross:0, addon:0};
+      sfByDayCashier[key][tid].net   += net;
+      sfByDayCashier[key][tid].gross += gross;
+      if (isAddon) sfByDayCashier[key][tid].addon += net;
     }
-  }, 80);
-}
 
-// ── Currency format helper
-function applyCurr(ws, maxRow, cols) {
-  const fmt = '"$"#,##0.00';
-  for (let r=1; r<=maxRow; r++) {
-    for (const c of cols) {
-      const addr = XLSX.utils.encode_cell({r:r-1, c});
-      if (ws[addr] && typeof ws[addr].v==='number') ws[addr].z = fmt;
-    }
-  }
-}
-function avg(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
-function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
-function fmtDate(d){
-  if(!d) return '';
-  const [m,day,y]=d.split('/');
-  const mo=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${mo[+m]||m} ${+day} ${y}`;
-}
-// ═══ TABS ═══
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelector('[onclick="switchTab(\'' + tab + '\')"]').classList.add('active');
-  document.getElementById('tab-' + tab).classList.add('active');
-}
-
-// ═══ SCHEDULE ═══
-var schedData = [];
-
-(function(){
-  var sdz = document.getElementById('sched-drop');
-  if(!sdz) return;
-  ['dragenter','dragover'].forEach(function(ev){ sdz.addEventListener(ev, function(e){ e.preventDefault(); sdz.classList.add('over'); }); });
-  ['dragleave','drop'].forEach(function(ev){ sdz.addEventListener(ev, function(e){ e.preventDefault(); sdz.classList.remove('over'); }); });
-  sdz.addEventListener('drop', function(e){ var f=e.dataTransfer.files[0]; if(f) handleSchedule(f); });
-  document.getElementById('sched-in').addEventListener('change', function(e){ if(e.target.files[0]) handleSchedule(e.target.files[0]); });
-})();
-
-function setSchedStatus(type, msg, spin) {
-  var sb = document.getElementById('sched-status');
-  sb.className = type; sb.innerHTML = '';
-  if(spin){ var s=document.createElement('div'); s.className='spinner'; sb.appendChild(s); }
-  var t=document.createElement('span'); t.textContent=msg; sb.appendChild(t);
-}
-
-function handleSchedule(file) {
-  setSchedStatus('processing', 'Reading schedule...', true);
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      schedData = parseScheduleHTML(e.target.result);
-      if(!schedData.length){ setSchedStatus('error','No schedule data found. Check that the file contains employee names and shift times.'); return; }
-      renderSchedPreview(schedData);
-      setSchedStatus('success','Found ' + schedData.length + ' employees — review the table below then download.');
-    } catch(ex){ setSchedStatus('error','Error: ' + ex.message); }
-  };
-  reader.readAsText(file);
-}
-
-function parseScheduleHTML(html) {
-  var parser = new DOMParser();
-  var doc = parser.parseFromString(html, 'text/html');
-  var results = [];
-  var seen = new Set();
-  var timeRe = /\b(1[0-2]|[1-9]):[0-5]\d\s?[AP]M\b/gi;
-
-  // Strategy 1: table rows
-  var rows = doc.querySelectorAll('tr');
-  rows.forEach(function(row){
-    var cells = Array.from(row.querySelectorAll('td,th')).map(function(c){ return c.textContent.trim(); });
-    var rowText = cells.join(' ');
-    var times = rowText.match(timeRe);
-    var nameCell = cells.find(function(c){ return /^[A-Z][a-z]+\s+[A-Z][a-z]+/.test(c.trim()); });
-    if(nameCell && times && times.length >= 2 && !seen.has(nameCell.trim())){
-      seen.add(nameCell.trim());
-      results.push({name:nameCell.trim(), start:times[0], end:times[times.length-1]});
+    if (ttype === 'DELIVERY' && rtype === 'Sale') {
+      var note = (r['Ticket Notes']||'').trim();
+      var disp = dispName(note);
+      if (!dlTix[tid]) dlTix[tid] = {dispatcher:disp, net:0, gross:0, addon:0};
+      dlTix[tid].net   += net;
+      dlTix[tid].gross += gross;
+      if (isAddon) dlTix[tid].addon += net;
     }
   });
 
-  // Strategy 2: line by line
-  if(!results.length){
-    var body = doc.body ? (doc.body.innerText || doc.body.textContent) : html.replace(/<[^>]+>/g,' ');
-    var lines = body.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
-    lines.forEach(function(line){
-      var nm = line.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
-      var times = line.match(timeRe);
-      if(nm && times && times.length >= 2 && !seen.has(nm[1])){
-        seen.add(nm[1]);
-        results.push({name:nm[1], start:times[0], end:times[times.length-1]});
-      }
+  // Aggregate SF by (date, cashier)
+  var sfDayCashier = {}; // key -> {cashier, date, net, gross, addon, txns}
+  Object.keys(sfByDayCashier).forEach(function(key) {
+    var tickets = sfByDayCashier[key];
+    var agg = {net:0, gross:0, addon:0, txns:0, cashier:'', date:''};
+    Object.values(tickets).forEach(function(t) {
+      if (t.net <= 0) return;
+      agg.net += t.net; agg.gross += t.gross; agg.addon += t.addon;
+      agg.txns++; agg.cashier = t.cashier; agg.date = t.date;
     });
-  }
-  return results;
-}
-
-function calcBreaks(startStr, endStr) {
-  function parseTime(s) {
-    if(!s) return null;
-    var m = s.match(/(\d+):(\d+)\s*([AP]M)/i);
-    if(!m) return null;
-    var h=parseInt(m[1]), min=parseInt(m[2]), pm=m[3].toUpperCase()==='PM';
-    if(pm && h!==12) h+=12;
-    if(!pm && h===12) h=0;
-    return h*60+min;
-  }
-  function fmtTime(mins) {
-    if(mins===null) return '—';
-    var h=Math.floor(mins/60), m=mins%60;
-    var ampm=h>=12?'PM':'AM', h12=h%12||12;
-    return h12+':'+(m<10?'0':'')+m+' '+ampm;
-  }
-  var st=parseTime(startStr), en=parseTime(endStr);
-  if(!st||!en) return {b1:'—',lunch:'—',b2:'—'};
-  var dur=en-st;
-  return {
-    b1:   dur>=240 ? fmtTime(st+120)         : '—',
-    lunch: dur>=300 ? fmtTime(st+Math.floor(dur/2)) : '—',
-    b2:   dur>=420 ? fmtTime(en-120)         : '—',
-  };
-}
-
-function renderSchedPreview(data) {
-  var wrap = document.getElementById('sched-table-wrap');
-  var html = '<table class="sched-table"><thead><tr><th>Employee</th><th>Start</th><th>1st Break</th><th>Lunch</th><th>2nd Break</th><th>End</th></tr></thead><tbody>';
-  data.forEach(function(r){
-    var b = calcBreaks(r.start, r.end);
-    html += '<tr><td><strong>'+r.name+'</strong></td><td>'+r.start+'</td><td>'+b.b1+'</td><td>'+b.lunch+'</td><td>'+b.b2+'</td><td>'+r.end+'</td></tr>';
+    if (agg.txns > 0) sfDayCashier[key] = agg;
   });
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
-  document.getElementById('sched-title').textContent = 'Detected Schedule — ' + data.length + ' employees';
-  document.getElementById('sched-preview').style.display = 'block';
+
+  // Aggregate DL by dispatcher
+  var dlByDisp = {};
+  Object.values(dlTix).forEach(function(t) {
+    if (t.net <= 0) return;
+    var d = t.dispatcher;
+    if (!dlByDisp[d]) dlByDisp[d] = {net:0, gross:0, addon:0, txns:0};
+    dlByDisp[d].net += t.net; dlByDisp[d].gross += t.gross;
+    dlByDisp[d].addon += t.addon; dlByDisp[d].txns++;
+  });
+
+  // Per-employee: all days, sorted
+  var empDays = {}; // cashier -> [{date, aov, txns, net, gross, addon, addon_pct}]
+  Object.values(sfDayCashier).forEach(function(d) {
+    if (!empDays[d.cashier]) empDays[d.cashier] = [];
+    empDays[d.cashier].push({
+      date: d.date, txns: d.txns, net: d.net, gross: d.gross, addon: d.addon,
+      aov: d.net / d.txns,
+      addon_pct: d.net > 0 ? d.addon / d.net * 100 : 0
+    });
+  });
+  Object.keys(empDays).forEach(function(nm) {
+    empDays[nm].sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  });
+
+  // Build full monthly + last-shift per employee
+  var empStats = [];
+  Object.keys(empDays).forEach(function(nm) {
+    var days = empDays[nm];
+    var lastDay = days[days.length - 1];
+    var mtdDays = days.slice(0, -1);
+    var mtdNet = 0, mtdTxns = 0, mtdAddon = 0;
+    mtdDays.forEach(function(d){ mtdNet += d.net; mtdTxns += d.txns; mtdAddon += d.addon; });
+    var fullNet = 0, fullTxns = 0, fullAddon = 0, fullGross = 0;
+    days.forEach(function(d){ fullNet += d.net; fullTxns += d.txns; fullAddon += d.addon; fullGross += d.gross; });
+
+    empStats.push({
+      name: nm,
+      lastDate: lastDay.date,
+      lastAov: lastDay.aov,
+      lastTxns: lastDay.txns,
+      lastAddon: lastDay.addon_pct,
+      mtdAov: mtdTxns > 0 ? mtdNet / mtdTxns : lastDay.aov,
+      mtdAdd: mtdNet > 0 ? mtdAddon / mtdNet * 100 : 0,
+      mtdTxns: mtdTxns,
+      fullAov: fullNet / fullTxns,
+      fullTxns: fullTxns,
+      fullAddon: fullNet > 0 ? fullAddon / fullNet * 100 : 0,
+      fullNet: fullNet,
+      fullGross: fullGross,
+    });
+  });
+
+  // DL stats
+  var dlStats = Object.keys(dlByDisp).map(function(nm) {
+    var d = dlByDisp[nm];
+    return {name:nm, aov:d.net/d.txns, aov_a:d.gross/d.txns, txns:d.txns,
+            addon_pct:d.net>0?d.addon/d.net*100:0, net:d.net, gross:d.gross};
+  });
+
+  return { empStats: empStats, dlStats: dlStats };
 }
 
-function clearSched() {
-  schedData = [];
-  document.getElementById('sched-preview').style.display = 'none';
-  setSchedStatus('ready','Ready — waiting for schedule HTML file');
-  document.getElementById('sched-in').value = '';
+// ── Classify employee for coaching
+function classify(s) {
+  var small = s.lastTxns < 6 || s.mtdTxns < 5;
+  if (small) return 'small';
+  var diff = s.lastAov - s.mtdAov;
+  var lMet = s.lastAov >= 65, addMet = s.mtdAdd >= 4;
+  if (lMet && addMet)  return 'star';
+  if (lMet)            return 'aov_good';
+  if (diff >= 3)       return 'trending';
+  if (diff <= -4)      return 'dropping';
+  if (s.mtdAov >= 62)  return 'close';
+  return 'push';
 }
 
-function generateBreakSheet() {
-  if(!schedData.length){ setSchedStatus('error','No schedule data loaded.'); return; }
+function statusLabel(type) {
+  return {star:'On Target', aov_good:'Strong AOV', trending:'Trending Up',
+          close:'Almost There', dropping:'Check In', push:'Needs Push', small:'Small Sample'}[type] || '';
+}
+
+function coachingNote(s, type) {
+  var fn = s.name.split(' ')[0];
+  var diff = s.lastAov - s.mtdAov;
+  var aovGap = (65 - s.mtdAov).toFixed(2);
+  var addGap = (4 - s.mtdAdd).toFixed(1);
+  var lbl = s.lastDate + ' (' + s.lastTxns + ' txns)';
+
+  if (type === 'small')    return fn + ' has limited data (' + s.lastTxns + ' txns last shift, ' + s.mtdTxns + ' MTD). Monitor over a full shift.';
+  if (type === 'star')     return fn + ' hit both goals last shift — $' + s.lastAov.toFixed(2) + ' AOV on ' + lbl + '. Add-on ' + s.mtdAdd.toFixed(1) + '%. Call it out.';
+  if (type === 'aov_good') return fn + ' hit the $65 goal last shift ($' + s.lastAov.toFixed(2) + ' on ' + lbl + '). Add-on ' + s.mtdAdd.toFixed(1) + '%' + (parseFloat(addGap) > 0 ? ' — ' + addGap + '% from target.' : '.');
+  if (type === 'trending') return fn + ' ran above their monthly avg last shift — $' + s.lastAov.toFixed(2) + ' vs $' + s.mtdAov.toFixed(2) + ' MTD on ' + lbl + '. Acknowledge the momentum.';
+  if (type === 'dropping') return fn + ' dropped to $' + s.lastAov.toFixed(2) + ' last shift (' + lbl + ') vs $' + s.mtdAov.toFixed(2) + ' MTD. Quick check-in when they\'re next in.';
+  if (type === 'close')    return fn + ' at $' + s.lastAov.toFixed(2) + ' last shift (' + lbl + ') — $' + aovGap + ' from the $65 goal. One good upsell per transaction closes it.';
+  return fn + ' at $' + s.lastAov.toFixed(2) + ' last shift (' + lbl + '), $' + aovGap + ' below goal. Good candidate for a product pairing conversation.';
+}
+
+function aovTip(s) {
+  if (s.mtdAov >= 65) return 'AOV above goal — stay consistent, avoid discounting.';
+  var gap = (65 - s.mtdAov).toFixed(2);
+  if (parseFloat(gap) <= 2.5) return 'AOV: $' + gap + ' from goal. One trade-up per customer closes it.';
+  return 'AOV: Suggest a bundle or complementary product on every ticket.';
+}
+
+function addOnTip(s) {
+  if (s.mtdAdd >= 4) return 'Add-on at ' + s.mtdAdd.toFixed(1) + '% — above the 4% goal. Keep it up.';
+  return 'Add-on: ' + s.mtdAdd.toFixed(1) + '% vs 4% goal. One offer at the end of every transaction builds the habit.';
+}
+
+// ── Excel style helpers
+var COLORS = {
+  DK:'155230', MD:'2E9455', LT:'D5EDDB', BG:'F0F7F2',
+  GD:'E8A020', GB:'FFF8EC', WH:'FFFFFF', MU:'9AB0A0',
+  TX:'1A2620', RD:'C8392A', PU:'6030A0', PB:'F4EEFF',
+  GRN_BG:'E8F8EE', AMB_BG:'FFF4EC', RED_BG:'FFF0F0', GRAY_BG:'F8F8F8',
+  TEAL:'006080'
+};
+
+function xfill(wb, color) {
+  return {patternType:'solid', fgColor:{rgb:color}};
+}
+
+function dateStr() {
+  var now = new Date();
+  return (now.getMonth()+1) + '-' + now.getDate() + '-' + now.getFullYear();
+}
+
+// ── REPORT 1: Monthly AOV Report (SF + DL)
+function generateAOVReport(data, dateRange) {
+  var empStats = data.empStats;
+  var dlStats  = data.dlStats;
+
+  var storeNet  = empStats.reduce(function(s,e){ return s+e.fullNet; }, 0);
+  var storeTxns = empStats.reduce(function(s,e){ return s+e.fullTxns; }, 0);
+  var storeAddon= empStats.reduce(function(s,e){ return s+e.fullNet*e.fullAddon/100; }, 0);
+  var storeAOV  = storeNet / storeTxns;
+  var storeAddonPct = storeNet > 0 ? storeAddon / storeNet * 100 : 0;
+
+  var sfSorted = empStats.slice().sort(function(a,b){ return b.fullAov - a.fullAov; });
+  var dlNamed  = dlStats.filter(function(d){ return d.name !== 'No Dispatcher Listed'; })
+                         .sort(function(a,b){ return b.aov - a.aov; });
+  var dlNo     = dlStats.filter(function(d){ return d.name === 'No Dispatcher Listed'; });
+  var dlAll    = dlNamed.concat(dlNo);
+
+  var dlNet  = dlNamed.reduce(function(s,d){ return s+d.net; }, 0);
+  var dlTxns = dlNamed.reduce(function(s,d){ return s+d.txns; }, 0);
+  var dlAOV  = dlTxns > 0 ? dlNet / dlTxns : 0;
+  var dlAddonPct = dlNet > 0 ? dlNamed.reduce(function(s,d){ return s+d.net*d.addon_pct/100;},0)/dlNet*100 : 0;
+
   var wb = XLSX.utils.book_new();
-  var today = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  var rows = [
-    ['THE SANCTUARY — BREAK SCHEDULE','','','','',''],
-    [today,'','','','',''],
-    [''],
-    ['Employee','Shift Start','1st Break','Lunch','2nd Break','Shift End'],
-  ];
-  schedData.forEach(function(r){
-    var b = calcBreaks(r.start, r.end);
-    rows.push([r.name, r.start, b.b1, b.lunch, b.b2, r.end]);
-  });
-  rows.push(['']);
-  rows.push(['* Break times are estimates based on shift length. Adjust as needed.']);
-  var ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:24},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Break Schedule');
-  XLSX.writeFile(wb, 'Break_Schedule_' + today.replace(/[,\s]+/g,'_') + '.xlsx');
-  setSchedStatus('success','Break sheet downloaded.');
-}
+  var medals = {0:'#1', 1:'#2', 2:'#3'};
 
-// ═══ COACHING REPORT ═══
-function generateCoachingReport(rows, fileSuffix, dateLabel) {
-  var FLOOR = ['POS','PICKUP'];
-  var dates = Array.from(new Set(rows.map(function(r){ return r['Date Open']; }).filter(Boolean))).sort();
-  if(dates.length < 2) return;
-  var yesterday = dates[dates.length-1];
-  var mtdDates = dates.slice(0,-1);
+  function buildSheet(title, data, stAov, stAddon, stTxns, isDL) {
+    var aoa = [];
+    // Title
+    aoa.push([title + '  |  ' + dateRange,'','','','','']);
+    aoa.push(['']);
+    // Summary
+    var lbl = isDL ? 'Channel AOV (Named)' : 'Store AOV';
+    var lbl2 = isDL ? 'Total Deliveries' : 'Total Transactions';
+    aoa.push([lbl, lbl2, 'Add-On %', dateRange, '', '']);
+    aoa.push(['$'+stAov.toFixed(2), stTxns.toLocaleString(), stAddon.toFixed(1)+'%', '', '', '']);
+    aoa.push(['']);
+    // Headers
+    var nameCol = isDL ? 'Dispatcher' : 'Budtender';
+    var txnCol  = isDL ? 'Deliveries' : 'Transactions';
+    aoa.push(['#', nameCol, 'AOV (Before Tax)', 'AOV (After Tax)', 'Add-On %', txnCol]);
 
-  function buildEmp(subset) {
-    var tix = {};
-    subset.forEach(function(r){
-      if(!FLOOR.includes((r['Ticket Type']||'').toUpperCase()) || r['Type']!=='Sale') return;
-      var tid=(r['Ticket ID']||'').trim(), ch=(r['Cashier']||'').trim();
-      if(!tid||!ch||/register|sanctuary/i.test(ch)) return;
-      var net=parseFloat(r['Net Sales']||0), gross=parseFloat(r['Gross Receipts']||0);
-      var ia=/add.?on/i.test(r['Product Name']||'');
-      if(!tix[tid]) tix[tid]={cashier:ch,net:0,gross:0,addon:0};
-      tix[tid].net+=net; tix[tid].gross+=gross; if(ia) tix[tid].addon+=net;
+    var rank = 0;
+    data.forEach(function(d, i) {
+      var isNo = isDL && d.name === 'No Dispatcher Listed';
+      var aov   = isDL ? d.aov   : d.fullAov;
+      var aov_a = isDL ? d.aov_a : d.fullAov * 1.2943;
+      var addon = isDL ? d.addon_pct : d.fullAddon;
+      var txns  = isDL ? d.txns  : d.fullTxns;
+      var r = medals[rank] || ('#' + (rank+1));
+      if (!isNo) rank++;
+      aoa.push([isNo ? '—' : r, d.name, parseFloat(aov.toFixed(2)), parseFloat(aov_a.toFixed(2)),
+                parseFloat((addon/100).toFixed(4)), txns]);
     });
-    var emp = {};
-    Object.values(tix).forEach(function(t){
-      if(t.net<=0) return;
-      if(!emp[t.cashier]) emp[t.cashier]={net:0,gross:0,addon:0,txns:0};
-      emp[t.cashier].net+=t.net; emp[t.cashier].gross+=t.gross;
-      emp[t.cashier].addon+=t.addon; emp[t.cashier].txns++;
-    });
-    var res = {};
-    Object.entries(emp).forEach(function(e){
-      var nm=e[0],d=e[1];
-      res[nm]={txns:d.txns,aov:d.net/d.txns,addon_pct:d.net>0?d.addon/d.net*100:0,net:d.net};
-    });
-    return res;
+    aoa.push(['']);
+    aoa.push(['Average', '', parseFloat(stAov.toFixed(2)), parseFloat((stAov*1.2943).toFixed(2)),
+              parseFloat((stAddon/100).toFixed(4)), stTxns]);
+    aoa.push(['']);
+    aoa.push(['* AOV = Net Sales / Transactions (before tax)  ·  Tax rate 29.43%  ·  Returns excluded']);
+
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch:6},{wch:28},{wch:18},{wch:16},{wch:11},{wch:14}];
+
+    return ws;
   }
 
-  var mtd  = buildEmp(rows.filter(function(r){ return mtdDates.includes(r['Date Open']); }));
-  var yest = buildEmp(rows.filter(function(r){ return r['Date Open']===yesterday; }));
-  var full = buildEmp(rows);
+  var wsSF = buildSheet('Sales Floor AOV Report', sfSorted, storeAOV, storeAddonPct, storeTxns, false);
+  var wsDL = buildSheet('Delivery AOV Report', dlAll, dlAOV, dlAddonPct, dlTxns, true);
 
-  var storeNet=Object.values(full).reduce(function(s,d){ return s+d.net; },0);
-  var storeTxn=Object.values(full).reduce(function(s,d){ return s+d.txns; },0);
-  var storeAOV=storeNet/storeTxn;
-  var storeAddon=storeNet>0?Object.values(full).reduce(function(s,d){ return s+d.net*d.addon_pct/100; },0)/storeNet*100:0;
+  XLSX.utils.book_append_sheet(wb, wsSF, 'Sales Floor');
+  XLSX.utils.book_append_sheet(wb, wsDL, 'Delivery');
 
-  var allNames = Array.from(new Set(Object.keys(full).concat(Object.keys(yest)))).filter(function(n){ return !/register|sanctuary/i.test(n); });
-  allNames.sort(function(a,b){ return (full[b]?full[b].aov:0)-(full[a]?full[a].aov:0); });
+  XLSX.writeFile(wb, 'AOV_Report_' + dateStr() + '.xlsx');
+}
 
-  var AOV_GOAL=65, ADD_GOAL=4;
-  var aoa = [
-    ['THE SANCTUARY — DAILY COACHING REPORT','','','','','','',''],
-    [dateLabel+'  ·  Yesterday: '+yesterday+'  ·  Goals: $65 AOV · 4% add-on','','','','','','',''],
-    ['Store MTD AOV: $'+storeAOV.toFixed(2)+'  ·  Add-on: '+storeAddon.toFixed(1)+'%  ·  '+storeTxn.toLocaleString()+' transactions','','','','','','',''],
-    [''],
-    ['Employee','MTD AOV','MTD Add-On %','MTD Txns','Yesterday AOV','Yesterday Txns','Status','Coaching Note'],
-  ];
+// ── REPORT 2: Coaching Report
+function generateCoachingReport(data, dateRange) {
+  var empStats = data.empStats;
+  var storeNet  = empStats.reduce(function(s,e){ return s+e.fullNet; }, 0);
+  var storeTxns = empStats.reduce(function(s,e){ return s+e.fullTxns; }, 0);
+  var storeAOV  = storeNet / storeTxns;
 
-  allNames.forEach(function(nm){
-    var m=mtd[nm]||null, y=yest[nm]||null;
-    var mAov=m?m.aov:0, mAdd=m?m.addon_pct:0, mTxn=m?m.txns:0;
-    var yAov=y?y.aov:0, yTxn=y?y.txns:0;
-    var fn=nm.split(' ')[0];
-    var status='', note='';
-    if(!m||mTxn<3){ status='Small Sample'; note=fn+' has limited MTD data. Monitor over a full shift.'; }
-    else if(yTxn>0&&yTxn<6){ status='Small Sample'; note=fn+' had only '+yTxn+' transaction(s) yesterday — too small to read.'; }
-    else if(yTxn>=6){
-      if(yAov>=AOV_GOAL&&mAdd>=ADD_GOAL){ status='On Target'; note=fn+' hit both goals yesterday ($'+yAov.toFixed(2)+' AOV, '+mAdd.toFixed(1)+'% add-on). Call it out.'; }
-      else if(yAov>=AOV_GOAL){ status='Strong AOV'; note=fn+' hit the AOV goal ($'+yAov.toFixed(2)+' yesterday). Add-on at '+mAdd.toFixed(1)+'% — remind them to offer one add-on per ticket.'; }
-      else if(yAov>=mAov*1.04){ status='Trending Up'; note=fn+' ran above their average yesterday ($'+yAov.toFixed(2)+' vs $'+mAov.toFixed(2)+' MTD). Acknowledge it.'; }
-      else if(yAov<mAov*0.91){ status='Check In'; note=fn+' dropped to $'+yAov.toFixed(2)+' yesterday vs $'+mAov.toFixed(2)+' MTD. Quick check-in — not a call-out.'; }
-      else if(mAov>=62){ status='Almost There'; note=fn+' at $'+yAov.toFixed(2)+' — $'+(AOV_GOAL-yAov).toFixed(2)+' from the goal. One trade-up per customer closes it.'; }
-      else{ status='Needs Push'; note=fn+' at $'+yAov.toFixed(2)+' — $'+(AOV_GOAL-yAov).toFixed(2)+' below goal. Product pairing conversation today.'; }
-    } else {
-      if(mAov>=AOV_GOAL&&mAdd>=ADD_GOAL){ status='On Target (MTD)'; note=fn+' hitting both goals MTD. Recognize it next shift.'; }
-      else if(mAov>=AOV_GOAL){ status='Strong AOV (MTD)'; note=fn+' at $'+mAov.toFixed(2)+' MTD. Add-on at '+mAdd.toFixed(1)+'% — push toward 4%.'; }
-      else if(mAov>=62){ status='Almost There (MTD)'; note=fn+' at $'+mAov.toFixed(2)+' MTD — $'+(AOV_GOAL-mAov).toFixed(2)+' from goal.'; }
-      else{ status='Below Goal (MTD)'; note=fn+' at $'+mAov.toFixed(2)+' MTD — $'+(AOV_GOAL-mAov).toFixed(2)+' below goal. Coaching conversation this week.'; }
+  var sorted = empStats.slice().sort(function(a,b){ return b.lastAov - a.lastAov; });
+
+  var wb   = XLSX.utils.book_new();
+  var aoa  = [];
+
+  aoa.push(['THE SANCTUARY — DAILY COACHING REPORT','','','','','','','','','']);
+  aoa.push([dateRange + '  ·  Goals: $65 AOV · 4% Add-On  ·  Last Shift vs Monthly Average','','','','','','','','','']);
+  aoa.push(['Store Average: $' + storeAOV.toFixed(2) + '  ·  ' + storeTxns.toLocaleString() + ' transactions MTD','','','','','','','','','']);
+  aoa.push(['']);
+  aoa.push(['Employee','MTD AOV','MTD Add-On%','MTD Txns','Last Shift Date','Last Shift AOV','Last Txns','vs MTD','Status','Coaching Note']);
+
+  sorted.forEach(function(s) {
+    var type = classify(s);
+    var diff = s.lastAov - s.mtdAov;
+    var note = coachingNote(s, type);
+    if (type !== 'small') {
+      note += '  |  ' + aovTip(s) + '  |  ' + addOnTip(s);
     }
-    aoa.push([nm, mAov?parseFloat(mAov.toFixed(2)):'', mAdd?parseFloat((mAdd/100).toFixed(4)):'', mTxn||0, yAov?parseFloat(yAov.toFixed(2)):'', yTxn||'—', status, note]);
+    aoa.push([
+      s.name,
+      s.mtdTxns >= 3 ? parseFloat(s.mtdAov.toFixed(2)) : '—',
+      s.mtdTxns >= 3 ? parseFloat((s.mtdAdd/100).toFixed(4)) : '—',
+      s.mtdTxns || '—',
+      s.lastDate,
+      parseFloat(s.lastAov.toFixed(2)),
+      s.lastTxns,
+      s.mtdTxns >= 3 ? parseFloat(diff.toFixed(2)) : '—',
+      statusLabel(type),
+      note
+    ]);
   });
 
   aoa.push(['']);
-  aoa.push(['* MTD excludes yesterday ('+yesterday+')  ·  Goals: $65 AOV · 4% add-on']);
+  aoa.push(['* MTD excludes last shift  ·  Diff = Last Shift AOV minus MTD avg  ·  Goals: $65 AOV · 4% add-on']);
+
   var ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:26},{wch:11},{wch:12},{wch:10},{wch:14},{wch:14},{wch:20},{wch:72}];
-  var wb = XLSX.utils.book_new();
+  ws['!cols'] = [{wch:26},{wch:10},{wch:12},{wch:9},{wch:14},{wch:14},{wch:10},{wch:9},{wch:16},{wch:90}];
   XLSX.utils.book_append_sheet(wb, ws, 'Coaching Report');
-  XLSX.writeFile(wb, 'Coaching_Report'+fileSuffix+'.xlsx');
+  XLSX.writeFile(wb, 'Coaching_Report_' + dateStr() + '.xlsx');
 }
 
-// ═══ WEEKLY AOV BREAKDOWN ═══
-function generateWeeklyAOV(rows, fileSuffix, dateLabel) {
-  var FLOOR = ['POS','PICKUP'];
-  var NAME_PATTERNS = [
-    [/\bashtyn\b|\bashyn\b|\bash\b/i,'Ashtyn'],[/\brayven\b/i,'Rayven'],[/\bdonavn\b|\bdonavan\b/i,'Donavan'],
-    [/\bdenelle\b/i,'Denelle'],[/\bparit\b/i,'Parit'],[/\bkathleen\b|\bkat\b/i,'Kat / Kathleen'],
-    [/\brichard\b|\brich\b/i,'Richard'],[/\bstas\b/i,'Stas'],[/\bjosh(ua)?\b/i,'Josh'],
-    [/\bnorma\b/i,'Norma'],[/\balyssa\b/i,'Alyssa'],[/\bcassie\b/i,'Cassie'],
-  ];
-  function xname(n){ for(var i=0;i<NAME_PATTERNS.length;i++) if(NAME_PATTERNS[i][0].test(n)) return NAME_PATTERNS[i][1]; return 'No Dispatcher Listed'; }
-
-  var allDates = Array.from(new Set(rows.map(function(r){ return r['Date Open']; }).filter(Boolean))).sort();
-  var weeks = {}, weekKeys = [];
-  allDates.forEach(function(d){
-    var dt=new Date(d), dow=dt.getDay();
-    var mon=new Date(dt); mon.setDate(dt.getDate()-((dow+6)%7));
-    var sun=new Date(mon); sun.setDate(mon.getDate()+6);
-    var lbl=(mon.getMonth()+1)+'/'+mon.getDate()+'-'+(sun.getMonth()+1)+'/'+sun.getDate();
-    if(!weeks[lbl]){ weeks[lbl]=[]; weekKeys.push(lbl); }
-    weeks[lbl].push(d);
-  });
-
-  function buildSF(subset) {
-    var tix={};
-    subset.forEach(function(r){
-      if(!FLOOR.includes((r['Ticket Type']||'').toUpperCase())||r['Type']!=='Sale') return;
-      var tid=(r['Ticket ID']||'').trim(), ch=(r['Cashier']||'').trim();
-      if(!tid||!ch||/register|sanctuary/i.test(ch)) return;
-      var net=parseFloat(r['Net Sales']||0), gross=parseFloat(r['Gross Receipts']||0);
-      var ia=/add.?on/i.test(r['Product Name']||'');
-      if(!tix[tid]) tix[tid]={cashier:ch,net:0,gross:0,addon:0};
-      tix[tid].net+=net; tix[tid].gross+=gross; if(ia) tix[tid].addon+=net;
-    });
-    var emp={};
-    Object.values(tix).forEach(function(t){
-      if(t.net<=0) return;
-      if(!emp[t.cashier]) emp[t.cashier]={net:0,gross:0,addon:0,txns:0};
-      emp[t.cashier].net+=t.net; emp[t.cashier].gross+=t.gross; emp[t.cashier].addon+=t.addon; emp[t.cashier].txns++;
-    });
-    var res={};
-    Object.entries(emp).forEach(function(e){ var nm=e[0],d=e[1]; res[nm]={txns:d.txns,aov:d.net/d.txns,addon_pct:d.net>0?d.addon/d.net*100:0,net:d.net}; });
-    return res;
-  }
-
-  function buildDL(subset) {
-    var tix={};
-    subset.forEach(function(r){
-      if((r['Ticket Type']||'').toUpperCase()!=='DELIVERY'||r['Type']!=='Sale') return;
-      var tid=(r['Ticket ID']||'').trim(), note=(r['Ticket Notes']||'').trim();
-      var net=parseFloat(r['Net Sales']||0); var ia=/add.?on/i.test(r['Product Name']||'');
-      if(!tid) return;
-      if(!tix[tid]) tix[tid]={name:xname(note),net:0,addon:0};
-      tix[tid].net+=net; if(ia) tix[tid].addon+=net;
-    });
-    var emp={};
-    Object.values(tix).forEach(function(t){
-      if(t.net<=0) return;
-      if(!emp[t.name]) emp[t.name]={net:0,addon:0,txns:0};
-      emp[t.name].net+=t.net; emp[t.name].addon+=t.addon; emp[t.name].txns++;
-    });
-    var res={};
-    Object.entries(emp).forEach(function(e){ var nm=e[0],d=e[1]; res[nm]={txns:d.txns,aov:d.net/d.txns,addon_pct:d.net>0?d.addon/d.net*100:0,net:d.net}; });
-    return res;
-  }
-
-  var fullSF=buildSF(rows), fullDL=buildDL(rows);
-  var wkSF=weekKeys.map(function(k){ return buildSF(rows.filter(function(r){ return weeks[k].includes(r['Date Open']); })); });
-  var wkDL=weekKeys.map(function(k){ return buildDL(rows.filter(function(r){ return weeks[k].includes(r['Date Open']); })); });
-
-  function saov(d){ var n=Object.values(d).reduce(function(s,x){ return s+x.net; },0); var t=Object.values(d).reduce(function(s,x){ return s+x.txns; },0); return t?n/t:0; }
-
-  var sfSorted=Object.entries(fullSF).sort(function(a,b){ return b[1].aov-a[1].aov; });
-  var dlSorted=Object.entries(fullDL).filter(function(e){ return e[0]!=='No Dispatcher Listed'; }).sort(function(a,b){ return b[1].aov-a[1].aov; });
-
-  var wb=XLSX.utils.book_new();
-
-  // SF sheet
-  var sfHdr=['Rank','Budtender'].concat(weekKeys.map(function(k){ return 'Wk '+k; })).concat(['Monthly AOV','Add-On %','Total Txns']);
-  var sfRows=[['THE SANCTUARY — SALES FLOOR WEEKLY AOV'],[''],sfHdr];
-  sfSorted.forEach(function(e,i){
-    var nm=e[0],d=e[1];
-    sfRows.push([i+1,nm].concat(weekKeys.map(function(_,wi){ var w=wkSF[wi][nm]; return w&&w.txns>=2?parseFloat(w.aov.toFixed(2)):'—'; })).concat([parseFloat(d.aov.toFixed(2)),parseFloat((d.addon_pct/100).toFixed(4)),d.txns]));
-  });
-  sfRows.push([]);
-  sfRows.push(['Store Avg',''].concat(weekKeys.map(function(_,wi){ return parseFloat(saov(wkSF[wi]).toFixed(2)); })).concat([parseFloat(saov(fullSF).toFixed(2)),'',Object.values(fullSF).reduce(function(s,d){ return s+d.txns; },0)]));
-  var wsSF=XLSX.utils.aoa_to_sheet(sfRows);
-  wsSF['!cols']=[{wch:6},{wch:26}].concat(weekKeys.map(function(){ return {wch:16}; })).concat([{wch:13},{wch:11},{wch:10}]);
-  XLSX.utils.book_append_sheet(wb,wsSF,'Sales Floor');
-
-  // DL sheet
-  var dlHdr=['Rank','Dispatcher'].concat(weekKeys.map(function(k){ return 'Wk '+k; })).concat(['Monthly AOV','Add-On %','Deliveries']);
-  var dlRows=[['THE SANCTUARY — DELIVERY WEEKLY AOV'],[''],dlHdr];
-  dlSorted.concat(Object.entries(fullDL).filter(function(e){ return e[0]==='No Dispatcher Listed'; })).forEach(function(e,i){
-    var nm=e[0],d=e[1],isNo=nm==='No Dispatcher Listed';
-    dlRows.push([isNo?'—':i+1,nm].concat(weekKeys.map(function(_,wi){ var w=wkDL[wi][nm]; return w&&w.txns>=1?parseFloat(w.aov.toFixed(2)):'—'; })).concat([parseFloat(d.aov.toFixed(2)),parseFloat((d.addon_pct/100).toFixed(4)),d.txns]));
-  });
-  var wsDL=XLSX.utils.aoa_to_sheet(dlRows);
-  wsDL['!cols']=[{wch:6},{wch:24}].concat(weekKeys.map(function(){ return {wch:16}; })).concat([{wch:13},{wch:11},{wch:10}]);
-  XLSX.utils.book_append_sheet(wb,wsDL,'Delivery');
-
-  XLSX.writeFile(wb,'AOV_Weekly_Breakdown'+fileSuffix+'.xlsx');
+// ── Entry point
+function runReports(rows, fileName) {
+  setStatus('processing', 'Computing stats...', true);
+  setTimeout(function() {
+    try {
+      var dates = Array.from(new Set(rows.map(function(r){ return r['Date Open']; }).filter(Boolean))).sort();
+      var dateRange = dates.length >= 2 ? 'May 1\u2013' + dates[dates.length-1].split('/')[1] + ', 2026' : fileName;
+      var data = parseCSV(rows);
+      if (!data.empStats.length) { setStatus('error', 'No sales floor data found in this file.'); return; }
+      var errs = [];
+      try { generateAOVReport(data, dateRange); } catch(e){ errs.push('AOV: '+e.message); console.error('AOV Report error:',e); }
+      setTimeout(function(){
+        try { generateCoachingReport(data, dateRange); } catch(e){ errs.push('Coaching: '+e.message); console.error('Coaching error:',e); }
+        if(errs.length) setStatus('error', 'Error: ' + errs.join(' | '));
+        else setStatus('success', '\u2705 2 files downloaded \u2014 AOV Report + Coaching Report');
+      }, 800);
+    } catch(e) {
+      setStatus('error', 'Error: ' + e.message);
+      console.error(e);
+    }
+  }, 30);
 }
 
 </script>
