@@ -1,445 +1,1329 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>The Sanctuary — Reports</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Sanctuary | Manager Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f2;color:#1a2620;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.card{background:#fff;border:1px solid #e4e9e5;border-radius:14px;overflow:hidden;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(0,0,0,0.07)}
-.card-header{background:#155230;padding:26px 28px 20px;text-align:center}
-.card-header h1{font-size:1.35rem;font-weight:700;color:#fff;margin-bottom:4px}
-.card-header p{font-size:0.78rem;color:#9ab0a0}
-.card-body{padding:28px}
+:root {
+  --bg: #EFF2EC;
+  --card: #FFFFFF;
+  --sidebar: #0C1E10;
+  --sidebar-hover: #182E1C;
+  --sidebar-active: #2D6A4F;
+  --primary: #2D6A4F;
+  --primary-light: #40916C;
+  --accent-gold: #C8981E;
+  --text: #18181A;
+  --text-sub: #4A4A52;
+  --text-muted: #8A8A96;
+  --border: #D8DDD4;
+  --above: #1B7B3C; --above-bg: #E8F5EC;
+  --close: #A05C00; --close-bg: #FEF3DC;
+  --below: #B91C1C; --below-bg: #FEE8E8;
+  --day-color: #1A5C9A; --day-bg: #E6F0FA;
+  --night-color: #5B21B6; --night-bg: #EDE9FF;
+  --delivery-color: #C0501E; --delivery-bg: #FFF0E8;
+  --inventory-color: #2563EB; --inventory-bg: #EEF3FF;
+  --r: 10px;
+  --sh: 0 1px 3px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04);
+}
 
-/* LOGIN */
-.field label{display:block;font-size:0.72rem;font-weight:700;color:#6b8070;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
-.field input{width:100%;padding:10px 14px;border:1.5px solid #e4e9e5;border-radius:8px;font-size:0.9rem;outline:none;transition:border .15s}
-.field input:focus{border-color:#4caf72}
-.btn{margin-top:14px;width:100%;background:#155230;color:#fff;border:none;border-radius:8px;padding:11px;font-size:0.88rem;font-weight:600;cursor:pointer;transition:background .15s}
-.btn:hover{background:#1e7040}
-.err{margin-top:8px;font-size:0.76rem;color:#c8392a;text-align:center;min-height:18px}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
 
-/* APP */
-#app{display:none}
-.drop-zone{border:2px dashed #d5eddb;border-radius:12px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:18px}
-.drop-zone:hover,.drop-zone.over{border-color:#2e9455;background:#f0f7f2}
-.drop-zone .icon{font-size:2rem;margin-bottom:10px}
-.drop-zone h2{font-size:1rem;font-weight:600;margin-bottom:6px}
-.drop-zone p{font-size:0.76rem;color:#6b8070;margin-bottom:14px;line-height:1.6}
-.drop-btn{background:#155230;color:#fff;border:none;border-radius:7px;padding:9px 22px;font-size:0.82rem;font-weight:600;cursor:pointer}
-.drop-btn:hover{background:#1e7040}
+/* ---- SIDEBAR ---- */
+.sidebar { width: 210px; min-width: 210px; background: var(--sidebar); display: flex; flex-direction: column; height: 100vh; }
+.sb-logo { padding: 20px 18px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.sb-logo .name { font-size: 13px; font-weight: 800; color: #FFF; letter-spacing: 0.05em; text-transform: uppercase; }
+.sb-logo .sub { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+.sb-nav { flex: 1; padding: 10px 8px; list-style: none; }
+.sb-nav li { margin: 2px 0; }
+.sb-nav a { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 7px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.sb-nav a:hover { background: var(--sidebar-hover); color: rgba(255,255,255,0.85); }
+.sb-nav a.active { background: var(--sidebar-active); color: #FFF; }
+.sb-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.sb-foot { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 0.04em; }
 
-.outputs{background:#f0f7f2;border-radius:10px;padding:14px 16px;margin-bottom:16px}
-.outputs p{font-size:0.76rem;color:#6b8070;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
-.out-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #d5eddb;font-size:0.82rem;color:#1a2620}
-.out-item:last-child{border-bottom:none}
-.out-item span{font-size:1rem}
+/* ---- MAIN ---- */
+.content { flex: 1; overflow-y: auto; height: 100vh; }
+.section { display: none; padding: 28px 30px 48px; max-width: 1080px; }
+.section.active { display: block; }
 
-#status{background:#fff;border:1px solid #e4e9e5;border-radius:10px;padding:12px 16px;font-size:0.82rem;color:#6b8070;display:flex;align-items:center;gap:10px;min-height:44px}
-#status.processing{border-color:#4caf72;background:#f0f7f2;color:#155230}
-#status.success{border-color:#2e9455;background:#f0f7f2;color:#1e5030}
-#status.error{border-color:#c8392a;background:#fff0f0;color:#c8392a}
-.spinner{width:14px;height:14px;border:2px solid #d5eddb;border-top-color:#2e9455;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-@keyframes spin{to{transform:rotate(360deg)}}
-.sign-out{background:none;border:none;color:#9ab0a0;font-size:0.74rem;cursor:pointer;margin-top:14px;display:block;width:100%;text-align:center;padding:6px}
-.sign-out:hover{color:#1a2620}
+/* ---- SECTION HEADER ---- */
+.sec-head { margin-bottom: 22px; }
+.sec-head h1 { font-size: 20px; font-weight: 700; }
+.sec-head p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* ---- UPLOAD ---- */
+.upload-area { border: 2px dashed var(--border); border-radius: var(--r); padding: 30px 24px; text-align: center; cursor: pointer; transition: all 0.18s; background: var(--card); margin-bottom: 20px; }
+.upload-area:hover, .upload-area.drag-over { border-color: var(--primary); background: rgba(45,106,79,0.03); }
+.upload-area input[type="file"] { display: none; }
+.upload-area .ui { font-size: 26px; margin-bottom: 8px; }
+.upload-area h3 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.upload-area p { font-size: 11px; color: var(--text-muted); }
+.upload-loaded { border-color: var(--primary); background: rgba(45,106,79,0.05); }
+
+/* ---- CARDS ---- */
+.card { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); box-shadow: var(--sh); margin-bottom: 16px; overflow: hidden; }
+.card-head { padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #FAFCF8; }
+.card-head h2 { font-size: 13px; font-weight: 700; color: var(--primary); }
+.card-body { padding: 16px; }
+
+/* ---- STATS ROW ---- */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--sh); }
+.stat-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-muted); margin-bottom: 5px; }
+.stat-val { font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.stat-val.green { color: var(--above); }
+.stat-val.amber { color: var(--close); }
+.stat-val.red { color: var(--below); }
+.stat-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+/* ---- TABLE ---- */
+.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tbl th { padding: 8px 12px; text-align: left; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); border-bottom: 1px solid var(--border); background: #FAFAFA; }
+.tbl th.right, .tbl td.right { text-align: right; }
+.tbl th.center, .tbl td.center { text-align: center; }
+.tbl td { padding: 9px 12px; border-bottom: 1px solid #F3F3F3; vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover { background: #F9FBF8; }
+
+/* ---- BADGES ---- */
+.badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.badge-above { background: var(--above-bg); color: var(--above); }
+.badge-close { background: var(--close-bg); color: var(--close); }
+.badge-below { background: var(--below-bg); color: var(--below); }
+.badge-day { background: var(--day-bg); color: var(--day-color); }
+.badge-night { background: var(--night-bg); color: var(--night-color); }
+.badge-delivery { background: var(--delivery-bg); color: var(--delivery-color); }
+.badge-both { background: #F0F9FF; color: #0369A1; }
+
+/* ---- COACHING NOTES ---- */
+.coaching-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.coaching-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; border-left: 3px solid var(--primary); }
+.coaching-card.above { border-left-color: var(--above); }
+.coaching-card.close { border-left-color: var(--close); }
+.coaching-card.below { border-left-color: var(--below); }
+.cc-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.cc-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+.cc-note { font-size: 12px; color: var(--text-sub); line-height: 1.6; }
+
+/* ---- 1V1 CONTEST ---- */
+.contest-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; margin-bottom: 20px; position: relative; }
+.contest-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.contest-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-gold); }
+.contest-month { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+.contest-match { display: grid; grid-template-columns: 1fr 36px 1fr; gap: 14px; align-items: center; }
+.c-player { text-align: center; }
+.c-player-name { font-size: 14px; font-weight: 700; }
+.c-player-dept { font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 4px; }
+.c-player-aov { font-size: 30px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--primary); }
+.c-player-txns { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.c-winner .c-player-aov { color: var(--above); }
+.c-vs { font-size: 14px; font-weight: 800; color: var(--text-muted); text-align: center; }
+.contest-bar-wrap { margin-top: 14px; }
+.contest-bar-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.contest-bar-bg { height: 6px; background: #EEF0EC; border-radius: 3px; overflow: hidden; }
+.contest-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent-gold)); border-radius: 3px; transition: width 0.5s ease; }
+.contest-edit-btn { position: absolute; top: 14px; right: 14px; background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+.contest-edit-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ---- MODAL ---- */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--card); border-radius: 14px; padding: 24px; width: 460px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.modal h2 { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.fg { display: flex; flex-direction: column; gap: 4px; }
+.fg label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.07em; }
+.fg input, .fg select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
+.fg input:focus, .fg select:focus { border-color: var(--primary); }
+.fg.full { grid-column: 1/-1; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-save { background: var(--primary); color: white; border: none; padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.btn-cancel { background: none; border: 1px solid var(--border); padding: 8px 18px; border-radius: 7px; font-size: 13px; cursor: pointer; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+
+/* ---- ACTION BAR ---- */
+.action-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.btn-print { display: flex; align-items: center; gap: 6px; background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.btn-print:hover { background: var(--primary-light); }
+.btn-clear { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); padding: 8px 14px; border-radius: 7px; font-size: 12px; cursor: pointer; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+.btn-clear:hover { border-color: #aaa; color: var(--text); }
+.res-date { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+
+/* ---- DRIVER SAFETY ---- */
+.driver-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.driver-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; box-shadow: var(--sh); }
+.dc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.dc-name { font-size: 13px; font-weight: 700; }
+.dc-rank { font-size: 10px; color: var(--text-muted); }
+.dc-score-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.dc-score { font-size: 34px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.dc-rating { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; }
+.tier-exc { color: #145A32; background: #EAFAF1; }
+.tier-good { color: #1A5276; background: #EBF5FB; }
+.tier-fair { color: #784212; background: #FEF5E7; }
+.tier-poor { color: #7B241C; background: #FDEDEC; }
+.dc-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 10px; }
+.dc-top-issue { font-size: 11px; }
+.dc-issue-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 3px; }
+.dc-bar-bg { height: 3px; background: #E8E8E8; border-radius: 2px; margin-top: 3px; overflow: hidden; }
+.dc-bar-fill { height: 100%; background: var(--below); border-radius: 2px; }
+.dc-change { font-size: 10px; font-weight: 600; }
+.dc-change.up { color: var(--above); }
+.dc-change.down { color: var(--below); }
+.dc-change.same { color: var(--text-muted); }
+
+/* ---- SCHEDULE ---- */
+.tab-bar { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 20px; gap: 0; }
+.tab-btn { padding: 8px 18px; font-size: 13px; font-weight: 500; border: none; background: none; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+.sched-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+.sched-tbl th { background: var(--primary); color: white; padding: 8px 8px; text-align: center; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.sched-tbl th.emp-col { text-align: left; min-width: 140px; }
+.sched-tbl td { padding: 6px 8px; border-bottom: 1px solid #F2F2F2; border-right: 1px solid #F5F5F5; vertical-align: middle; }
+.sched-tbl tbody tr:nth-child(even) { background: #FAFAFA; }
+.shift-pill { font-size: 10px; border-radius: 4px; padding: 2px 6px; display: inline-block; white-space: nowrap; }
+.sp-sales { background: var(--day-bg); color: var(--day-color); }
+.sp-delivery { background: var(--delivery-bg); color: var(--delivery-color); }
+.sp-inventory { background: var(--inventory-bg); color: var(--inventory-color); }
+.sp-sanctuary { background: #F0FDF4; color: #15803D; }
+.sp-off { color: #CCC; font-style: italic; }
+.bs-day { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 14px; overflow: hidden; }
+.bs-day-head { background: var(--primary); color: white; padding: 10px 16px; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.bs-day-count { font-size: 10px; opacity: 0.7; }
+.bs-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.bs-tbl th { padding: 7px 12px; background: #F6F9F5; font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); font-weight: 700; border-bottom: 1px solid var(--border); text-align: left; }
+.bs-tbl td { padding: 8px 12px; border-bottom: 1px solid #F5F5F5; }
+.bs-tbl tr:last-child td { border-bottom: none; }
+.break-tag { font-size: 10px; background: #FFF3CD; color: #856404; border-radius: 3px; padding: 1px 5px; margin-right: 3px; white-space: nowrap; }
+.meal-tag { font-size: 10px; background: #CCE5FF; color: #004085; border-radius: 3px; padding: 1px 5px; margin-right: 3px; white-space: nowrap; }
+
+/* ---- RESTOCK ---- */
+.restock-always { background: linear-gradient(135deg, #0C1E10 0%, #2D6A4F 100%); border-radius: var(--r); padding: 16px 20px; margin-bottom: 20px; }
+.ra-head { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 6px; }
+.ra-body { font-size: 13px; color: rgba(255,255,255,0.9); }
+.ra-body strong { color: white; }
+.restock-cat { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; }
+.rc-head { padding: 10px 16px; background: #F6F9F5; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.rc-title { font-size: 13px; font-weight: 700; color: var(--primary); }
+.rc-count { font-size: 9px; background: var(--primary); color: white; padding: 1px 7px; border-radius: 10px; font-weight: 700; }
+.restock-item { display: flex; align-items: center; padding: 9px 16px; border-bottom: 1px solid #F5F5F5; gap: 10px; }
+.restock-item:last-child { border-bottom: none; }
+.ri-rank { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; min-width: 22px; text-align: right; }
+.ri-info { flex: 1; }
+.ri-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.ri-brand { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.ri-units { font-size: 11px; font-weight: 700; background: var(--below-bg); color: var(--below); padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+
+/* ---- EMPTY STATE ---- */
+.empty { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+.empty-icon { font-size: 36px; margin-bottom: 12px; }
+.empty p { font-size: 13px; }
+
+/* ---- NOTICE / WARNING ---- */
+.notice { background: #FEF9E7; border: 1px solid #F5D98B; border-radius: 7px; padding: 10px 14px; font-size: 12px; color: #7A5200; margin-bottom: 14px; }
+.notice-err { background: var(--below-bg); border-color: #FBBCBC; color: var(--below); }
+
+/* ---- PRINT ---- */
+@media print {
+  .sidebar, .upload-area, .action-bar, .contest-edit-btn, .tab-bar { display: none !important; }
+  .content { overflow: visible !important; height: auto !important; }
+  body { overflow: visible !important; }
+  .section { display: block !important; padding: 0 !important; }
+  .section:not(.print-target) { display: none !important; }
+  .tab-pane { display: block !important; }
+  .card, .stat, .driver-card, .bs-day, .restock-cat { page-break-inside: avoid; }
+  .contest-wrap { display: none !important; }
+}
 </style>
 </head>
 <body>
 
-<div id="app" class="card" style="display:block">
-  <div class="card-header">
-    <h1>Report Generator</h1>
-    <p>The Sanctuary &mdash; Management</p>
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="name">The Sanctuary</div>
+    <div class="sub">Manager Hub</div>
   </div>
-  <div class="card-body">
-    <div class="drop-zone" id="dz" onclick="document.getElementById('fi').click()">
-      <div class="icon">📂</div>
-      <h2>Drop Treez Product Summary CSV</h2>
-      <p>Generates two files automatically when dropped</p>
-      <button class="drop-btn" onclick="event.stopPropagation();document.getElementById('fi').click()">Choose File</button>
-      <input type="file" id="fi" accept=".csv" style="display:none"/>
+  <ul class="sb-nav">
+    <li><a href="#" class="active" data-sec="aov"><span class="sb-icon">📊</span>AOV Report</a></li>
+    <li><a href="#" data-sec="drivers"><span class="sb-icon">🚗</span>Driver Safety</a></li>
+    <li><a href="#" data-sec="schedule"><span class="sb-icon">📅</span>Schedule</a></li>
+    <li><a href="#" data-sec="restock"><span class="sb-icon">📋</span>Restock List</a></li>
+  </ul>
+  <div class="sb-foot">v1.0 · The Sanctuary CA</div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+  <!-- ===== AOV REPORT ===== -->
+  <section class="section active" id="aov">
+    <div class="sec-head">
+      <h1>AOV Report</h1>
+      <p>Upload your daily sales CSV to generate the coaching report and day/night breakdown.</p>
     </div>
 
-    <div class="outputs">
-      <p>Generates</p>
-      <div class="out-item"><span>📊</span> AOV Report &mdash; Sales Floor + Delivery (Excel)</div>
-      <div class="out-item"><span>🎯</span> Coaching Report &mdash; Last shift vs monthly avg (Excel)</div>
+    <!-- Upload -->
+    <div class="upload-area" id="aov-drop" onclick="document.getElementById('aov-file').click()">
+      <input type="file" id="aov-file" accept=".csv">
+      <div class="ui">📊</div>
+      <h3>Drop sales CSV here</h3>
+      <p>Supports standard POS export formats · CSV only</p>
     </div>
 
-    <div id="status"><span>Ready &mdash; waiting for file</span></div>
+    <!-- 1v1 Contest Panel -->
+    <div class="contest-wrap" id="contest-wrap">
+      <div class="contest-head">
+        <div class="contest-title">🏆 1v1 Contest</div>
+        <div class="contest-month" id="c-month">—</div>
+      </div>
+      <div class="contest-match" id="c-match">
+        <div class="c-player" id="c-p1">
+          <div class="c-player-dept" id="c-p1-dept">—</div>
+          <div class="c-player-name" id="c-p1-name">—</div>
+          <div class="c-player-aov" id="c-p1-aov">—</div>
+          <div class="c-player-txns" id="c-p1-txns">— transactions</div>
+        </div>
+        <div class="c-vs">VS</div>
+        <div class="c-player" id="c-p2">
+          <div class="c-player-dept" id="c-p2-dept">—</div>
+          <div class="c-player-name" id="c-p2-name">—</div>
+          <div class="c-player-aov" id="c-p2-aov">—</div>
+          <div class="c-player-txns" id="c-p2-txns">— transactions</div>
+        </div>
+      </div>
+      <div class="contest-bar-wrap">
+        <div class="contest-bar-labels">
+          <span id="c-bar-l1">Player 1</span>
+          <span id="c-bar-l2">Player 2</span>
+        </div>
+        <div class="contest-bar-bg"><div class="contest-bar-fill" id="c-bar-fill" style="width:50%"></div></div>
+      </div>
+      <button class="contest-edit-btn" onclick="openContest()">Edit Contest</button>
+    </div>
+
+    <!-- Results -->
+    <div id="aov-results" style="display:none">
+      <div class="action-bar">
+        <button class="btn-print" onclick="printSection('aov')">🖨 Print Report</button>
+        <button class="btn-clear" onclick="clearSection('aov')">✕ Clear</button>
+        <span class="res-date" id="aov-date-label"></span>
+      </div>
+      <div class="stats-row" id="aov-stats"></div>
+      <div class="card">
+        <div class="card-head"><h2>Individual Performance</h2></div>
+        <div class="card-body" style="padding:0">
+          <table class="tbl" id="aov-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th class="center">Shift</th>
+                <th class="right">Transactions</th>
+                <th class="right">Total Sales</th>
+                <th class="right">AOV</th>
+                <th class="right">Target</th>
+                <th class="center">vs Target</th>
+                <th class="center">Status</th>
+              </tr>
+            </thead>
+            <tbody id="aov-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Day/Night Split -->
+      <div class="card">
+        <div class="card-head"><h2>Day vs Night Breakdown</h2></div>
+        <div class="card-body" style="padding:0">
+          <table class="tbl" id="daynite-table">
+            <thead>
+              <tr>
+                <th>Shift</th>
+                <th class="right">Transactions</th>
+                <th class="right">Total Sales</th>
+                <th class="right">AOV</th>
+                <th class="right">Avg per Employee</th>
+              </tr>
+            </thead>
+            <tbody id="daynite-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Coaching Notes -->
+      <div class="card">
+        <div class="card-head"><h2>Coaching Notes</h2></div>
+        <div class="card-body">
+          <div class="coaching-grid" id="coaching-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DRIVER SAFETY ===== -->
+  <section class="section" id="drivers">
+    <div class="sec-head">
+      <h1>Driver Safety</h1>
+      <p>Upload the safety data Excel file to generate the performance scorecard.</p>
+    </div>
+    <div class="upload-area" id="drv-drop" onclick="document.getElementById('drv-file').click()">
+      <input type="file" id="drv-file" accept=".xlsx,.xls,.csv">
+      <div class="ui">🚗</div>
+      <h3>Drop safety data Excel here</h3>
+      <p>.xlsx / .xls / .csv · Same format as before</p>
+    </div>
+    <div id="drv-results" style="display:none">
+      <div class="action-bar">
+        <button class="btn-print" onclick="printSection('drivers')">🖨 Print Report</button>
+        <button class="btn-clear" onclick="clearSection('drivers')">✕ Clear</button>
+        <span class="res-date" id="drv-date-label"></span>
+      </div>
+      <div class="stats-row" id="drv-stats"></div>
+      <div class="driver-grid" id="driver-grid"></div>
+      <div class="card">
+        <div class="card-head"><h2>Incident Breakdown by Category</h2></div>
+        <div class="card-body" style="padding:0">
+          <table class="tbl" id="drv-incident-table">
+            <thead><tr id="drv-inc-head"></tr></thead>
+            <tbody id="drv-inc-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCHEDULE ===== -->
+  <section class="section" id="schedule">
+    <div class="sec-head">
+      <h1>Schedule + Breaksheet</h1>
+      <p>Upload your schedule HTML export — get the full weekly view plus daily breaksheets.</p>
+    </div>
+    <div class="upload-area" id="sched-drop" onclick="document.getElementById('sched-file').click()">
+      <input type="file" id="sched-file" accept=".html,.htm">
+      <div class="ui">📅</div>
+      <h3>Drop schedule HTML here</h3>
+      <p>HTML export from your scheduling system</p>
+    </div>
+    <div id="sched-results" style="display:none">
+      <div class="action-bar">
+        <button class="btn-print" onclick="printSection('schedule')">🖨 Print</button>
+        <button class="btn-clear" onclick="clearSection('schedule')">✕ Clear</button>
+        <span class="res-date" id="sched-date-label"></span>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="sched-weekly" onclick="switchTab(this,'sched-weekly')">Weekly Schedule</button>
+        <button class="tab-btn" data-tab="sched-breaks" onclick="switchTab(this,'sched-breaks')">Breaksheet</button>
+      </div>
+      <div class="tab-pane active" id="sched-weekly">
+        <div class="card" style="overflow-x:auto">
+          <div class="card-body" style="padding:0; overflow-x:auto">
+            <table class="sched-tbl" id="sched-table"></table>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane" id="sched-breaks">
+        <div id="breaks-container"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RESTOCK LIST ===== -->
+  <section class="section" id="restock">
+    <div class="sec-head">
+      <h1>Restock List</h1>
+      <p>Upload tonight's inventory log CSV — get a prioritized restock list by category.</p>
+    </div>
+    <div class="upload-area" id="rst-drop" onclick="document.getElementById('rst-file').click()">
+      <input type="file" id="rst-file" accept=".csv">
+      <div class="ui">📋</div>
+      <h3>Drop inventory log CSV here</h3>
+      <p>Inventory_Report_Log_MMDDYYYY_HHMMSS.csv</p>
+    </div>
+    <div id="rst-results" style="display:none">
+      <div class="action-bar">
+        <button class="btn-print" onclick="printSection('restock')">🖨 Print List</button>
+        <button class="btn-clear" onclick="clearSection('restock')">✕ Clear</button>
+        <span class="res-date" id="rst-date-label"></span>
+      </div>
+      <div class="restock-always">
+        <div class="ra-head">Always Full Restock Every Night</div>
+        <div class="ra-body"><strong>ONIT · Another World · Wyld</strong> — pull and fully restock all available units for these three brands regardless of sales volume.</div>
+      </div>
+      <div id="rst-categories"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Contest Edit Modal -->
+<div class="modal-bg" id="contest-modal">
+  <div class="modal">
+    <h2>🏆 Edit 1v1 Contest</h2>
+    <div class="modal-grid">
+      <div class="fg full">
+        <label>Contest Month</label>
+        <input type="text" id="c-month-input" placeholder="e.g. June 2026">
+      </div>
+      <div class="fg"><label>Player 1 Name</label><input type="text" id="c-p1-name-input" placeholder="Employee name"></div>
+      <div class="fg"><label>Player 2 Name</label><input type="text" id="c-p2-name-input" placeholder="Employee name"></div>
+      <div class="fg"><label>P1 Department</label>
+        <select id="c-p1-dept-input"><option>Sales Floor</option><option>Delivery</option><option>Inventory</option></select>
+      </div>
+      <div class="fg"><label>P2 Department</label>
+        <select id="c-p2-dept-input"><option>Sales Floor</option><option>Delivery</option><option>Inventory</option></select>
+      </div>
+      <div class="fg"><label>P1 MTD AOV ($)</label><input type="number" id="c-p1-aov-input" step="0.01" placeholder="0.00"></div>
+      <div class="fg"><label>P2 MTD AOV ($)</label><input type="number" id="c-p2-aov-input" step="0.01" placeholder="0.00"></div>
+      <div class="fg"><label>P1 Transactions</label><input type="number" id="c-p1-txns-input" placeholder="0"></div>
+      <div class="fg"><label>P2 Transactions</label><input type="number" id="c-p2-txns-input" placeholder="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeContest()">Cancel</button>
+      <button class="btn-save" onclick="saveContest()">Save Contest</button>
+    </div>
   </div>
 </div>
 
 <script>
-var dz=document.getElementById('dz');
-['dragenter','dragover'].forEach(function(ev){ dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add('over');}); });
-['dragleave','drop'].forEach(function(ev){ dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove('over');}); });
-dz.addEventListener('drop',function(e){ var f=e.dataTransfer.files[0]; if(f&&f.name.endsWith('.csv')) handleFile(f); else setStatus('error','Please drop a .csv file'); });
-document.getElementById('fi').addEventListener('change',function(e){ if(e.target.files[0]) handleFile(e.target.files[0]); });
-
-function handleFile(file){
-  setStatus('processing','Reading file…',true);
-  Papa.parse(file,{
-    header:true, skipEmptyLines:true,
-    complete:function(res){
-      if(!res.data||!res.data.length){setStatus('error','File appears empty.');return;}
-      runReports(res.data, file.name);
-    },
-    error:function(){ setStatus('error','Could not read file.'); }
+// ============================================================
+// NAVIGATION
+// ============================================================
+document.querySelectorAll('.sb-nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const sec = a.dataset.sec;
+    document.querySelectorAll('.sb-nav a').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    document.getElementById(sec).classList.add('active');
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('print-target'));
+    document.getElementById(sec).classList.add('print-target');
   });
+});
+document.getElementById('aov').classList.add('print-target');
+
+function switchTab(btn, paneId) {
+  const bar = btn.closest('.tab-bar');
+  bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const wrapper = btn.closest('.section') || document.body;
+  wrapper.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(paneId).classList.add('active');
 }
 
-function setStatus(type,msg,spin){
-  var el=document.getElementById('status');
-  el.className=type; el.innerHTML='';
-  if(spin){var s=document.createElement('div');s.className='spinner';el.appendChild(s);}
-  var t=document.createElement('span');t.textContent=msg;el.appendChild(t);
-}
-</script>
-
-<script>
-// ── Name normalizer (delivery dispatchers)
-var NAME_MAP = [
-  [/\bashtyn\b|\bashyn\b|\bash\b/i,'Ashtyn'],[/\brayven\b/i,'Rayven'],
-  [/\bdonavn\b|\bdonavan\b/i,'Donavan'],[/\bdenelle\b/i,'Denelle'],
-  [/\bparit\b/i,'Parit'],[/\bkathleen\b|\bkat\b/i,'Kat / Kathleen'],
-  [/\brichard\b|\brich\b/i,'Richard'],[/\bstas\b/i,'Stas'],
-  [/\bjosh(ua)?\b/i,'Josh'],[/\bnorma\b/i,'Norma'],
-  [/\balyssa\b/i,'Alyssa'],[/\bcassie\b/i,'Cassie'],
-];
-function dispName(n) {
-  for (var i=0;i<NAME_MAP.length;i++) if (NAME_MAP[i][0].test(n)) return NAME_MAP[i][1];
-  return 'No Dispatcher Listed';
+function printSection(sec) {
+  document.querySelectorAll('.section').forEach(x => x.classList.remove('print-target'));
+  document.getElementById(sec).classList.add('print-target');
+  window.print();
 }
 
-// ── Parse CSV into ticket maps
-function parseCSV(rows) {
-  var FLOOR = {POS:1, PICKUP:1};
-  // Sales floor tickets keyed by (date, cashier) -> tid -> {net, gross, addon}
-  var sfByDayCashier = {};
-  // Delivery tickets -> tid -> {dispatcher, net, gross, addon}
-  var dlTix = {};
-
-  rows.forEach(function(r) {
-    var ttype = (r['Ticket Type']||'').toUpperCase().trim();
-    var rtype = (r['Type']||'').trim();
-    var tid   = (r['Ticket ID']||'').trim();
-    var date  = (r['Date Open']||'').trim();
-    if (!tid || !date) return;
-
-    var net   = parseFloat(r['Net Sales']||0) || 0;
-    var gross = parseFloat(r['Gross Receipts']||0) || 0;
-    var isAddon = /add.?on/i.test(r['Product Name']||'');
-
-    if (FLOOR[ttype] && rtype === 'Sale') {
-      var ch = (r['Cashier']||'').trim();
-      if (!ch || /register|sanctuary/i.test(ch)) return;
-      var key = date + '||' + ch;
-      if (!sfByDayCashier[key]) sfByDayCashier[key] = {};
-      if (!sfByDayCashier[key][tid]) sfByDayCashier[key][tid] = {cashier:ch, date:date, net:0, gross:0, addon:0};
-      sfByDayCashier[key][tid].net   += net;
-      sfByDayCashier[key][tid].gross += gross;
-      if (isAddon) sfByDayCashier[key][tid].addon += net;
-    }
-
-    if (ttype === 'DELIVERY' && rtype === 'Sale') {
-      var note = (r['Ticket Notes']||'').trim();
-      var disp = dispName(note);
-      if (!dlTix[tid]) dlTix[tid] = {dispatcher:disp, net:0, gross:0, addon:0};
-      dlTix[tid].net   += net;
-      dlTix[tid].gross += gross;
-      if (isAddon) dlTix[tid].addon += net;
-    }
-  });
-
-  // Aggregate SF by (date, cashier)
-  var sfDayCashier = {}; // key -> {cashier, date, net, gross, addon, txns}
-  Object.keys(sfByDayCashier).forEach(function(key) {
-    var tickets = sfByDayCashier[key];
-    var agg = {net:0, gross:0, addon:0, txns:0, cashier:'', date:''};
-    Object.values(tickets).forEach(function(t) {
-      if (t.net <= 0) return;
-      agg.net += t.net; agg.gross += t.gross; agg.addon += t.addon;
-      agg.txns++; agg.cashier = t.cashier; agg.date = t.date;
-    });
-    if (agg.txns > 0) sfDayCashier[key] = agg;
-  });
-
-  // Aggregate DL by dispatcher
-  var dlByDisp = {};
-  Object.values(dlTix).forEach(function(t) {
-    if (t.net <= 0) return;
-    var d = t.dispatcher;
-    if (!dlByDisp[d]) dlByDisp[d] = {net:0, gross:0, addon:0, txns:0};
-    dlByDisp[d].net += t.net; dlByDisp[d].gross += t.gross;
-    dlByDisp[d].addon += t.addon; dlByDisp[d].txns++;
-  });
-
-  // Per-employee: all days, sorted
-  var empDays = {}; // cashier -> [{date, aov, txns, net, gross, addon, addon_pct}]
-  Object.values(sfDayCashier).forEach(function(d) {
-    if (!empDays[d.cashier]) empDays[d.cashier] = [];
-    empDays[d.cashier].push({
-      date: d.date, txns: d.txns, net: d.net, gross: d.gross, addon: d.addon,
-      aov: d.net / d.txns,
-      addon_pct: d.net > 0 ? d.addon / d.net * 100 : 0
-    });
-  });
-  Object.keys(empDays).forEach(function(nm) {
-    empDays[nm].sort(function(a,b){ return a.date < b.date ? -1 : 1; });
-  });
-
-  // Build full monthly + last-shift per employee
-  var empStats = [];
-  Object.keys(empDays).forEach(function(nm) {
-    var days = empDays[nm];
-    var lastDay = days[days.length - 1];
-    var mtdDays = days.slice(0, -1);
-    var mtdNet = 0, mtdTxns = 0, mtdAddon = 0;
-    mtdDays.forEach(function(d){ mtdNet += d.net; mtdTxns += d.txns; mtdAddon += d.addon; });
-    var fullNet = 0, fullTxns = 0, fullAddon = 0, fullGross = 0;
-    days.forEach(function(d){ fullNet += d.net; fullTxns += d.txns; fullAddon += d.addon; fullGross += d.gross; });
-
-    empStats.push({
-      name: nm,
-      lastDate: lastDay.date,
-      lastAov: lastDay.aov,
-      lastTxns: lastDay.txns,
-      lastAddon: lastDay.addon_pct,
-      mtdAov: mtdTxns > 0 ? mtdNet / mtdTxns : lastDay.aov,
-      mtdAdd: mtdNet > 0 ? mtdAddon / mtdNet * 100 : 0,
-      mtdTxns: mtdTxns,
-      fullAov: fullNet / fullTxns,
-      fullTxns: fullTxns,
-      fullAddon: fullNet > 0 ? fullAddon / fullNet * 100 : 0,
-      fullNet: fullNet,
-      fullGross: fullGross,
-    });
-  });
-
-  // DL stats
-  var dlStats = Object.keys(dlByDisp).map(function(nm) {
-    var d = dlByDisp[nm];
-    return {name:nm, aov:d.net/d.txns, aov_a:d.gross/d.txns, txns:d.txns,
-            addon_pct:d.net>0?d.addon/d.net*100:0, net:d.net, gross:d.gross};
-  });
-
-  return { empStats: empStats, dlStats: dlStats };
+function clearSection(sec) {
+  if (sec === 'aov') { document.getElementById('aov-results').style.display='none'; document.getElementById('aov-drop').classList.remove('upload-loaded'); }
+  if (sec === 'drivers') { document.getElementById('drv-results').style.display='none'; document.getElementById('drv-drop').classList.remove('upload-loaded'); }
+  if (sec === 'schedule') { document.getElementById('sched-results').style.display='none'; document.getElementById('sched-drop').classList.remove('upload-loaded'); }
+  if (sec === 'restock') { document.getElementById('rst-results').style.display='none'; document.getElementById('rst-drop').classList.remove('upload-loaded'); }
 }
 
-// ── Classify employee for coaching
-function classify(s) {
-  var small = s.lastTxns < 6 || s.mtdTxns < 5;
-  if (small) return 'small';
-  var diff = s.lastAov - s.mtdAov;
-  var lMet = s.lastAov >= 65, addMet = s.mtdAdd >= 4;
-  if (lMet && addMet)  return 'star';
-  if (lMet)            return 'aov_good';
-  if (diff >= 3)       return 'trending';
-  if (diff <= -4)      return 'dropping';
-  if (s.mtdAov >= 62)  return 'close';
-  return 'push';
-}
-
-function statusLabel(type) {
-  return {star:'On Target', aov_good:'Strong AOV', trending:'Trending Up',
-          close:'Almost There', dropping:'Check In', push:'Needs Push', small:'Small Sample'}[type] || '';
-}
-
-function coachingNote(s, type) {
-  var fn = s.name.split(' ')[0];
-  var diff = s.lastAov - s.mtdAov;
-  var aovGap = (65 - s.mtdAov).toFixed(2);
-  var addGap = (4 - s.mtdAdd).toFixed(1);
-  var lbl = s.lastDate + ' (' + s.lastTxns + ' txns)';
-
-  if (type === 'small')    return fn + ' has limited data (' + s.lastTxns + ' txns last shift, ' + s.mtdTxns + ' MTD). Monitor over a full shift.';
-  if (type === 'star')     return fn + ' hit both goals last shift — $' + s.lastAov.toFixed(2) + ' AOV on ' + lbl + '. Add-on ' + s.mtdAdd.toFixed(1) + '%. Call it out.';
-  if (type === 'aov_good') return fn + ' hit the $65 goal last shift ($' + s.lastAov.toFixed(2) + ' on ' + lbl + '). Add-on ' + s.mtdAdd.toFixed(1) + '%' + (parseFloat(addGap) > 0 ? ' — ' + addGap + '% from target.' : '.');
-  if (type === 'trending') return fn + ' ran above their monthly avg last shift — $' + s.lastAov.toFixed(2) + ' vs $' + s.mtdAov.toFixed(2) + ' MTD on ' + lbl + '. Acknowledge the momentum.';
-  if (type === 'dropping') return fn + ' dropped to $' + s.lastAov.toFixed(2) + ' last shift (' + lbl + ') vs $' + s.mtdAov.toFixed(2) + ' MTD. Quick check-in when they\'re next in.';
-  if (type === 'close')    return fn + ' at $' + s.lastAov.toFixed(2) + ' last shift (' + lbl + ') — $' + aovGap + ' from the $65 goal. One good upsell per transaction closes it.';
-  return fn + ' at $' + s.lastAov.toFixed(2) + ' last shift (' + lbl + '), $' + aovGap + ' below goal. Good candidate for a product pairing conversation.';
-}
-
-function aovTip(s) {
-  if (s.mtdAov >= 65) return 'AOV above goal — stay consistent, avoid discounting.';
-  var gap = (65 - s.mtdAov).toFixed(2);
-  if (parseFloat(gap) <= 2.5) return 'AOV: $' + gap + ' from goal. One trade-up per customer closes it.';
-  return 'AOV: Suggest a bundle or complementary product on every ticket.';
-}
-
-function addOnTip(s) {
-  if (s.mtdAdd >= 4) return 'Add-on at ' + s.mtdAdd.toFixed(1) + '% — above the 4% goal. Keep it up.';
-  return 'Add-on: ' + s.mtdAdd.toFixed(1) + '% vs 4% goal. One offer at the end of every transaction builds the habit.';
-}
-
-// ── Excel style helpers
-var COLORS = {
-  DK:'155230', MD:'2E9455', LT:'D5EDDB', BG:'F0F7F2',
-  GD:'E8A020', GB:'FFF8EC', WH:'FFFFFF', MU:'9AB0A0',
-  TX:'1A2620', RD:'C8392A', PU:'6030A0', PB:'F4EEFF',
-  GRN_BG:'E8F8EE', AMB_BG:'FFF4EC', RED_BG:'FFF0F0', GRAY_BG:'F8F8F8',
-  TEAL:'006080'
+// ============================================================
+// UTILS
+// ============================================================
+const fmt$ = v => '$' + parseFloat(v || 0).toFixed(2);
+const fmt$k = v => v >= 1000 ? '$' + (v/1000).toFixed(1)+'k' : '$' + parseFloat(v||0).toFixed(0);
+const fmtPct = (v, target) => { const d = ((v-target)/target*100); return (d>=0?'+':'')+d.toFixed(1)+'%'; };
+const statusBadge = (aov, target) => {
+  const pct = (aov - target) / target * 100;
+  if (pct >= 0) return `<span class="badge badge-above">Above</span>`;
+  if (pct >= -8) return `<span class="badge badge-close">Close</span>`;
+  return `<span class="badge badge-below">Below</span>`;
 };
+const statusClass = (aov, target) => { const p=(aov-target)/target*100; return p>=0?'above':p>=-8?'close':'below'; };
 
-function xfill(wb, color) {
-  return {patternType:'solid', fgColor:{rgb:color}};
+function setupUpload(dropId, fileId, handler) {
+  const drop = document.getElementById(dropId);
+  const inp = document.getElementById(fileId);
+  inp.addEventListener('change', e => { if (e.target.files[0]) { handler(e.target.files[0]); drop.classList.add('upload-loaded'); } });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) { handler(e.dataTransfer.files[0]); drop.classList.add('upload-loaded'); }
+  });
 }
 
-function dateStr() {
-  var now = new Date();
-  return (now.getMonth()+1) + '-' + now.getDate() + '-' + now.getFullYear();
+// ============================================================
+// MODULE 1: AOV REPORT
+// ============================================================
+const AOV_TARGETS = { floor: 63, delivery: 97 };
+const DAY_CUTOFF = 14; // 2:00 PM
+
+function detectAOVCols(headers) {
+  const h = headers.map(x => (x||'').toLowerCase().trim());
+  const find = (...candidates) => { for (const c of candidates) { const i = h.findIndex(x => x.includes(c)); if (i >= 0) return i; } return -1; };
+  return {
+    employee: find('cashier','employee','budtender','staff','sold by','operator','user','associate'),
+    time:     find('created at','completed at','time','date','timestamp','order time','sale time'),
+    total:    find('total','order total','gross','sale amount','net total','amount','subtotal'),
+    addOn:    find('add on','addon','add-on','upsell','accessory add'),
+    dept:     find('department','dept','channel','register','location','order type')
+  };
 }
 
-// ── REPORT 1: Monthly AOV Report (SF + DL)
-function generateAOVReport(data, dateRange) {
-  var empStats = data.empStats;
-  var dlStats  = data.dlStats;
+function parseTime(str) {
+  if (!str) return null;
+  const d = new Date(str);
+  if (!isNaN(d)) return d;
+  const m = String(str).match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+  if (m) {
+    let h = parseInt(m[1]), mn = parseInt(m[2]);
+    if (m[3] && m[3].toLowerCase()==='pm' && h < 12) h += 12;
+    if (m[3] && m[3].toLowerCase()==='am' && h === 12) h = 0;
+    return new Date(1970,0,1,h,mn);
+  }
+  return null;
+}
 
-  var storeNet  = empStats.reduce(function(s,e){ return s+e.fullNet; }, 0);
-  var storeTxns = empStats.reduce(function(s,e){ return s+e.fullTxns; }, 0);
-  var storeAddon= empStats.reduce(function(s,e){ return s+e.fullNet*e.fullAddon/100; }, 0);
-  var storeAOV  = storeNet / storeTxns;
-  var storeAddonPct = storeNet > 0 ? storeAddon / storeNet * 100 : 0;
+function getShiftType(timeStr) {
+  const d = parseTime(timeStr);
+  if (!d) return 'unknown';
+  return d.getHours() < DAY_CUTOFF ? 'day' : 'night';
+}
 
-  var sfSorted = empStats.slice().sort(function(a,b){ return b.fullAov - a.fullAov; });
-  var dlNamed  = dlStats.filter(function(d){ return d.name !== 'No Dispatcher Listed'; })
-                         .sort(function(a,b){ return b.aov - a.aov; });
-  var dlNo     = dlStats.filter(function(d){ return d.name === 'No Dispatcher Listed'; });
-  var dlAll    = dlNamed.concat(dlNo);
+setupUpload('aov-drop', 'aov-file', file => {
+  Papa.parse(file, {
+    header: true, skipEmptyLines: true,
+    complete: res => renderAOV(res.data, res.meta.fields, file.name)
+  });
+});
 
-  var dlNet  = dlNamed.reduce(function(s,d){ return s+d.net; }, 0);
-  var dlTxns = dlNamed.reduce(function(s,d){ return s+d.txns; }, 0);
-  var dlAOV  = dlTxns > 0 ? dlNet / dlTxns : 0;
-  var dlAddonPct = dlNet > 0 ? dlNamed.reduce(function(s,d){ return s+d.net*d.addon_pct/100;},0)/dlNet*100 : 0;
-
-  var wb = XLSX.utils.book_new();
-  var medals = {0:'#1', 1:'#2', 2:'#3'};
-
-  function buildSheet(title, data, stAov, stAddon, stTxns, isDL) {
-    var aoa = [];
-    // Title
-    aoa.push([title + '  |  ' + dateRange,'','','','','']);
-    aoa.push(['']);
-    // Summary
-    var lbl = isDL ? 'Channel AOV (Named)' : 'Store AOV';
-    var lbl2 = isDL ? 'Total Deliveries' : 'Total Transactions';
-    aoa.push([lbl, lbl2, 'Add-On %', dateRange, '', '']);
-    aoa.push(['$'+stAov.toFixed(2), stTxns.toLocaleString(), stAddon.toFixed(1)+'%', '', '', '']);
-    aoa.push(['']);
-    // Headers
-    var nameCol = isDL ? 'Dispatcher' : 'Budtender';
-    var txnCol  = isDL ? 'Deliveries' : 'Transactions';
-    aoa.push(['#', nameCol, 'AOV (Before Tax)', 'AOV (After Tax)', 'Add-On %', txnCol]);
-
-    var rank = 0;
-    data.forEach(function(d, i) {
-      var isNo = isDL && d.name === 'No Dispatcher Listed';
-      var aov   = isDL ? d.aov   : d.fullAov;
-      var aov_a = isDL ? d.aov_a : d.fullAov * 1.2943;
-      var addon = isDL ? d.addon_pct : d.fullAddon;
-      var txns  = isDL ? d.txns  : d.fullTxns;
-      var r = medals[rank] || ('#' + (rank+1));
-      if (!isNo) rank++;
-      aoa.push([isNo ? '—' : r, d.name, parseFloat(aov.toFixed(2)), parseFloat(aov_a.toFixed(2)),
-                parseFloat((addon/100).toFixed(4)), txns]);
-    });
-    aoa.push(['']);
-    aoa.push(['Average', '', parseFloat(stAov.toFixed(2)), parseFloat((stAov*1.2943).toFixed(2)),
-              parseFloat((stAddon/100).toFixed(4)), stTxns]);
-    aoa.push(['']);
-    aoa.push(['* AOV = Net Sales / Transactions (before tax)  ·  Tax rate 29.43%  ·  Returns excluded']);
-
-    var ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = [{wch:6},{wch:28},{wch:18},{wch:16},{wch:11},{wch:14}];
-
-    return ws;
+function renderAOV(data, headers, filename) {
+  const cols = detectAOVCols(headers);
+  if (cols.employee < 0 || cols.total < 0) {
+    document.getElementById('aov-results').style.display='block';
+    document.getElementById('aov-stats').innerHTML = `<div class="notice notice-err">Could not detect Employee or Total columns. Headers found: ${headers.join(', ')}</div>`;
+    return;
   }
 
-  var wsSF = buildSheet('Sales Floor AOV Report', sfSorted, storeAOV, storeAddonPct, storeTxns, false);
-  var wsDL = buildSheet('Delivery AOV Report', dlAll, dlAOV, dlAddonPct, dlTxns, true);
+  const empKey = headers[cols.employee];
+  const totalKey = headers[cols.total];
+  const timeKey = cols.time >= 0 ? headers[cols.time] : null;
+  const addOnKey = cols.addOn >= 0 ? headers[cols.addOn] : null;
+  const deptKey = cols.dept >= 0 ? headers[cols.dept] : null;
 
-  XLSX.utils.book_append_sheet(wb, wsSF, 'Sales Floor');
-  XLSX.utils.book_append_sheet(wb, wsDL, 'Delivery');
+  // Group by employee
+  const empData = {};
+  let storeTotal = 0, storeTxns = 0;
+  let dayTotal = 0, dayTxns = 0, nightTotal = 0, nightTxns = 0;
 
-  XLSX.writeFile(wb, 'AOV_Report_' + dateStr() + '.xlsx');
-}
+  data.forEach(row => {
+    const name = (row[empKey]||'').trim();
+    if (!name) return;
+    const amount = parseFloat((row[totalKey]||'0').replace(/[$,]/g,'')) || 0;
+    const shift = timeKey ? getShiftType(row[timeKey]) : 'unknown';
+    const addOn = addOnKey ? (parseFloat((row[addOnKey]||'0').replace(/[$,]/g,'')) || 0) : 0;
+    const dept = deptKey ? (row[deptKey]||'').toLowerCase() : '';
 
-// ── REPORT 2: Coaching Report
-function generateCoachingReport(data, dateRange) {
-  var empStats = data.empStats;
-  var storeNet  = empStats.reduce(function(s,e){ return s+e.fullNet; }, 0);
-  var storeTxns = empStats.reduce(function(s,e){ return s+e.fullTxns; }, 0);
-  var storeAOV  = storeNet / storeTxns;
-
-  var sorted = empStats.slice().sort(function(a,b){ return b.lastAov - a.lastAov; });
-
-  var wb   = XLSX.utils.book_new();
-  var aoa  = [];
-
-  aoa.push(['THE SANCTUARY — DAILY COACHING REPORT','','','','','','','','','']);
-  aoa.push([dateRange + '  ·  Goals: $65 AOV · 4% Add-On  ·  Last Shift vs Monthly Average','','','','','','','','','']);
-  aoa.push(['Store Average: $' + storeAOV.toFixed(2) + '  ·  ' + storeTxns.toLocaleString() + ' transactions MTD','','','','','','','','','']);
-  aoa.push(['']);
-  aoa.push(['Employee','MTD AOV','MTD Add-On%','MTD Txns','Last Shift Date','Last Shift AOV','Last Txns','vs MTD','Status','Coaching Note']);
-
-  sorted.forEach(function(s) {
-    var type = classify(s);
-    var diff = s.lastAov - s.mtdAov;
-    var note = coachingNote(s, type);
-    if (type !== 'small') {
-      note += '  |  ' + aovTip(s) + '  |  ' + addOnTip(s);
-    }
-    aoa.push([
-      s.name,
-      s.mtdTxns >= 3 ? parseFloat(s.mtdAov.toFixed(2)) : '—',
-      s.mtdTxns >= 3 ? parseFloat((s.mtdAdd/100).toFixed(4)) : '—',
-      s.mtdTxns || '—',
-      s.lastDate,
-      parseFloat(s.lastAov.toFixed(2)),
-      s.lastTxns,
-      s.mtdTxns >= 3 ? parseFloat(diff.toFixed(2)) : '—',
-      statusLabel(type),
-      note
-    ]);
+    if (!empData[name]) empData[name] = { name, txns:0, total:0, day:{txns:0,total:0}, night:{txns:0,total:0}, addOns:0, dept };
+    empData[name].txns++;
+    empData[name].total += amount;
+    empData[name].addOns += addOn;
+    if (shift === 'day') { empData[name].day.txns++; empData[name].day.total += amount; dayTotal+=amount; dayTxns++; }
+    else if (shift === 'night') { empData[name].night.txns++; empData[name].night.total += amount; nightTotal+=amount; nightTxns++; }
+    storeTotal += amount; storeTxns++;
   });
 
-  aoa.push(['']);
-  aoa.push(['* MTD excludes last shift  ·  Diff = Last Shift AOV minus MTD avg  ·  Goals: $65 AOV · 4% add-on']);
+  const employees = Object.values(empData).sort((a,b) => b.total/b.txns - a.total/a.txns);
+  const storeAOV = storeTxns > 0 ? storeTotal/storeTxns : 0;
+  const dayAOV = dayTxns > 0 ? dayTotal/dayTxns : 0;
+  const nightAOV = nightTxns > 0 ? nightTotal/nightTxns : 0;
 
-  var ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:26},{wch:10},{wch:12},{wch:9},{wch:14},{wch:14},{wch:10},{wch:9},{wch:16},{wch:90}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Coaching Report');
-  XLSX.writeFile(wb, 'Coaching_Report_' + dateStr() + '.xlsx');
+  // Stats
+  document.getElementById('aov-stats').innerHTML = `
+    <div class="stat"><div class="stat-lbl">Store AOV</div><div class="stat-val ${storeAOV>=63?'green':storeAOV>=55?'amber':'red'}">${fmt$(storeAOV)}</div><div class="stat-sub">${storeTxns} transactions</div></div>
+    <div class="stat"><div class="stat-lbl">Total Sales</div><div class="stat-val">${fmt$k(storeTotal)}</div><div class="stat-sub">today</div></div>
+    <div class="stat"><div class="stat-lbl">Day Shift AOV</div><div class="stat-val ${dayAOV>=63?'green':'amber'}">${fmt$(dayAOV)}</div><div class="stat-sub">${dayTxns} txns · before 2pm</div></div>
+    <div class="stat"><div class="stat-lbl">Night Shift AOV</div><div class="stat-val ${nightAOV>=63?'green':'amber'}">${fmt$(nightAOV)}</div><div class="stat-sub">${nightTxns} txns · 2pm+</div></div>
+    <div class="stat"><div class="stat-lbl">Employees</div><div class="stat-val">${employees.length}</div><div class="stat-sub">on report</div></div>
+  `;
+
+  // Employee table
+  const tbody = document.getElementById('aov-tbody');
+  tbody.innerHTML = employees.map(e => {
+    const aov = e.txns > 0 ? e.total/e.txns : 0;
+    const isDelivery = e.dept.includes('deliver');
+    const target = isDelivery ? AOV_TARGETS.delivery : AOV_TARGETS.floor;
+    const shiftBadge = e.day.txns > 0 && e.night.txns > 0
+      ? `<span class="badge badge-both">Both</span>`
+      : e.day.txns > 0 ? `<span class="badge badge-day">Day</span>` : `<span class="badge badge-night">Night</span>`;
+    return `<tr>
+      <td><strong>${e.name}</strong></td>
+      <td class="center">${shiftBadge}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${e.txns}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(e.total)}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmt$(aov)}</td>
+      <td class="right" style="color:var(--text-muted)">${fmt$(target)}</td>
+      <td class="center" style="font-family:'JetBrains Mono',monospace;font-size:11px">${fmtPct(aov,target)}</td>
+      <td class="center">${statusBadge(aov,target)}</td>
+    </tr>`;
+  }).join('');
+
+  // Day/Night table
+  const dnBody = document.getElementById('daynite-tbody');
+  const dayEmps = employees.filter(e=>e.day.txns>0).length;
+  const nightEmps = employees.filter(e=>e.night.txns>0).length;
+  dnBody.innerHTML = `
+    <tr>
+      <td><span class="badge badge-day">Day Shift</span> <span style="font-size:11px;color:var(--text-muted)">Open – 2:00 PM</span></td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${dayTxns}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(dayTotal)}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmt$(dayAOV)}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${dayEmps > 0 ? fmt$(dayTotal/dayEmps) : '—'}</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-night">Night Shift</span> <span style="font-size:11px;color:var(--text-muted)">2:00 PM – Close</span></td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${nightTxns}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(nightTotal)}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmt$(nightAOV)}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${nightEmps > 0 ? fmt$(nightTotal/nightEmps) : '—'}</td>
+    </tr>
+    <tr style="background:#F6F9F5;font-weight:700">
+      <td>Total</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${storeTxns}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(storeTotal)}</td>
+      <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(storeAOV)}</td>
+      <td class="right">—</td>
+    </tr>
+  `;
+
+  // Coaching notes
+  const cgrid = document.getElementById('coaching-grid');
+  cgrid.innerHTML = employees.map(e => {
+    const aov = e.txns > 0 ? e.total/e.txns : 0;
+    const isDelivery = e.dept.includes('deliver');
+    const target = isDelivery ? AOV_TARGETS.delivery : AOV_TARGETS.floor;
+    const sc = statusClass(aov, target);
+    const diff = aov - target;
+    let note = '';
+    if (sc === 'above') {
+      note = `Solid day — ${e.name} is ${fmt$(Math.abs(diff))} above target. Keep the same energy and push add-ons to widen the gap further.`;
+    } else if (sc === 'close') {
+      note = `${e.name} is close — just ${fmt$(Math.abs(diff))} away from target. One more add-on per transaction would put them over. Remind them to offer a pairing on every ticket.`;
+    } else {
+      note = `${e.name} needs a refocus — currently ${fmt$(Math.abs(diff))} below target. Coach on upselling basics: lead with a suggestion, offer a complementary product, and aim for at least one add-on per customer.`;
+    }
+    const isDeliveryBadge = isDelivery ? `<span class="badge badge-delivery" style="margin-right:4px">Delivery</span>` : `<span class="badge badge-day" style="margin-right:4px">Floor</span>`;
+    return `<div class="coaching-card ${sc}">
+      <div class="cc-name">${e.name}</div>
+      <div class="cc-meta">${isDeliveryBadge} AOV: ${fmt$(aov)} &nbsp;|&nbsp; Target: ${fmt$(target)} &nbsp;|&nbsp; ${e.txns} txns</div>
+      <div class="cc-note">${note}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('aov-date-label').textContent = filename;
+  document.getElementById('aov-results').style.display = 'block';
+
+  // Auto-populate contest if names match
+  autoUpdateContest(empData);
 }
 
-// ── Entry point
-function runReports(rows, fileName) {
-  setStatus('processing', 'Computing stats...', true);
-  setTimeout(function() {
-    try {
-      var dates = Array.from(new Set(rows.map(function(r){ return r['Date Open']; }).filter(Boolean))).sort();
-      var dateRange = dates.length >= 2 ? 'May 1\u2013' + dates[dates.length-1].split('/')[1] + ', 2026' : fileName;
-      var data = parseCSV(rows);
-      if (!data.empStats.length) { setStatus('error', 'No sales floor data found in this file.'); return; }
-      var errs = [];
-      try { generateAOVReport(data, dateRange); } catch(e){ errs.push('AOV: '+e.message); console.error('AOV Report error:',e); }
-      setTimeout(function(){
-        try { generateCoachingReport(data, dateRange); } catch(e){ errs.push('Coaching: '+e.message); console.error('Coaching error:',e); }
-        if(errs.length) setStatus('error', 'Error: ' + errs.join(' | '));
-        else setStatus('success', '\u2705 2 files downloaded \u2014 AOV Report + Coaching Report');
-      }, 800);
-    } catch(e) {
-      setStatus('error', 'Error: ' + e.message);
-      console.error(e);
+// ============================================================
+// 1V1 CONTEST
+// ============================================================
+let contestData = JSON.parse(localStorage.getItem('sanctuary_1v1') || 'null') || {
+  month: new Date().toLocaleString('en-US',{month:'long',year:'numeric'}),
+  p1: { name: 'Player 1', dept: 'Sales Floor', aov: 0, txns: 0 },
+  p2: { name: 'Player 2', dept: 'Sales Floor', aov: 0, txns: 0 }
+};
+
+function renderContest() {
+  const {p1,p2,month} = contestData;
+  document.getElementById('c-month').textContent = month;
+  document.getElementById('c-p1-name').textContent = p1.name;
+  document.getElementById('c-p2-name').textContent = p2.name;
+  document.getElementById('c-p1-dept').textContent = p1.dept;
+  document.getElementById('c-p2-dept').textContent = p2.dept;
+  document.getElementById('c-p1-aov').textContent = p1.aov > 0 ? fmt$(p1.aov) : '—';
+  document.getElementById('c-p2-aov').textContent = p2.aov > 0 ? fmt$(p2.aov) : '—';
+  document.getElementById('c-p1-txns').textContent = (p1.txns||0) + ' transactions';
+  document.getElementById('c-p2-txns').textContent = (p2.txns||0) + ' transactions';
+  document.getElementById('c-bar-l1').textContent = p1.name;
+  document.getElementById('c-bar-l2').textContent = p2.name;
+  const total = (p1.aov||0) + (p2.aov||0);
+  const pct = total > 0 ? (p1.aov / total * 100) : 50;
+  document.getElementById('c-bar-fill').style.width = pct + '%';
+  document.getElementById('c-p1').classList.toggle('c-winner', p1.aov > p2.aov && p1.aov > 0);
+  document.getElementById('c-p2').classList.toggle('c-winner', p2.aov > p1.aov && p2.aov > 0);
+}
+
+function openContest() {
+  const {p1,p2,month} = contestData;
+  document.getElementById('c-month-input').value = month;
+  document.getElementById('c-p1-name-input').value = p1.name;
+  document.getElementById('c-p2-name-input').value = p2.name;
+  document.getElementById('c-p1-dept-input').value = p1.dept;
+  document.getElementById('c-p2-dept-input').value = p2.dept;
+  document.getElementById('c-p1-aov-input').value = p1.aov || '';
+  document.getElementById('c-p2-aov-input').value = p2.aov || '';
+  document.getElementById('c-p1-txns-input').value = p1.txns || '';
+  document.getElementById('c-p2-txns-input').value = p2.txns || '';
+  document.getElementById('contest-modal').classList.add('open');
+}
+
+function closeContest() {
+  document.getElementById('contest-modal').classList.remove('open');
+}
+
+function saveContest() {
+  contestData = {
+    month: document.getElementById('c-month-input').value || contestData.month,
+    p1: {
+      name: document.getElementById('c-p1-name-input').value || 'Player 1',
+      dept: document.getElementById('c-p1-dept-input').value,
+      aov: parseFloat(document.getElementById('c-p1-aov-input').value) || 0,
+      txns: parseInt(document.getElementById('c-p1-txns-input').value) || 0
+    },
+    p2: {
+      name: document.getElementById('c-p2-name-input').value || 'Player 2',
+      dept: document.getElementById('c-p2-dept-input').value,
+      aov: parseFloat(document.getElementById('c-p2-aov-input').value) || 0,
+      txns: parseInt(document.getElementById('c-p2-txns-input').value) || 0
     }
-  }, 30);
+  };
+  localStorage.setItem('sanctuary_1v1', JSON.stringify(contestData));
+  renderContest();
+  closeContest();
+}
+
+function autoUpdateContest(empData) {
+  const p1match = Object.values(empData).find(e => e.name.toLowerCase().includes(contestData.p1.name.toLowerCase()) || contestData.p1.name.toLowerCase().includes(e.name.toLowerCase()));
+  const p2match = Object.values(empData).find(e => e.name.toLowerCase().includes(contestData.p2.name.toLowerCase()) || contestData.p2.name.toLowerCase().includes(e.name.toLowerCase()));
+  if (p1match) { contestData.p1.aov = p1match.total/p1match.txns; contestData.p1.txns = p1match.txns; }
+  if (p2match) { contestData.p2.aov = p2match.total/p2match.txns; contestData.p2.txns = p2match.txns; }
+  if (p1match || p2match) renderContest();
+}
+
+renderContest();
+
+// ============================================================
+// MODULE 2: DRIVER SAFETY
+// ============================================================
+const INCIDENT_CATS = ['Accelerating','Braking','Cell Phone','Close Following','Cornering','Distraction','Seat Belt','Speeding','Stop Sign'];
+
+function scoreToTier(s) {
+  if (s >= 90) return {label:'Excellent', cls:'tier-exc'};
+  if (s >= 75) return {label:'Good', cls:'tier-good'};
+  if (s >= 60) return {label:'Fair', cls:'tier-fair'};
+  return {label:'Poor', cls:'tier-poor'};
+}
+
+function parseDrvExcel(wb) {
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+  if (raw.length < 2) return null;
+
+  // Find header row
+  let headerRow = 0;
+  for (let i=0; i<Math.min(5,raw.length); i++) {
+    const r = raw[i].map(c => String(c).toLowerCase());
+    if (r.some(c => c.includes('score') || c.includes('driver') || c.includes('name'))) { headerRow = i; break; }
+  }
+
+  const headers = raw[headerRow].map(h => String(h||'').trim());
+  const hLow = headers.map(h => h.toLowerCase());
+  const findH = (...cands) => { for (const c of cands) { const i = hLow.findIndex(h=>h.includes(c)); if (i>=0) return i; } return -1; };
+
+  const nameCol = findH('driver','name','employee','cashier');
+  const scoreCol = findH('score','safety score');
+  const milesCol = findH('miles','mileage','distance');
+  const changeCol = findH('change','delta','diff');
+
+  const catCols = INCIDENT_CATS.map(cat => findH(cat.toLowerCase()));
+
+  const drivers = [];
+  for (let i = headerRow+1; i < raw.length; i++) {
+    const row = raw[i];
+    const name = String(row[nameCol]||'').trim();
+    if (!name || name.toLowerCase().includes('total') || name.toLowerCase().includes('average') || name.toLowerCase().includes('team')) continue;
+    const score = parseFloat(row[scoreCol]) || 0;
+    if (!score && !name) continue;
+    const incidents = {};
+    let totalInc = 0;
+    INCIDENT_CATS.forEach((cat, ci) => {
+      const v = catCols[ci] >= 0 ? (parseInt(row[catCols[ci]]) || 0) : 0;
+      incidents[cat] = v;
+      totalInc += v;
+    });
+    const topIssue = Object.entries(incidents).sort((a,b)=>b[1]-a[1])[0];
+    drivers.push({
+      name, score,
+      miles: parseFloat(row[milesCol]) || 0,
+      change: parseFloat(row[changeCol]) || 0,
+      incidents, totalInc,
+      topIssue: topIssue[1]>0 ? topIssue : null
+    });
+  }
+  return drivers.sort((a,b) => b.score - a.score);
+}
+
+setupUpload('drv-drop', 'drv-file', file => {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'csv') {
+    Papa.parse(file, {
+      header: true, skipEmptyLines: true,
+      complete: res => { const drivers = parseDrvCSV(res.data, res.meta.fields); if (drivers) renderDrivers(drivers, file.name); }
+    });
+  } else {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const drivers = parseDrvExcel(wb);
+      if (drivers) renderDrivers(drivers, file.name);
+    };
+    reader.readAsBinaryString(file);
+  }
+});
+
+function parseDrvCSV(data, headers) {
+  const hLow = headers.map(h=>(h||'').toLowerCase().trim());
+  const findH = (...c) => { for (const x of c) { const i=hLow.findIndex(h=>h.includes(x)); if(i>=0)return headers[i]; } return null; };
+  const nameKey = findH('driver','name','employee');
+  const scoreKey = findH('score','safety');
+  if (!nameKey || !scoreKey) return null;
+  const milesKey = findH('miles','mileage');
+  const changeKey = findH('change','delta');
+  const catKeys = INCIDENT_CATS.map(cat => findH(cat.toLowerCase()));
+  return data.map(row => {
+    const name = (row[nameKey]||'').trim();
+    const score = parseFloat(row[scoreKey]||0);
+    const incidents = {};
+    let totalInc = 0;
+    INCIDENT_CATS.forEach((cat,i) => { const v=catKeys[i]?parseInt(row[catKeys[i]])||0:0; incidents[cat]=v; totalInc+=v; });
+    const topIssue = Object.entries(incidents).sort((a,b)=>b[1]-a[1])[0];
+    return { name, score, miles:parseFloat(row[milesKey]||0), change:parseFloat(row[changeKey]||0), incidents, totalInc, topIssue:topIssue[1]>0?topIssue:null };
+  }).filter(d=>d.name).sort((a,b)=>b.score-a.score);
+}
+
+function renderDrivers(drivers, filename) {
+  if (!drivers || drivers.length === 0) {
+    document.getElementById('drv-results').style.display='block';
+    document.getElementById('drv-stats').innerHTML='<div class="notice notice-err">No driver data found. Check column headers include: Driver/Name, Score/Safety Score, and incident categories.</div>';
+    return;
+  }
+
+  const avgScore = drivers.reduce((s,d)=>s+d.score,0)/drivers.length;
+  const topScore = Math.max(...drivers.map(d=>d.score));
+  const lowScore = Math.min(...drivers.map(d=>d.score));
+  const totalInc = drivers.reduce((s,d)=>s+d.totalInc,0);
+  const topCat = (() => {
+    const counts = {}; INCIDENT_CATS.forEach(c=>{counts[c]=0;});
+    drivers.forEach(d=>INCIDENT_CATS.forEach(c=>counts[c]+=d.incidents[c]||0));
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  })();
+
+  document.getElementById('drv-stats').innerHTML = `
+    <div class="stat"><div class="stat-lbl">Team Average</div><div class="stat-val ${avgScore>=75?'green':avgScore>=60?'amber':'red'}">${avgScore.toFixed(0)}</div><div class="stat-sub">safety score</div></div>
+    <div class="stat"><div class="stat-lbl">Top Score</div><div class="stat-val green">${topScore}</div><div class="stat-sub">${drivers.find(d=>d.score===topScore).name}</div></div>
+    <div class="stat"><div class="stat-lbl">Lowest Score</div><div class="stat-val ${lowScore>=60?'amber':'red'}">${lowScore}</div><div class="stat-sub">${drivers.find(d=>d.score===lowScore).name}</div></div>
+    <div class="stat"><div class="stat-lbl">Total Incidents</div><div class="stat-val ${totalInc<20?'amber':'red'}">${totalInc}</div><div class="stat-sub">across all drivers</div></div>
+    <div class="stat"><div class="stat-lbl">Top Issue</div><div class="stat-val amber" style="font-size:14px;line-height:1.3">${topCat[0]}</div><div class="stat-sub">${topCat[1]} incidents total</div></div>
+  `;
+
+  const maxInc = Math.max(...drivers.map(d=>d.totalInc), 1);
+  document.getElementById('driver-grid').innerHTML = drivers.map((d, idx) => {
+    const tier = scoreToTier(d.score);
+    const chg = d.change > 0 ? `<span class="dc-change up">▲ ${d.change}</span>` : d.change < 0 ? `<span class="dc-change down">▼ ${Math.abs(d.change)}</span>` : `<span class="dc-change same">—</span>`;
+    const topIssueHTML = d.topIssue ? `<div class="dc-issue-label">Top Issue</div><div style="font-weight:600">${d.topIssue[0]} <span style="color:var(--below)">(${d.topIssue[1]})</span></div>` : `<div style="color:var(--above);font-size:11px">No major incidents</div>`;
+    const barW = Math.round((d.totalInc/maxInc)*100);
+    return `<div class="driver-card">
+      <div class="dc-top"><div class="dc-name">${d.name}</div><div class="dc-rank">#${idx+1}</div></div>
+      <div class="dc-score-row">
+        <div class="dc-score ${tier.cls.replace('tier-','').length>0?'':''}"><span style="color:${tier.cls==='tier-exc'?'var(--above)':tier.cls==='tier-good'?'var(--day-color)':tier.cls==='tier-fair'?'var(--close)':'var(--below)'}">${d.score}</span></div>
+        <span class="dc-rating ${tier.cls}">${tier.label}</span>
+        ${chg}
+      </div>
+      <div class="dc-meta">${d.miles > 0 ? d.miles.toLocaleString()+' mi · ':''} ${d.totalInc} total incidents</div>
+      <div class="dc-top-issue">
+        ${topIssueHTML}
+        <div class="dc-bar-bg"><div class="dc-bar-fill" style="width:${barW}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Incident table
+  const incHead = document.getElementById('drv-inc-head');
+  incHead.innerHTML = `<th style="text-align:left;background:#FAFAFA;font-size:9px;font-weight:700;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em">Driver</th>` +
+    INCIDENT_CATS.map(c=>`<th class="center" style="background:#FAFAFA;font-size:9px;font-weight:700;padding:8px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em">${c}</th>`).join('') +
+    `<th class="right" style="background:#FAFAFA;font-size:9px;font-weight:700;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em">Total</th>`;
+  const incBody = document.getElementById('drv-inc-tbody');
+  incBody.innerHTML = drivers.map(d => {
+    const cells = INCIDENT_CATS.map(cat => {
+      const v = d.incidents[cat]||0;
+      const color = v >= 5 ? 'var(--below)' : v >= 3 ? 'var(--close)' : 'var(--text)';
+      const bg = v >= 5 ? 'var(--below-bg)' : v >= 3 ? 'var(--close-bg)' : '';
+      return `<td class="center" style="font-family:'JetBrains Mono',monospace;${bg?`background:${bg};`:''}${v>0?`color:${color};font-weight:600`:''}">${v||'—'}</td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600">${d.name}</td>${cells}<td class="right" style="font-family:'JetBrains Mono',monospace;font-weight:700">${d.totalInc}</td></tr>`;
+  }).join('');
+
+  document.getElementById('drv-date-label').textContent = filename;
+  document.getElementById('drv-results').style.display = 'block';
+}
+
+// ============================================================
+// MODULE 3: SCHEDULE + BREAKSHEET
+// ============================================================
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function parseSchedHTML(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const employees = [];
+
+  // Try to find date range from title/heading
+  const titleEl = doc.querySelector('title,h1,h2,.schedule-title,.week-title');
+  const weekLabel = titleEl ? titleEl.textContent.trim() : '';
+
+  // Strategy 1: look for standard table structure
+  const tables = doc.querySelectorAll('table');
+  let bestTable = null, bestScore = 0;
+
+  for (const table of tables) {
+    const rows = table.querySelectorAll('tr');
+    if (rows.length < 3) continue;
+    const headerText = rows[0].textContent.toLowerCase();
+    const score = (['mon','tue','wed','thu','fri','sat','sun','monday','tuesday','employee','name','staff'].filter(k=>headerText.includes(k))).length;
+    if (score > bestScore) { bestScore = score; bestTable = table; }
+  }
+
+  if (bestTable) {
+    const rows = Array.from(bestTable.querySelectorAll('tr'));
+    const headers = Array.from(rows[0].querySelectorAll('th,td')).map(c=>c.textContent.trim());
+    // Find which columns are days
+    const dayColMap = {};
+    const dayNames = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday','mon','tue','wed','thu','fri','sat','sun'];
+    headers.forEach((h, i) => {
+      const hl = h.toLowerCase();
+      const dayIdx = dayNames.findIndex(d => hl.includes(d));
+      if (dayIdx >= 0) dayColMap[Math.floor(dayIdx/2)] = i; // 0=mon..6=sun but dayNames has both long and short
+    });
+    // Simpler: find day columns by detecting days 0-6
+    const dayIndices = [];
+    headers.forEach((h, i) => {
+      const hl = h.toLowerCase();
+      DAYS.forEach((d, di) => { if (hl.includes(d.toLowerCase())) dayIndices[di] = i; });
+      ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].forEach((d, di) => { if (hl.includes(d)) dayIndices[di] = i; });
+    });
+
+    const nameCol = headers.findIndex(h => /name|employee|staff/i.test(h));
+    const deptCol = headers.findIndex(h => /dept|department|role|position/i.test(h));
+
+    for (let ri = 1; ri < rows.length; ri++) {
+      const cells = Array.from(rows[ri].querySelectorAll('td,th'));
+      if (cells.length < 2) continue;
+      const name = cells[nameCol >= 0 ? nameCol : 0].textContent.trim();
+      if (!name || name.toLowerCase().includes('total') || name.toLowerCase().includes('average')) continue;
+      const dept = deptCol >= 0 ? cells[deptCol].textContent.trim() : '';
+      const shifts = DAYS.map((d, di) => {
+        const colI = dayIndices[di];
+        if (colI === undefined || !cells[colI]) return '';
+        return cells[colI].textContent.trim();
+      });
+      if (shifts.some(s=>s)) employees.push({ name, dept, shifts });
+    }
+  }
+
+  // Strategy 2: look for div-based schedule (Homebase-style)
+  if (employees.length === 0) {
+    const rows = doc.querySelectorAll('[class*="employee"],[class*="staff"],[class*="person"],[class*="row"]');
+    rows.forEach(row => {
+      const nameEl = row.querySelector('[class*="name"],[class*="employee"]');
+      if (!nameEl) return;
+      const name = nameEl.textContent.trim();
+      if (!name) return;
+      const shiftEls = row.querySelectorAll('[class*="shift"],[class*="day"],[class*="cell"]');
+      if (shiftEls.length >= 5) {
+        const shifts = Array.from(shiftEls).slice(0,7).map(e=>e.textContent.trim());
+        employees.push({ name, dept: '', shifts });
+      }
+    });
+  }
+
+  // Strategy 3: parse as pre-formatted text or look for inline data
+  if (employees.length === 0) {
+    const preEls = doc.querySelectorAll('pre, code, [class*="schedule"]');
+    preEls.forEach(el => {
+      const text = el.textContent;
+      const lines = text.split('\n').filter(l=>l.trim());
+      lines.forEach(line => {
+        // Look for patterns like "Employee Name  Day: 8am-4pm, ..."
+        const m = line.match(/^([A-Z][a-zA-Z\s]+?)\s{2,}(.+)/);
+        if (m) employees.push({ name: m[1].trim(), dept: '', shifts: Array(7).fill('') });
+      });
+    });
+  }
+
+  return { employees, weekLabel };
+}
+
+function parseShiftText(text) {
+  if (!text) return null;
+  const t = text.toLowerCase().trim();
+  if (!t || t === 'off' || t === 'day off' || t === 'x' || t === '-') return null;
+
+  // Handle "HH:MMa-HH:MMp|Dept" or "HH:MMa-HH:MMp Dept"
+  const m = text.match(/(\d{1,2}):?(\d{2})?\s*(a|am|p|pm)?\s*[-–]\s*(\d{1,2}):?(\d{2})?\s*(a|am|p|pm)?(?:[|\s]+(.+))?/i);
+  if (!m) return { display: text, dept: 'Sales', startHour: 8, endHour: 16, duration: 8 };
+
+  const toHour = (h, m2, ampm) => {
+    let hr = parseInt(h), mn = parseInt(m2||0);
+    if (ampm && (ampm.toLowerCase()==='p'||ampm.toLowerCase()==='pm') && hr<12) hr+=12;
+    if (ampm && (ampm.toLowerCase()==='a'||ampm.toLowerCase()==='am') && hr===12) hr=0;
+    return hr + mn/60;
+  };
+
+  const start = toHour(m[1], m[2], m[3]);
+  const end = toHour(m[4], m[5], m[6]);
+  const dept = (m[7]||'Sales').trim().replace(/\|/g,'').trim();
+  const duration = end > start ? end - start : 24 - start + end;
+
+  const displayText = `${m[1]}:${m[2]||'00'}${(m[3]||'').replace('am','a').replace('pm','p')||''} – ${m[4]}:${m[5]||'00'}${(m[6]||'').replace('am','a').replace('pm','p')||''}`;
+
+  return { display: displayText, dept, startHour: start, endHour: end, duration };
+}
+
+function getDeptClass(dept) {
+  const d = (dept||'').toLowerCase();
+  if (d.includes('deliver')) return 'sp-delivery';
+  if (d.includes('inventor')) return 'sp-inventory';
+  if (d.includes('sanctuary')) return 'sp-sanctuary';
+  return 'sp-sales';
+}
+
+function calcBreaks(shift) {
+  if (!shift) return [];
+  const { startHour, duration, dept } = shift;
+  const breaks = [];
+  if (duration < 3.5) return breaks;
+  if (duration >= 3.5) {
+    const restTime = startHour + Math.min(2, duration * 0.4);
+    breaks.push({ type: 'rest', time: restTime, label: '10 min rest' });
+  }
+  if (duration > 5) {
+    const mealTime = startHour + Math.min(4.5, duration * 0.5);
+    breaks.push({ type: 'meal', time: mealTime, label: '30 min meal' });
+  }
+  if (duration > 10) {
+    const rest2Time = startHour + Math.min(8, duration * 0.75);
+    breaks.push({ type: 'rest', time: rest2Time, label: '10 min rest' });
+  }
+  return breaks.sort((a,b)=>a.time-b.time);
+}
+
+function fmtHour(h) {
+  const hr = Math.floor(h);
+  const mn = Math.round((h - hr) * 60);
+  const period = hr >= 12 ? 'PM' : 'AM';
+  const disp = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
+  return `${disp}:${mn.toString().padStart(2,'0')} ${period}`;
+}
+
+setupUpload('sched-drop', 'sched-file', file => {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const { employees, weekLabel } = parseSchedHTML(e.target.result);
+    if (employees.length === 0) {
+      document.getElementById('sched-results').style.display='block';
+      document.getElementById('sched-date-label').textContent = file.name;
+      document.getElementById('sched-table').innerHTML='<tr><td colspan="8" style="padding:24px;color:var(--text-muted);text-align:center">Could not parse schedule structure. The parser supports standard HTML table exports from Homebase, 7shifts, and similar tools.</td></tr>';
+      document.getElementById('breaks-container').innerHTML='<div class="notice">No shift data could be extracted.</div>';
+      document.getElementById('sched-results').style.display='block';
+      return;
+    }
+    renderSchedule(employees, file.name, weekLabel);
+  };
+  reader.readAsText(file);
+});
+
+function renderSchedule(employees, filename, weekLabel) {
+  // Parse all shifts
+  const parsed = employees.map(e => ({
+    ...e, parsedShifts: e.shifts.map(parseShiftText)
+  }));
+
+  // Weekly schedule table
+  const table = document.getElementById('sched-table');
+  const headerRow = `<tr><th class="emp-col">Employee</th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr>`;
+  const bodyRows = parsed.map(e => {
+    const cells = e.parsedShifts.map((s, di) => {
+      if (!s) return `<td><span class="shift-pill sp-off">Off</span></td>`;
+      const cls = getDeptClass(s.dept);
+      return `<td><span class="shift-pill ${cls}">${s.display}</span></td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600;font-size:12px">${e.name}${e.dept?`<br><span style="font-size:10px;color:var(--text-muted)">${e.dept}</span>`:''}</td>${cells}</tr>`;
+  }).join('');
+  table.innerHTML = `<thead>${headerRow}</thead><tbody>${bodyRows}</tbody>`;
+
+  // Breaksheet
+  const container = document.getElementById('breaks-container');
+  container.innerHTML = DAYS.map((day, di) => {
+    const dayEmps = parsed.filter(e => e.parsedShifts[di]).map(e => ({
+      name: e.name,
+      shift: e.parsedShifts[di]
+    })).sort((a,b) => (a.shift.startHour||0) - (b.shift.startHour||0));
+
+    if (dayEmps.length === 0) return `<div class="bs-day"><div class="bs-day-head">${day}<span class="bs-day-count">No shifts</span></div></div>`;
+
+    const rows = dayEmps.map(({name, shift}) => {
+      const breaks = calcBreaks(shift);
+      const breakTags = breaks.map(b =>
+        b.type === 'rest'
+          ? `<span class="break-tag">${fmtHour(b.time)}</span>`
+          : `<span class="meal-tag">${fmtHour(b.time)}</span>`
+      ).join('');
+      const deptCls = getDeptClass(shift.dept);
+      return `<tr>
+        <td style="font-weight:600">${name}</td>
+        <td><span class="shift-pill ${deptCls}">${shift.display}</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">${shift.dept||'Sales Floor'}</td>
+        <td>${breakTags || '<span style="color:var(--text-muted);font-size:11px">No breaks</span>'}</td>
+      </tr>`;
+    }).join('');
+
+    return `<div class="bs-day">
+      <div class="bs-day-head">${day} <span class="bs-day-count">${dayEmps.length} employees</span></div>
+      <table class="bs-tbl">
+        <thead><tr><th>Employee</th><th>Shift</th><th>Department</th><th>Breaks <span style="font-weight:400;opacity:.7">(🟡 rest · 🔵 meal)</span></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  document.getElementById('sched-date-label').textContent = weekLabel || filename;
+  document.getElementById('sched-results').style.display = 'block';
+}
+
+// ============================================================
+// MODULE 4: RESTOCK LIST
+// ============================================================
+const ALWAYS_RESTOCK = ['onit','another world','wyld'];
+const RESTOCK_CATS = ['Prerolls','Cartridges','Edibles','Flower','Beverages','Extracts'];
+const CAT_ICONS = { Prerolls:'🌿', Cartridges:'💨', Edibles:'🍬', Flower:'🌸', Beverages:'🧃', Extracts:'💎' };
+
+setupUpload('rst-drop', 'rst-file', file => {
+  Papa.parse(file, {
+    header: true, skipEmptyLines: true,
+    complete: res => renderRestock(res.data, res.meta.fields, file.name)
+  });
+});
+
+function renderRestock(data, headers, filename) {
+  const hLow = headers.map(h=>(h||'').toLowerCase().trim());
+  const findH = (...cands) => { for(const c of cands) { const i=hLow.findIndex(h=>h.includes(c)); if(i>=0)return headers[i]; } return null; };
+
+  const actKey = findH('activity','action','type','transaction');
+  const changeKey = findH('change','qty change','quantity change','units','amount');
+  const ptKey = findH('product type','type','category','class');
+  const brandKey = findH('brand','manufacturer','vendor');
+  const nameKey = findH('product name','name','description','item name','product');
+  const subtypeKey = findH('subtype','sub type','subcategory','sub-type');
+
+  if (!actKey || !changeKey || !nameKey) {
+    document.getElementById('rst-results').style.display='block';
+    document.getElementById('rst-categories').innerHTML='<div class="notice notice-err">Could not detect required columns. Expected: Activity, Change, Product Name. Found: '+headers.join(', ')+'</div>';
+    return;
+  }
+
+  // Filter POS Sales only
+  const sales = data.filter(row => (row[actKey]||'').trim().toLowerCase() === 'pos sale');
+  if (sales.length === 0) {
+    document.getElementById('rst-results').style.display='block';
+    document.getElementById('rst-categories').innerHTML='<div class="notice notice-err">No "POS Sale" activity found. Make sure the Activity column contains "POS Sale" entries.</div>';
+    return;
+  }
+
+  // Aggregate by category/brand/product
+  const agg = {};
+  sales.forEach(row => {
+    const name = (row[nameKey]||'').trim();
+    // Exclude PROMO and ADD ON items
+    if (/(promo|add on|add-on)/i.test(name)) return;
+    const brand = (row[brandKey]||'Unknown').trim();
+    if (ALWAYS_RESTOCK.some(ar => brand.toLowerCase().includes(ar) || name.toLowerCase().includes(ar))) return;
+
+    const rawType = (row[ptKey]||'Other').trim();
+    // Map to our 6 categories
+    const ptLow = rawType.toLowerCase();
+    let cat = 'Other';
+    if (ptLow.includes('preroll') || ptLow.includes('pre-roll') || ptLow.includes('joint')) cat = 'Prerolls';
+    else if (ptLow.includes('cart') || ptLow.includes('vape') || ptLow.includes('concentrate') && ptLow.includes('cart')) cat = 'Cartridges';
+    else if (ptLow.includes('edible') || ptLow.includes('gummy') || ptLow.includes('chocolate') || ptLow.includes('capsule') || ptLow.includes('tincture')) cat = 'Edibles';
+    else if (ptLow.includes('flower') || ptLow.includes('bud') || ptLow.includes('eighth') || ptLow.includes('ounce')) cat = 'Flower';
+    else if (ptLow.includes('bev') || ptLow.includes('drink') || ptLow.includes('soda') || ptLow.includes('water')) cat = 'Beverages';
+    else if (ptLow.includes('extract') || ptLow.includes('concentrate') || ptLow.includes('wax') || ptLow.includes('shatter') || ptLow.includes('rosin') || ptLow.includes('live resin') || ptLow.includes('dab')) cat = 'Extracts';
+    else cat = rawType; // Fallback: use raw type
+
+    const units = Math.abs(parseFloat((row[changeKey]||'0').replace(/,/g,'')) || 0);
+    const key = `${cat}|||${brand}|||${name}`;
+    if (!agg[key]) agg[key] = { cat, brand, name, units: 0 };
+    agg[key].units += units;
+  });
+
+  // Build by category
+  const byCat = {};
+  RESTOCK_CATS.forEach(c => byCat[c] = []);
+  Object.values(agg).forEach(item => {
+    if (byCat[item.cat]) byCat[item.cat].push(item);
+    else {
+      if (!byCat['Other']) byCat['Other'] = [];
+      byCat['Other'].push(item);
+    }
+  });
+
+  const html = RESTOCK_CATS.map(cat => {
+    const items = (byCat[cat]||[]).sort((a,b)=>b.units-a.units);
+    if (items.length === 0) return '';
+    const itemsHTML = items.map((item, idx) => `
+      <div class="restock-item">
+        <div class="ri-rank">${idx+1}</div>
+        <div class="ri-info">
+          <div class="ri-name">${item.name}</div>
+          <div class="ri-brand">${item.brand}</div>
+        </div>
+        <div class="ri-units">${item.units.toFixed(0)} sold</div>
+      </div>
+    `).join('');
+    return `<div class="restock-cat">
+      <div class="rc-head">
+        <div class="rc-title">${CAT_ICONS[cat]||''} ${cat}</div>
+        <div class="rc-count">${items.length} items</div>
+      </div>
+      ${itemsHTML}
+    </div>`;
+  }).join('');
+
+  // Also show any extra categories not in our 6
+  const extraCatHTML = Object.entries(byCat)
+    .filter(([c]) => !RESTOCK_CATS.includes(c) && c !== 'Other')
+    .map(([c, items]) => {
+      if (!items.length) return '';
+      items.sort((a,b)=>b.units-a.units);
+      const rows = items.map((item,idx)=>`<div class="restock-item"><div class="ri-rank">${idx+1}</div><div class="ri-info"><div class="ri-name">${item.name}</div><div class="ri-brand">${item.brand}</div></div><div class="ri-units">${item.units.toFixed(0)} sold</div></div>`).join('');
+      return `<div class="restock-cat"><div class="rc-head"><div class="rc-title">${c}</div><div class="rc-count">${items.length} items</div></div>${rows}</div>`;
+    }).join('');
+
+  document.getElementById('rst-categories').innerHTML = html + extraCatHTML || '<div class="empty"><div class="empty-icon">✅</div><p>No restock items found after filtering.</p></div>';
+
+  const dateMatch = filename.match(/\d{8}/);
+  const dateLabel = dateMatch ? dateMatch[0].replace(/(\d{2})(\d{2})(\d{4})/,'$1/$2/$3') : filename;
+  document.getElementById('rst-date-label').textContent = dateLabel;
+  document.getElementById('rst-results').style.display = 'block';
 }
 
 </script>
