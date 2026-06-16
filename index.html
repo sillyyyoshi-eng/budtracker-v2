@@ -774,7 +774,7 @@
         <section class="section" id="drivers">
             <div class="sec-head">
                 <h1>Driver Safety</h1>
-                <p>Upload the safety data Excel file to generate the full performance scorecard with charts.</p>
+                <p>Upload the safety data Excel file to generate the full performance scorecard with charts. Sample data is pre-loaded.</p>
             </div>
             <div class="upload-area" id="drv-drop" onclick="document.getElementById('drv-file').click()">
                 <input type="file" id="drv-file" accept=".xlsx,.xls,.csv">
@@ -782,11 +782,11 @@
                 <h3>Drop safety data Excel here</h3>
                 <p>.xlsx / .xls / .csv · Same format as before</p>
             </div>
-            <div id="drv-results" style="display:none">
+            <div id="drv-results" style="display:block">
                 <div class="action-bar">
                     <button class="btn-print" onclick="printSection('drivers')">🖨 Print Report</button>
                     <button class="btn-clear" onclick="clearSection('drivers')">✕ Clear</button>
-                    <span class="res-date" id="drv-date-label"></span>
+                    <span class="res-date" id="drv-date-label">Sample Data (May 4 – May 31, 2026)</span>
                 </div>
 
                 <!-- KPI Stats -->
@@ -975,6 +975,10 @@
                 document.getElementById(sec).classList.add('active');
                 document.querySelectorAll('.section').forEach(x => x.classList.remove('print-target'));
                 document.getElementById(sec).classList.add('print-target');
+                // If drivers tab, ensure it's rendered
+                if (sec === 'drivers' && window.driverData) {
+                    renderDriverDashboard(window.driverData, 'Sample Data');
+                }
             });
         });
         document.getElementById('aov').classList.add('print-target');
@@ -1000,7 +1004,6 @@
             if (sec === 'drivers') {
                 document.getElementById('drv-results').style.display = 'none';
                 document.getElementById('drv-drop').classList.remove('upload-loaded');
-                // Destroy charts to free memory
                 if (window.safetyBarChart) { window.safetyBarChart.destroy();
                     window.safetyBarChart = null; }
                 if (window.categoryTotalChart) { window.categoryTotalChart.destroy();
@@ -1008,6 +1011,7 @@
                 if (window.radarChart) { window.radarChart.destroy();
                     window.radarChart = null; }
                 window.driverData = null;
+                document.getElementById('drv-date-label').textContent = '—';
             }
             if (sec === 'schedule') { document.getElementById('sched-results').style.display = 'none';
                 document.getElementById('sched-drop').classList.remove('upload-loaded'); }
@@ -1317,7 +1321,7 @@
         renderContest();
 
         // ============================================================
-        // MODULE 2: DRIVER SAFETY (UPDATED with full dashboard)
+        // MODULE 2: DRIVER SAFETY (UPDATED with SAMPLE DATA)
         // ============================================================
         const INCIDENT_CATS = ['Accelerating', 'Braking', 'Cell Phone', 'Close Following', 'Cornering', 'Distraction',
             'Seat Belt', 'Speeding', 'Stop Sign'
@@ -1409,6 +1413,80 @@
 
         setupUpload('drv-drop', 'drv-file', handleDriverUpload);
 
+        // --- SAMPLE DATA (from your prompt) ---
+        const SAMPLE_DRIVER_DATA = [{
+            name: 'Lee McNabb',
+            score: 71,
+            miles: 2586.7,
+            change: 0,
+            incidents: { 'Accelerating': 6, 'Braking': 0, 'Cell Phone': 1, 'Close Following': 8, 'Cornering': 1,
+                'Distraction': 3, 'Seat Belt': 0, 'Speeding': 11, 'Stop Sign': 7 }
+        }, {
+            name: 'Justin Cabreros',
+            score: 69,
+            miles: 1696.1,
+            change: -1,
+            incidents: { 'Accelerating': 3, 'Braking': 3, 'Cell Phone': 2, 'Close Following': 3, 'Cornering': 3,
+                'Distraction': 10, 'Seat Belt': 0, 'Speeding': 16, 'Stop Sign': 1 }
+        }, {
+            name: 'Michael Senus',
+            score: 77,
+            miles: 1733.4,
+            change: -2,
+            incidents: { 'Accelerating': 2, 'Braking': 1, 'Cell Phone': 0, 'Close Following': 13, 'Cornering': 2,
+                'Distraction': 0, 'Seat Belt': 1, 'Speeding': 1, 'Stop Sign': 0 }
+        }, {
+            name: 'Scott King',
+            score: 83,
+            miles: 2484.8,
+            change: 0,
+            incidents: { 'Accelerating': 6, 'Braking': 0, 'Cell Phone': 0, 'Close Following': 6, 'Cornering': 0,
+                'Distraction': 1, 'Seat Belt': 0, 'Speeding': 6, 'Stop Sign': 0 }
+        }, {
+            name: 'Carlos Dabdoub',
+            score: 71,
+            miles: 2648.2,
+            change: -3,
+            incidents: { 'Accelerating': 0, 'Braking': 0, 'Cell Phone': 5, 'Close Following': 1, 'Cornering': 4,
+                'Distraction': 4, 'Seat Belt': 0, 'Speeding': 6, 'Stop Sign': 11 }
+        }, {
+            name: 'Norma Barajas',
+            score: 73,
+            miles: 295.2,
+            change: 0,
+            incidents: { 'Accelerating': 0, 'Braking': 0, 'Cell Phone': 0, 'Close Following': 6, 'Cornering': 2,
+                'Distraction': 2, 'Seat Belt': 0, 'Speeding': 7, 'Stop Sign': 3 }
+        }, {
+            name: 'Cameron Ward',
+            score: 82,
+            miles: 1297.7,
+            change: 3,
+            incidents: { 'Accelerating': 5, 'Braking': 0, 'Cell Phone': 2, 'Close Following': 0, 'Cornering': 1,
+                'Distraction': 0, 'Seat Belt': 0, 'Speeding': 0, 'Stop Sign': 1 }
+        }, {
+            name: 'Benjamin Rodriguez',
+            score: 76,
+            miles: 1498.4,
+            change: 9,
+            incidents: { 'Accelerating': 1, 'Braking': 0, 'Cell Phone': 10, 'Close Following': 1, 'Cornering': 1,
+                'Distraction': 0, 'Seat Belt': 0, 'Speeding': 10, 'Stop Sign': 4 }
+        }, {
+            name: 'Trevor Haynes',
+            score: 58,
+            miles: 2066.5,
+            change: 0,
+            incidents: { 'Accelerating': 2, 'Braking': 8, 'Cell Phone': 3, 'Close Following': 9, 'Cornering': 8,
+                'Distraction': 7, 'Seat Belt': 0, 'Speeding': 17, 'Stop Sign': 12 }
+        }];
+
+        // Compute totalInc and topIssue for sample
+        SAMPLE_DRIVER_DATA.forEach(d => {
+            d.totalInc = Object.values(d.incidents).reduce((a, b) => a + b, 0);
+            const sorted = Object.entries(d.incidents).sort((a, b) => b[1] - a[1]);
+            d.topIssue = sorted[0][1] > 0 ? sorted[0] : null;
+        });
+        window.driverData = SAMPLE_DRIVER_DATA;
+
         // --- Render Driver Dashboard ---
         function renderDriverDashboard(drivers, filename) {
             document.getElementById('drv-results').style.display = 'block';
@@ -1431,7 +1509,6 @@
             `;
 
             // --- Overview Charts ---
-            // Safety Score Bar Chart
             const ctxBar = document.getElementById('safetyScoreChart').getContext('2d');
             if (window.safetyBarChart) window.safetyBarChart.destroy();
             window.safetyBarChart = new Chart(ctxBar, {
@@ -1453,7 +1530,6 @@
                 }
             });
 
-            // Category Total Chart
             const ctxCat = document.getElementById('categoryTotalChart').getContext('2d');
             if (window.categoryTotalChart) window.categoryTotalChart.destroy();
             window.categoryTotalChart = new Chart(ctxCat, {
@@ -1504,23 +1580,21 @@
                 select.appendChild(opt);
             });
             select.onchange = () => updateDriverDetail(drivers, parseInt(select.value));
-            // Trigger first update
             if (drivers.length > 0) {
                 select.value = 0;
                 updateDriverDetail(drivers, 0);
             }
 
-            // --- Tab switching inside driver section ---
+            // Tab switching
             document.querySelectorAll('#drv-dashboard-tabs .tab-btn').forEach(btn => {
                 btn.onclick = function() {
                     document.querySelectorAll('#drv-dashboard-tabs .tab-btn').forEach(b => b.classList.remove(
-                    'active'));
+                        'active'));
                     this.classList.add('active');
                     const paneId = this.dataset.tab;
                     document.querySelectorAll('#drv-results .tab-pane').forEach(p => p.classList.remove(
                     'active'));
                     document.getElementById(paneId).classList.add('active');
-                    // Resize charts if needed
                     if (window.safetyBarChart) window.safetyBarChart.resize();
                     if (window.categoryTotalChart) window.categoryTotalChart.resize();
                     if (window.radarChart) window.radarChart.resize();
@@ -1540,7 +1614,6 @@
             document.getElementById('detailMilesChange').textContent = d.miles > 0 ? `${d.miles.toFixed(0)} mi driven` :
             '—';
 
-            // Radar Chart
             const radarCtx = document.getElementById('radarIncidentRate').getContext('2d');
             if (window.radarChart) window.radarChart.destroy();
 
@@ -1581,12 +1654,10 @@
                 }
             });
 
-            // Breakdown Table
             const tbody = document.querySelector('#driverBreakdownTable tbody');
             tbody.innerHTML = INCIDENT_CATS.map((cat, i) => {
                 const ev = d.incidents[cat] || 0;
                 const rate = d.miles > 0 ? (ev / d.miles * 100).toFixed(1) : '0.0';
-                // Mock points/impact for display (we don't have exact points from the file, but we can show event count and rate)
                 return `<tr>
                     <td style="font-weight:500">${cat}</td>
                     <td style="font-family:'JetBrains Mono',monospace">${ev}</td>
@@ -1596,7 +1667,6 @@
                 </tr>`;
             }).join('');
 
-            // Coaching Tip
             const topRisks = INCIDENT_CATS.map(cat => ({ cat, rate: d.miles > 0 ? (d.incidents[cat] / d.miles * 100) :
                     0 }))
                 .sort((a, b) => b.rate - a.rate)
@@ -1605,8 +1675,7 @@
 
             let tip = '';
             if (topRisks.length > 0) {
-                tip =
-                `⚠️ Focus areas: ${topRisks.map(r=>r.cat).join(', ')}. `;
+                tip = `⚠️ Focus areas: ${topRisks.map(r=>r.cat).join(', ')}. `;
                 if (topRisks[0].cat === 'Speeding') tip += `Speeding is high. Smooth acceleration & speed compliance improves score.`;
                 else if (topRisks[0].cat === 'Close Following') tip += `Maintain safer following distance.`;
                 else if (topRisks[0].cat === 'Cell Phone') tip += `Hands-free usage is mandatory.`;
@@ -1618,6 +1687,10 @@
             document.getElementById('coachingTip').innerHTML = `🎯 ${tip}`;
         }
 
+        // --- Load sample data on page load ---
+        window.onload = function() {
+            renderDriverDashboard(SAMPLE_DRIVER_DATA, 'Sample Data (May 4 – May 31, 2026)');
+        };
 
         // ============================================================
         // MODULE 3: SCHEDULE + BREAKSHEET (unchanged)
