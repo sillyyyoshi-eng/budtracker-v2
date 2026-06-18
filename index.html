@@ -1,2027 +1,1626 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Sanctuary | Manager Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        :root {
-            --bg: #EFF2EC;
-            --card: #FFFFFF;
-            --sidebar: #0C1E10;
-            --sidebar-hover: #182E1C;
-            --sidebar-active: #2D6A4F;
-            --primary: #2D6A4F;
-            --primary-light: #40916C;
-            --accent-gold: #C8981E;
-            --text: #18181A;
-            --text-sub: #4A4A52;
-            --text-muted: #8A8A96;
-            --border: #D8DDD4;
-            --above: #1B7B3C;
-            --above-bg: #E8F5EC;
-            --close: #A05C00;
-            --close-bg: #FEF3DC;
-            --below: #B91C1C;
-            --below-bg: #FEE8E8;
-            --day-color: #1A5C9A;
-            --day-bg: #E6F0FA;
-            --night-color: #5B21B6;
-            --night-bg: #EDE9FF;
-            --delivery-color: #C0501E;
-            --delivery-bg: #FFF0E8;
-            --inventory-color: #2563EB;
-            --inventory-bg: #EEF3FF;
-            --r: 10px;
-            --sh: 0 1px 3px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* ---- SIDEBAR ---- */
-        .sidebar {
-            width: 210px;
-            min-width: 210px;
-            background: var(--sidebar);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        .sb-logo {
-            padding: 20px 18px 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-        .sb-logo .name {
-            font-size: 13px;
-            font-weight: 800;
-            color: #FFF;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }
-        .sb-logo .sub {
-            font-size: 10px;
-            color: rgba(255,255,255,0.35);
-            margin-top: 3px;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-        .sb-nav {
-            flex: 1;
-            padding: 10px 8px;
-            list-style: none;
-        }
-        .sb-nav li {
-            margin: 2px 0;
-        }
-        .sb-nav a {
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            padding: 10px 12px;
-            border-radius: 7px;
-            color: rgba(255,255,255,0.5);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .sb-nav a:hover {
-            background: var(--sidebar-hover);
-            color: rgba(255,255,255,0.85);
-        }
-        .sb-nav a.active {
-            background: var(--sidebar-active);
-            color: #FFF;
-        }
-        .sb-icon {
-            font-size: 15px;
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .sb-foot {
-            padding: 14px 18px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            font-size: 10px;
-            color: rgba(255,255,255,0.2);
-            letter-spacing: 0.04em;
-        }
-
-        /* ---- MAIN ---- */
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            height: 100vh;
-        }
-        .section {
-            display: none;
-            padding: 28px 30px 48px;
-            max-width: 1080px;
-        }
-        .section.active {
-            display: block;
-        }
-
-        /* ---- SECTION HEADER ---- */
-        .sec-head {
-            margin-bottom: 22px;
-        }
-        .sec-head h1 {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .sec-head p {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* ---- UPLOAD ---- */
-        .upload-area {
-            border: 2px dashed var(--border);
-            border-radius: var(--r);
-            padding: 30px 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.18s;
-            background: var(--card);
-            margin-bottom: 20px;
-        }
-        .upload-area:hover,
-        .upload-area.drag-over {
-            border-color: var(--primary);
-            background: rgba(45,106,79,0.03);
-        }
-        .upload-area input[type="file"] {
-            display: none;
-        }
-        .upload-area .ui {
-            font-size: 26px;
-            margin-bottom: 8px;
-        }
-        .upload-area h3 {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-        .upload-area p {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-        .upload-loaded {
-            border-color: var(--primary);
-            background: rgba(45,106,79,0.05);
-        }
-
-        /* ---- CARDS ---- */
-        .card {
-            background: var(--card);
-            border-radius: var(--r);
-            border: 1px solid var(--border);
-            box-shadow: var(--sh);
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        .card-head {
-            padding: 13px 16px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #FAFCF8;
-        }
-        .card-head h2 {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        .card-body {
-            padding: 16px;
-        }
-
-        /* ---- STATS ROW ---- */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-            margin-bottom: 18px;
-        }
-        .stat {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--r);
-            padding: 14px 16px;
-            box-shadow: var(--sh);
-        }
-        .stat-lbl {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.09em;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-        }
-        .stat-val {
-            font-size: 24px;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .stat-val.green {
-            color: var(--above);
-        }
-        .stat-val.amber {
-            color: var(--close);
-        }
-        .stat-val.red {
-            color: var(--below);
-        }
-        .stat-sub {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        /* ---- TABLES ---- */
-        .tbl {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        .tbl th {
-            padding: 8px 12px;
-            text-align: left;
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border);
-            background: #FAFAFA;
-        }
-        .tbl th.right,
-        .tbl td.right {
-            text-align: right;
-        }
-        .tbl th.center,
-        .tbl td.center {
-            text-align: center;
-        }
-        .tbl td {
-            padding: 9px 12px;
-            border-bottom: 1px solid #F3F3F3;
-            vertical-align: middle;
-        }
-        .tbl tr:last-child td {
-            border-bottom: none;
-        }
-        .tbl tbody tr:hover {
-            background: #F9FBF8;
-        }
-
-        /* ---- BADGES ---- */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 7px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        .badge-above {
-            background: var(--above-bg);
-            color: var(--above);
-        }
-        .badge-close {
-            background: var(--close-bg);
-            color: var(--close);
-        }
-        .badge-below {
-            background: var(--below-bg);
-            color: var(--below);
-        }
-        .badge-day {
-            background: var(--day-bg);
-            color: var(--day-color);
-        }
-        .badge-night {
-            background: var(--night-bg);
-            color: var(--night-color);
-        }
-        .badge-delivery {
-            background: var(--delivery-bg);
-            color: var(--delivery-color);
-        }
-        .badge-both {
-            background: #F0F9FF;
-            color: #0369A1;
-        }
-
-        /* ---- ACTION BAR ---- */
-        .action-bar {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .btn-print {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 7px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-print:hover {
-            background: var(--primary-light);
-        }
-        .btn-clear {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: none;
-            border: 1px solid var(--border);
-            padding: 8px 14px;
-            border-radius: 7px;
-            font-size: 12px;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-clear:hover {
-            border-color: #aaa;
-            color: var(--text);
-        }
-        .res-date {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-left: auto;
-        }
-
-        /* ============================================================ */
-        /* NEW DRIVER SAFETY DASHBOARD STYLES */
-        /* ============================================================ */
-        #drv-dashboard-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 8px;
-        }
-        #drv-dashboard-tabs .tab-btn {
-            background: transparent;
-            border: none;
-            font-size: 0.95rem;
-            font-weight: 600;
-            padding: 8px 24px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: var(--text-muted);
-            font-family: 'Inter', sans-serif;
-        }
-        #drv-dashboard-tabs .tab-btn.active {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 6px 12px -6px rgba(0, 32, 64, 0.2);
-        }
-        #drv-dashboard-tabs .tab-btn:hover:not(.active) {
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .two-charts {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-        .chart-card {
-            flex: 1;
-            min-width: 280px;
-            background: var(--card);
-            border-radius: var(--r);
-            padding: 16px 14px;
-            border: 1px solid var(--border);
-            box-shadow: var(--sh);
-        }
-        .chart-card canvas {
-            max-height: 240px;
-            max-width: 100%;
-        }
-
-        .driver-detail-panel {
-            background: var(--card);
-            border-radius: var(--r);
-            padding: 20px;
-            border: 1px solid var(--border);
-            box-shadow: var(--sh);
-            margin-bottom: 16px;
-        }
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .flex-between h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-        #driverSelect {
-            background: white;
-            border: 1px solid var(--border);
-            padding: 8px 20px;
-            border-radius: 48px;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            cursor: pointer;
-            color: var(--text);
-        }
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 2fr;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        @media (max-width: 700px) {
-            .detail-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        .kpi-card {
-            background: var(--bg);
-            border-radius: var(--r);
-            padding: 14px 16px;
-            border: 1px solid var(--border);
-        }
-        .kpi-title {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-        .kpi-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--text);
-            line-height: 1.2;
-        }
-        .insight-text {
-            background: #EEF2FA;
-            padding: 14px 18px;
-            border-radius: var(--r);
-            margin-top: 16px;
-            font-size: 0.9rem;
-            color: var(--text-sub);
-            border-left: 4px solid var(--primary);
-        }
-        .insight-text .highlight {
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .dc-change.up {
-            color: var(--above);
-        }
-        .dc-change.down {
-            color: var(--below);
-        }
-        .dc-change.same {
-            color: var(--text-muted);
-        }
-
-        .driver-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .driver-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--r);
-            padding: 16px;
-            box-shadow: var(--sh);
-        }
-        .dc-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
-        .dc-name {
-            font-size: 13px;
-            font-weight: 700;
-        }
-        .dc-rank {
-            font-size: 10px;
-            color: var(--text-muted);
-        }
-        .dc-score-row {
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-            margin-bottom: 4px;
-        }
-        .dc-score {
-            font-size: 30px;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .dc-rating {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 12px;
-        }
-        .tier-exc {
-            color: #145A32;
-            background: #EAFAF1;
-        }
-        .tier-good {
-            color: #1A5276;
-            background: #EBF5FB;
-        }
-        .tier-fair {
-            color: #784212;
-            background: #FEF5E7;
-        }
-        .tier-poor {
-            color: #7B241C;
-            background: #FDEDEC;
-        }
-        .dc-meta {
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-        .dc-top-issue {
-            font-size: 11px;
-        }
-        .dc-issue-label {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: var(--text-muted);
-            margin-bottom: 2px;
-        }
-        .dc-bar-bg {
-            height: 3px;
-            background: #E8E8E8;
-            border-radius: 2px;
-            margin-top: 4px;
-            overflow: hidden;
-        }
-        .dc-bar-fill {
-            height: 100%;
-            background: var(--close);
-            border-radius: 2px;
-        }
-
-        /* Print */
-        @media print {
-            .sidebar,
-            .upload-area,
-            .action-bar,
-            .contest-edit-btn,
-            .tab-bar,
-            #drv-dashboard-tabs .tab-btn {
-                display: none !important;
-            }
-            .content {
-                overflow: visible !important;
-                height: auto !important;
-            }
-            body {
-                overflow: visible !important;
-            }
-            .section {
-                display: block !important;
-                padding: 0 !important;
-            }
-            .section:not(.print-target) {
-                display: none !important;
-            }
-            .tab-pane {
-                display: block !important;
-            }
-            .card,
-            .stat,
-            .driver-card,
-            .bs-day,
-            .restock-cat {
-                page-break-inside: avoid;
-            }
-            .contest-wrap {
-                display: none !important;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Sanctuary | Manager Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── same styles as before ── */
+:root {
+  --bg: #EFF2EC; --card: #FFFFFF; --sidebar: #0C1E10; --sidebar-hover: #182E1C;
+  --sidebar-active: #2D6A4F; --primary: #2D6A4F; --primary-light: #40916C;
+  --accent-gold: #C8981E; --text: #18181A; --text-sub: #4A4A52; --text-muted: #8A8A96;
+  --border: #D8DDD4; --above: #1B7B3C; --above-bg: #E8F5EC; --close: #A05C00;
+  --close-bg: #FEF3DC; --below: #B91C1C; --below-bg: #FEE8E8; --day-color: #1A5C9A;
+  --day-bg: #E6F0FA; --night-color: #5B21B6; --night-bg: #EDE9FF;
+  --delivery-color: #C0501E; --delivery-bg: #FFF0E8; --inventory-color: #2563EB;
+  --inventory-bg: #EEF3FF; --r: 10px; --sh: 0 1px 3px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+.sidebar { width: 210px; min-width: 210px; background: var(--sidebar); display: flex; flex-direction: column; height: 100vh; }
+.sb-logo { padding: 20px 18px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.sb-logo .name { font-size: 13px; font-weight: 800; color: #FFF; letter-spacing: 0.05em; text-transform: uppercase; }
+.sb-logo .sub { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+.sb-nav { flex: 1; padding: 10px 8px; list-style: none; }
+.sb-nav li { margin: 2px 0; }
+.sb-nav a { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 7px; color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.sb-nav a:hover { background: var(--sidebar-hover); color: rgba(255,255,255,0.85); }
+.sb-nav a.active { background: var(--sidebar-active); color: #FFF; }
+.sb-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.sb-foot { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 0.04em; display: flex; flex-direction: column; gap: 4px; }
+.sb-foot .reset-btn { background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); padding: 4px 12px; border-radius: 6px; font-size: 10px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; width: 100%; text-align: center; }
+.sb-foot .reset-btn:hover { background: rgba(255,255,255,0.08); color: #FFF; border-color: rgba(255,255,255,0.3); }
+.content { flex: 1; overflow-y: auto; height: 100vh; }
+.section { display: none; padding: 28px 30px 48px; max-width: 1080px; }
+.section.active { display: block; }
+.sec-head { margin-bottom: 22px; }
+.sec-head h1 { font-size: 20px; font-weight: 700; }
+.sec-head p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.upload-area { border: 2px dashed var(--border); border-radius: var(--r); padding: 30px 24px; text-align: center; cursor: pointer; transition: all 0.18s; background: var(--card); margin-bottom: 20px; }
+.upload-area:hover, .upload-area.drag-over { border-color: var(--primary); background: rgba(45,106,79,0.03); }
+.upload-area input[type="file"] { display: none; }
+.upload-area .ui { font-size: 26px; margin-bottom: 8px; }
+.upload-area h3 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.upload-area p { font-size: 11px; color: var(--text-muted); }
+.upload-loaded { border-color: var(--primary); background: rgba(45,106,79,0.05); }
+.card { background: var(--card); border-radius: var(--r); border: 1px solid var(--border); box-shadow: var(--sh); margin-bottom: 16px; overflow: hidden; }
+.card-head { padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #FAFCF8; }
+.card-head h2 { font-size: 13px; font-weight: 700; color: var(--primary); }
+.card-body { padding: 16px; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--sh); }
+.stat-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-muted); margin-bottom: 5px; }
+.stat-val { font-size: 24px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.stat-val.green { color: var(--above); } .stat-val.amber { color: var(--close); } .stat-val.red { color: var(--below); }
+.stat-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tbl th { padding: 8px 12px; text-align: left; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); border-bottom: 1px solid var(--border); background: #FAFAFA; }
+.tbl th.right, .tbl td.right { text-align: right; }
+.tbl th.center, .tbl td.center { text-align: center; }
+.tbl td { padding: 9px 12px; border-bottom: 1px solid #F3F3F3; vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover { background: #F9FBF8; }
+.badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.badge-above { background: var(--above-bg); color: var(--above); }
+.badge-close { background: var(--close-bg); color: var(--close); }
+.badge-below { background: var(--below-bg); color: var(--below); }
+.badge-day { background: var(--day-bg); color: var(--day-color); }
+.badge-night { background: var(--night-bg); color: var(--night-color); }
+.badge-delivery { background: var(--delivery-bg); color: var(--delivery-color); }
+.badge-both { background: #F0F9FF; color: #0369A1; }
+.action-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.btn-print { display: flex; align-items: center; gap: 6px; background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.btn-print:hover { background: var(--primary-light); }
+.btn-clear { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); padding: 8px 14px; border-radius: 7px; font-size: 12px; cursor: pointer; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+.btn-clear:hover { border-color: #aaa; color: var(--text); }
+.res-date { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+/* Driver safety styles (same as before) */
+#drv-dashboard-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid var(--border); padding-bottom: 8px; }
+#drv-dashboard-tabs .tab-btn { background: transparent; border: none; font-size: 0.95rem; font-weight: 600; padding: 8px 24px; border-radius: 40px; cursor: pointer; transition: all 0.2s ease; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+#drv-dashboard-tabs .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 6px 12px -6px rgba(0, 32, 64, 0.2); }
+#drv-dashboard-tabs .tab-btn:hover:not(.active) { background: var(--bg); color: var(--text); }
+.two-charts { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; }
+.chart-card { flex: 1; min-width: 280px; background: var(--card); border-radius: var(--r); padding: 16px 14px; border: 1px solid var(--border); box-shadow: var(--sh); }
+.chart-card canvas { max-height: 240px; max-width: 100%; }
+.driver-detail-panel { background: var(--card); border-radius: var(--r); padding: 20px; border: 1px solid var(--border); box-shadow: var(--sh); margin-bottom: 16px; }
+.flex-between { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 20px; }
+.flex-between h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+#driverSelect { background: white; border: 1px solid var(--border); padding: 8px 20px; border-radius: 48px; font-weight: 500; font-family: 'Inter', sans-serif; font-size: 0.85rem; cursor: pointer; color: var(--text); }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 16px; margin-bottom: 24px; }
+@media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr 1fr; } }
+.kpi-card { background: var(--bg); border-radius: var(--r); padding: 14px 16px; border: 1px solid var(--border); }
+.kpi-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+.kpi-value { font-size: 1.8rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text); line-height: 1.2; }
+.insight-text { background: #EEF2FA; padding: 14px 18px; border-radius: var(--r); margin-top: 16px; font-size: 0.9rem; color: var(--text-sub); border-left: 4px solid var(--primary); }
+.insight-text .highlight { font-weight: 700; color: var(--primary); }
+.dc-change.up { color: var(--above); } .dc-change.down { color: var(--below); } .dc-change.same { color: var(--text-muted); }
+.driver-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.driver-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; box-shadow: var(--sh); }
+.dc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.dc-name { font-size: 13px; font-weight: 700; }
+.dc-rank { font-size: 10px; color: var(--text-muted); }
+.dc-score-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.dc-score { font-size: 30px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.dc-rating { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; }
+.tier-exc { color: #145A32; background: #EAFAF1; }
+.tier-good { color: #1A5276; background: #EBF5FB; }
+.tier-fair { color: #784212; background: #FEF5E7; }
+.tier-poor { color: #7B241C; background: #FDEDEC; }
+.dc-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; }
+.dc-top-issue { font-size: 11px; }
+.dc-issue-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 2px; }
+.dc-bar-bg { height: 3px; background: #E8E8E8; border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.dc-bar-fill { height: 100%; background: var(--close); border-radius: 2px; }
+/* Schedule, Restock, Contest styles (same as before) */
+.sched-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+.sched-tbl th { background: var(--primary); color: white; padding: 8px 8px; text-align: center; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.sched-tbl th.emp-col { text-align: left; min-width: 140px; }
+.sched-tbl td { padding: 6px 8px; border-bottom: 1px solid #F2F2F2; border-right: 1px solid #F5F5F5; vertical-align: middle; }
+.sched-tbl tbody tr:nth-child(even) { background: #FAFAFA; }
+.shift-pill { font-size: 10px; border-radius: 4px; padding: 2px 6px; display: inline-block; white-space: nowrap; }
+.sp-sales { background: var(--day-bg); color: var(--day-color); }
+.sp-delivery { background: var(--delivery-bg); color: var(--delivery-color); }
+.sp-inventory { background: var(--inventory-bg); color: var(--inventory-color); }
+.sp-sanctuary { background: #F0FDF4; color: #15803D; }
+.sp-off { color: #CCC; font-style: italic; }
+.bs-day { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 14px; overflow: hidden; }
+.bs-day-head { background: var(--primary); color: white; padding: 10px 16px; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.bs-day-count { font-size: 10px; opacity: 0.7; }
+.bs-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.bs-tbl th { padding: 7px 12px; background: #F6F9F5; font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); font-weight: 700; border-bottom: 1px solid var(--border); text-align: left; }
+.bs-tbl td { padding: 8px 12px; border-bottom: 1px solid #F5F5F5; }
+.bs-tbl tr:last-child td { border-bottom: none; }
+.break-tag { font-size: 10px; background: #FFF3CD; color: #856404; border-radius: 3px; padding: 1px 5px; margin-right: 3px; white-space: nowrap; }
+.meal-tag { font-size: 10px; background: #CCE5FF; color: #004085; border-radius: 3px; padding: 1px 5px; margin-right: 3px; white-space: nowrap; }
+.restock-always { background: linear-gradient(135deg, #0C1E10 0%, #2D6A4F 100%); border-radius: var(--r); padding: 16px 20px; margin-bottom: 20px; }
+.ra-head { font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 6px; }
+.ra-body { font-size: 13px; color: rgba(255,255,255,0.9); }
+.ra-body strong { color: white; }
+.restock-cat { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; }
+.rc-head { padding: 10px 16px; background: #F6F9F5; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.rc-title { font-size: 13px; font-weight: 700; color: var(--primary); }
+.rc-count { font-size: 9px; background: var(--primary); color: white; padding: 1px 7px; border-radius: 10px; font-weight: 700; }
+.restock-item { display: flex; align-items: center; padding: 9px 16px; border-bottom: 1px solid #F5F5F5; gap: 10px; }
+.restock-item:last-child { border-bottom: none; }
+.ri-rank { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; min-width: 22px; text-align: right; }
+.ri-info { flex: 1; }
+.ri-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.ri-brand { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.ri-units { font-size: 11px; font-weight: 700; background: var(--below-bg); color: var(--below); padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.contest-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; margin-bottom: 20px; position: relative; }
+.contest-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.contest-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-gold); }
+.contest-month { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+.contest-match { display: grid; grid-template-columns: 1fr 36px 1fr; gap: 14px; align-items: center; }
+.c-player { text-align: center; }
+.c-player-name { font-size: 14px; font-weight: 700; }
+.c-player-dept { font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 4px; }
+.c-player-aov { font-size: 30px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--primary); }
+.c-player-txns { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.c-winner .c-player-aov { color: var(--above); }
+.c-vs { font-size: 14px; font-weight: 800; color: var(--text-muted); text-align: center; }
+.contest-bar-wrap { margin-top: 14px; }
+.contest-bar-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.contest-bar-bg { height: 6px; background: #EEF0EC; border-radius: 3px; overflow: hidden; }
+.contest-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent-gold)); border-radius: 3px; transition: width 0.5s ease; }
+.contest-edit-btn { position: absolute; top: 14px; right: 14px; background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+.contest-edit-btn:hover { border-color: var(--primary); color: var(--primary); }
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--card); border-radius: 14px; padding: 24px; width: 460px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.modal h2 { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.fg { display: flex; flex-direction: column; gap: 4px; }
+.fg label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.07em; }
+.fg input, .fg select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
+.fg input:focus, .fg select:focus { border-color: var(--primary); }
+.fg.full { grid-column: 1/-1; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn-save { background: var(--primary); color: white; border: none; padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.btn-cancel { background: none; border: 1px solid var(--border); padding: 8px 18px; border-radius: 7px; font-size: 13px; cursor: pointer; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+.notice { background: #FEF9E7; border: 1px solid #F5D98B; border-radius: 7px; padding: 10px 14px; font-size: 12px; color: #7A5200; margin-bottom: 14px; }
+.notice-err { background: var(--below-bg); border-color: #FBBCBC; color: var(--below); }
+.coaching-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.coaching-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; border-left: 3px solid var(--primary); }
+.coaching-card.above { border-left-color: var(--above); }
+.coaching-card.close { border-left-color: var(--close); }
+.coaching-card.below { border-left-color: var(--below); }
+.cc-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.cc-meta { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+.cc-note { font-size: 12px; color: var(--text-sub); line-height: 1.6; }
+@media print {
+  .sidebar, .upload-area, .action-bar, .contest-edit-btn, .tab-bar, #drv-dashboard-tabs .tab-btn { display: none !important; }
+  .content { overflow: visible !important; height: auto !important; }
+  body { overflow: visible !important; }
+  .section { display: block !important; padding: 0 !important; }
+  .section:not(.print-target) { display: none !important; }
+  .tab-pane { display: block !important; }
+  .card, .stat, .driver-card, .bs-day, .restock-cat { page-break-inside: avoid; }
+  .contest-wrap { display: none !important; }
+}
+</style>
 </head>
 <body>
 
-    <!-- SIDEBAR -->
-    <nav class="sidebar">
-        <div class="sb-logo">
-            <div class="name">The Sanctuary</div>
-            <div class="sub">Manager Hub</div>
-        </div>
-        <ul class="sb-nav">
-            <li><a href="#" class="active" data-sec="aov"><span class="sb-icon">📊</span>AOV Report</a></li>
-            <li><a href="#" data-sec="drivers"><span class="sb-icon">🚗</span>Driver Safety</a></li>
-            <li><a href="#" data-sec="schedule"><span class="sb-icon">📅</span>Schedule</a></li>
-            <li><a href="#" data-sec="restock"><span class="sb-icon">📋</span>Restock List</a></li>
-        </ul>
-        <div class="sb-foot">v1.0 · The Sanctuary CA</div>
-    </nav>
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="name">The Sanctuary</div>
+    <div class="sub">Manager Hub</div>
+  </div>
+  <ul class="sb-nav">
+    <li><a href="#" class="active" data-sec="aov"><span class="sb-icon">📊</span>AOV Report</a></li>
+    <li><a href="#" data-sec="drivers"><span class="sb-icon">🚗</span>Driver Safety</a></li>
+    <li><a href="#" data-sec="schedule"><span class="sb-icon">📅</span>Schedule</a></li>
+    <li><a href="#" data-sec="restock"><span class="sb-icon">📋</span>Restock List</a></li>
+  </ul>
+  <div class="sb-foot">
+    <button class="reset-btn" onclick="resetAll()">⟳ Reset All Data</button>
+    <div style="opacity:0.4;">v1.0 · The Sanctuary CA</div>
+  </div>
+</nav>
 
-    <!-- MAIN CONTENT -->
-    <main class="content">
+<!-- MAIN CONTENT -->
+<main class="content">
 
-        <!-- ===== AOV REPORT ===== -->
-        <section class="section active" id="aov">
-            <div class="sec-head">
-                <h1>AOV Report</h1>
-                <p>Upload your daily sales CSV to generate the coaching report and day/night breakdown.</p>
-            </div>
-
-            <div class="upload-area" id="aov-drop" onclick="document.getElementById('aov-file').click()">
-                <input type="file" id="aov-file" accept=".csv">
-                <div class="ui">📊</div>
-                <h3>Drop sales CSV here</h3>
-                <p>Supports standard POS export formats · CSV only</p>
-            </div>
-
-            <div class="contest-wrap" id="contest-wrap">
-                <div class="contest-head">
-                    <div class="contest-title">🏆 1v1 Contest</div>
-                    <div class="contest-month" id="c-month">—</div>
-                </div>
-                <div class="contest-match" id="c-match">
-                    <div class="c-player" id="c-p1">
-                        <div class="c-player-dept" id="c-p1-dept">—</div>
-                        <div class="c-player-name" id="c-p1-name">—</div>
-                        <div class="c-player-aov" id="c-p1-aov">—</div>
-                        <div class="c-player-txns" id="c-p1-txns">— transactions</div>
-                    </div>
-                    <div class="c-vs">VS</div>
-                    <div class="c-player" id="c-p2">
-                        <div class="c-player-dept" id="c-p2-dept">—</div>
-                        <div class="c-player-name" id="c-p2-name">—</div>
-                        <div class="c-player-aov" id="c-p2-aov">—</div>
-                        <div class="c-player-txns" id="c-p2-txns">— transactions</div>
-                    </div>
-                </div>
-                <div class="contest-bar-wrap">
-                    <div class="contest-bar-labels">
-                        <span id="c-bar-l1">Player 1</span>
-                        <span id="c-bar-l2">Player 2</span>
-                    </div>
-                    <div class="contest-bar-bg"><div class="contest-bar-fill" id="c-bar-fill" style="width:50%"></div></div>
-                </div>
-                <button class="contest-edit-btn" onclick="openContest()">Edit Contest</button>
-            </div>
-
-            <div id="aov-results" style="display:none">
-                <div class="action-bar">
-                    <button class="btn-print" onclick="printSection('aov')">🖨 Print Report</button>
-                    <button class="btn-clear" onclick="clearSection('aov')">✕ Clear</button>
-                    <span class="res-date" id="aov-date-label"></span>
-                </div>
-                <div class="stats-row" id="aov-stats"></div>
-                <div class="card">
-                    <div class="card-head"><h2>Individual Performance</h2></div>
-                    <div class="card-body" style="padding:0">
-                        <table class="tbl" id="aov-table">
-                            <thead>
-                                <tr>
-                                    <th>Employee</th>
-                                    <th class="center">Shift</th>
-                                    <th class="right">Transactions</th>
-                                    <th class="right">Total Sales</th>
-                                    <th class="right">AOV</th>
-                                    <th class="right">Target</th>
-                                    <th class="center">vs Target</th>
-                                    <th class="center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="aov-tbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-head"><h2>Day vs Night Breakdown</h2></div>
-                    <div class="card-body" style="padding:0">
-                        <table class="tbl" id="daynite-table">
-                            <thead>
-                                <tr>
-                                    <th>Shift</th>
-                                    <th class="right">Transactions</th>
-                                    <th class="right">Total Sales</th>
-                                    <th class="right">AOV</th>
-                                    <th class="right">Avg per Employee</th>
-                                </tr>
-                            </thead>
-                            <tbody id="daynite-tbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-head"><h2>Coaching Notes</h2></div>
-                    <div class="card-body">
-                        <div class="coaching-grid" id="coaching-grid"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ===== DRIVER SAFETY (UPDATED) ===== -->
-        <section class="section" id="drivers">
-            <div class="sec-head">
-                <h1>Driver Safety</h1>
-                <p>Upload the safety data Excel file to generate the full performance scorecard with charts. Sample data is pre-loaded.</p>
-            </div>
-            <div class="upload-area" id="drv-drop" onclick="document.getElementById('drv-file').click()">
-                <input type="file" id="drv-file" accept=".xlsx,.xls,.csv">
-                <div class="ui">🚗</div>
-                <h3>Drop safety data Excel here</h3>
-                <p>.xlsx / .xls / .csv · Same format as before</p>
-            </div>
-            <div id="drv-results" style="display:block">
-                <div class="action-bar">
-                    <button class="btn-print" onclick="printSection('drivers')">🖨 Print Report</button>
-                    <button class="btn-clear" onclick="clearSection('drivers')">✕ Clear</button>
-                    <span class="res-date" id="drv-date-label">Sample Data (May 4 – May 31, 2026)</span>
-                </div>
-
-                <!-- KPI Stats -->
-                <div class="stats-row" id="drv-stats"></div>
-
-                <!-- Tabs -->
-                <div id="drv-dashboard-tabs">
-                    <button class="tab-btn active" data-tab="drv-overview">📊 Overall Safety & Rankings</button>
-                    <button class="tab-btn" data-tab="drv-deepdive">🧑‍✈️ Driver Deep Dive & Coaching</button>
-                </div>
-
-                <!-- Overview Pane -->
-                <div class="tab-pane active" id="drv-overview">
-                    <div class="two-charts">
-                        <div class="chart-card"><canvas id="safetyScoreChart"></canvas></div>
-                        <div class="chart-card"><canvas id="categoryTotalChart"></canvas></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-head"><h2>Driver Performance & Risk Overview</h2></div>
-                        <div class="card-body" style="padding:0; overflow-x:auto">
-                            <table class="tbl" id="driverSummaryTable">
-                                <thead>
-                                    <tr>
-                                        <th>Driver</th>
-                                        <th>Safety Score</th>
-                                        <th>Band</th>
-                                        <th>Score Δ</th>
-                                        <th>Miles</th>
-                                        <th>Total Incidents</th>
-                                        <th>Incidents / 100mi</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="insight-text" style="margin-top:10px;">💡 <span class="highlight">Safety bands:</span> Excellent (96-100) | Good (85-95) | Fair (50-84). Lower safety scores indicate higher risk. Focus on Speeding + Close Following = top fleet-wide challenges.</div>
-                </div>
-
-                <!-- Deep Dive Pane -->
-                <div class="tab-pane" id="drv-deepdive">
-                    <div class="driver-detail-panel">
-                        <div class="flex-between">
-                            <h2>🔍 Individual driver profile</h2>
-                            <select id="driverSelect"></select>
-                        </div>
-                        <div class="detail-grid">
-                            <div class="kpi-card">
-                                <div class="kpi-title">👤 Safety Score</div>
-                                <div class="kpi-value" id="detailScore">—</div>
-                                <div class="stat-sub" id="detailChange"></div>
-                            </div>
-                            <div class="kpi-card">
-                                <div class="kpi-title">📆 Miles driven (4w)</div>
-                                <div class="kpi-value" id="detailMiles">—</div>
-                                <div class="stat-sub" id="detailMilesChange"></div>
-                            </div>
-                            <div class="chart-card" style="min-width:200px; padding:10px;">
-                                <canvas id="radarIncidentRate" style="max-height:200px; width:100%;"></canvas>
-                                <div class="stat-sub" style="text-align:center;font-size:9px;">⛑️ Incidents per 100 miles vs Fleet avg</div>
-                            </div>
-                        </div>
-                        <div style="margin-top:16px; overflow-x:auto;">
-                            <table class="tbl" id="driverBreakdownTable">
-                                <thead>
-                                    <tr>
-                                        <th>Behavior</th>
-                                        <th>Events count</th>
-                                        <th>Points earned/available</th>
-                                        <th>Impact (score loss)</th>
-                                        <th>Per 100mi rate</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                        <div id="coachingTip" class="insight-text" style="margin-top:20px;">🎯 Select a driver to see targeted coaching insights based on highest risk behaviors.</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ===== SCHEDULE ===== -->
-        <section class="section" id="schedule">
-            <div class="sec-head">
-                <h1>Schedule + Breaksheet</h1>
-                <p>Upload your schedule HTML export — get the full weekly view plus daily breaksheets.</p>
-            </div>
-            <div class="upload-area" id="sched-drop" onclick="document.getElementById('sched-file').click()">
-                <input type="file" id="sched-file" accept=".html,.htm">
-                <div class="ui">📅</div>
-                <h3>Drop schedule HTML here</h3>
-                <p>HTML export from your scheduling system</p>
-            </div>
-            <div id="sched-results" style="display:none">
-                <div class="action-bar">
-                    <button class="btn-print" onclick="printSection('schedule')">🖨 Print</button>
-                    <button class="btn-clear" onclick="clearSection('schedule')">✕ Clear</button>
-                    <span class="res-date" id="sched-date-label"></span>
-                </div>
-                <div class="tab-bar">
-                    <button class="tab-btn active" data-tab="sched-weekly" onclick="switchTab(this,'sched-weekly')">Weekly Schedule</button>
-                    <button class="tab-btn" data-tab="sched-breaks" onclick="switchTab(this,'sched-breaks')">Breaksheet</button>
-                </div>
-                <div class="tab-pane active" id="sched-weekly">
-                    <div class="card" style="overflow-x:auto">
-                        <div class="card-body" style="padding:0; overflow-x:auto">
-                            <table class="sched-tbl" id="sched-table"></table>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-pane" id="sched-breaks">
-                    <div id="breaks-container"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ===== RESTOCK LIST ===== -->
-        <section class="section" id="restock">
-            <div class="sec-head">
-                <h1>Restock List</h1>
-                <p>Upload tonight's inventory log CSV — get a prioritized restock list by category.</p>
-            </div>
-            <div class="upload-area" id="rst-drop" onclick="document.getElementById('rst-file').click()">
-                <input type="file" id="rst-file" accept=".csv">
-                <div class="ui">📋</div>
-                <h3>Drop inventory log CSV here</h3>
-                <p>Inventory_Report_Log_MMDDYYYY_HHMMSS.csv</p>
-            </div>
-            <div id="rst-results" style="display:none">
-                <div class="action-bar">
-                    <button class="btn-print" onclick="printSection('restock')">🖨 Print List</button>
-                    <button class="btn-clear" onclick="clearSection('restock')">✕ Clear</button>
-                    <span class="res-date" id="rst-date-label"></span>
-                </div>
-                <div class="restock-always">
-                    <div class="ra-head">Always Full Restock Every Night</div>
-                    <div class="ra-body"><strong>ONIT · Another World · Wyld</strong> — pull and fully restock all available units for these three brands regardless of sales volume.</div>
-                </div>
-                <div id="rst-categories"></div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Contest Edit Modal -->
-    <div class="modal-bg" id="contest-modal">
-        <div class="modal">
-            <h2>🏆 Edit 1v1 Contest</h2>
-            <div class="modal-grid">
-                <div class="fg full">
-                    <label>Contest Month</label>
-                    <input type="text" id="c-month-input" placeholder="e.g. June 2026">
-                </div>
-                <div class="fg"><label>Player 1 Name</label><input type="text" id="c-p1-name-input" placeholder="Employee name"></div>
-                <div class="fg"><label>Player 2 Name</label><input type="text" id="c-p2-name-input" placeholder="Employee name"></div>
-                <div class="fg"><label>P1 Department</label>
-                    <select id="c-p1-dept-input"><option>Sales Floor</option><option>Delivery</option><option>Inventory</option></select>
-                </div>
-                <div class="fg"><label>P2 Department</label>
-                    <select id="c-p2-dept-input"><option>Sales Floor</option><option>Delivery</option><option>Inventory</option></select>
-                </div>
-                <div class="fg"><label>P1 MTD AOV ($)</label><input type="number" id="c-p1-aov-input" step="0.01" placeholder="0.00"></div>
-                <div class="fg"><label>P2 MTD AOV ($)</label><input type="number" id="c-p2-aov-input" step="0.01" placeholder="0.00"></div>
-                <div class="fg"><label>P1 Transactions</label><input type="number" id="c-p1-txns-input" placeholder="0"></div>
-                <div class="fg"><label>P2 Transactions</label><input type="number" id="c-p2-txns-input" placeholder="0"></div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeContest()">Cancel</button>
-                <button class="btn-save" onclick="saveContest()">Save Contest</button>
-            </div>
-        </div>
+  <!-- ===== AOV REPORT ===== -->
+  <section class="section active" id="aov">
+    <div class="sec-head">
+      <h1>AOV Report</h1>
+      <p>Upload your Treez Product Summary CSV to generate full coaching and AOV reports (Sales Floor + Delivery).</p>
     </div>
-
-    <script>
-        // ============================================================
-        // NAVIGATION
-        // ============================================================
-        document.querySelectorAll('.sb-nav a').forEach(a => {
-            a.addEventListener('click', e => {
-                e.preventDefault();
-                const sec = a.dataset.sec;
-                document.querySelectorAll('.sb-nav a').forEach(x => x.classList.remove('active'));
-                document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
-                a.classList.add('active');
-                document.getElementById(sec).classList.add('active');
-                document.querySelectorAll('.section').forEach(x => x.classList.remove('print-target'));
-                document.getElementById(sec).classList.add('print-target');
-                // If drivers tab, ensure it's rendered
-                if (sec === 'drivers' && window.driverData) {
-                    renderDriverDashboard(window.driverData, 'Sample Data');
-                }
-            });
-        });
-        document.getElementById('aov').classList.add('print-target');
-
-        function switchTab(btn, paneId) {
-            const bar = btn.closest('.tab-bar');
-            bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const wrapper = btn.closest('.section') || document.body;
-            wrapper.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            document.getElementById(paneId).classList.add('active');
-        }
-
-        function printSection(sec) {
-            document.querySelectorAll('.section').forEach(x => x.classList.remove('print-target'));
-            document.getElementById(sec).classList.add('print-target');
-            window.print();
-        }
-
-        function clearSection(sec) {
-            if (sec === 'aov') { document.getElementById('aov-results').style.display = 'none';
-                document.getElementById('aov-drop').classList.remove('upload-loaded'); }
-            if (sec === 'drivers') {
-                document.getElementById('drv-results').style.display = 'none';
-                document.getElementById('drv-drop').classList.remove('upload-loaded');
-                if (window.safetyBarChart) { window.safetyBarChart.destroy();
-                    window.safetyBarChart = null; }
-                if (window.categoryTotalChart) { window.categoryTotalChart.destroy();
-                    window.categoryTotalChart = null; }
-                if (window.radarChart) { window.radarChart.destroy();
-                    window.radarChart = null; }
-                window.driverData = null;
-                document.getElementById('drv-date-label').textContent = '—';
-            }
-            if (sec === 'schedule') { document.getElementById('sched-results').style.display = 'none';
-                document.getElementById('sched-drop').classList.remove('upload-loaded'); }
-            if (sec === 'restock') { document.getElementById('rst-results').style.display = 'none';
-                document.getElementById('rst-drop').classList.remove('upload-loaded'); }
-        }
-
-        // ============================================================
-        // UTILS
-        // ============================================================
-        const fmt$ = v => '$' + parseFloat(v || 0).toFixed(2);
-        const fmt$k = v => v >= 1000 ? '$' + (v / 1000).toFixed(1) + 'k' : '$' + parseFloat(v || 0).toFixed(0);
-        const fmtPct = (v, target) => { const d = ((v - target) / target * 100); return (d >= 0 ? '+' : '') + d.toFixed(1) + '%'; };
-        const statusBadge = (aov, target) => {
-            const pct = (aov - target) / target * 100;
-            if (pct >= 0) return `<span class="badge badge-above">Above</span>`;
-            if (pct >= -8) return `<span class="badge badge-close">Close</span>`;
-            return `<span class="badge badge-below">Below</span>`;
-        };
-        const statusClass = (aov, target) => { const p = (aov - target) / target * 100; return p >= 0 ? 'above' : p >= -8 ?
-                'close' : 'below'; };
-
-        function setupUpload(dropId, fileId, handler) {
-            const drop = document.getElementById(dropId);
-            const inp = document.getElementById(fileId);
-            inp.addEventListener('change', e => { if (e.target.files[0]) { handler(e.target.files[0]);
-                    drop.classList.add('upload-loaded'); } });
-            drop.addEventListener('dragover', e => { e.preventDefault();
-                drop.classList.add('drag-over'); });
-            drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
-            drop.addEventListener('drop', e => {
-                e.preventDefault();
-                drop.classList.remove('drag-over');
-                if (e.dataTransfer.files[0]) { handler(e.dataTransfer.files[0]);
-                    drop.classList.add('upload-loaded'); }
-            });
-        }
-
-        // ============================================================
-        // MODULE 1: AOV REPORT (unchanged)
-        // ============================================================
-        const AOV_TARGETS = { floor: 63, delivery: 97 };
-        const DAY_CUTOFF = 14;
-
-        function detectAOVCols(headers) {
-            const h = headers.map(x => (x || '').toLowerCase().trim());
-            const find = (...candidates) => { for (const c of candidates) { const i = h.findIndex(x => x.includes(c)); if (i >=
-                    0) return i; } return -1; };
-            return {
-                employee: find('cashier', 'employee', 'budtender', 'staff', 'sold by', 'operator', 'user', 'associate'),
-                time: find('created at', 'completed at', 'time', 'date', 'timestamp', 'order time', 'sale time'),
-                total: find('total', 'order total', 'gross', 'sale amount', 'net total', 'amount', 'subtotal'),
-                addOn: find('add on', 'addon', 'add-on', 'upsell', 'accessory add'),
-                dept: find('department', 'dept', 'channel', 'register', 'location', 'order type')
-            };
-        }
-
-        function parseTime(str) {
-            if (!str) return null;
-            const d = new Date(str);
-            if (!isNaN(d)) return d;
-            const m = String(str).match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
-            if (m) {
-                let h = parseInt(m[1]),
-                    mn = parseInt(m[2]);
-                if (m[3] && m[3].toLowerCase() === 'pm' && h < 12) h += 12;
-                if (m[3] && m[3].toLowerCase() === 'am' && h === 12) h = 0;
-                return new Date(1970, 0, 1, h, mn);
-            }
-            return null;
-        }
-
-        function getShiftType(timeStr) {
-            const d = parseTime(timeStr);
-            if (!d) return 'unknown';
-            return d.getHours() < DAY_CUTOFF ? 'day' : 'night';
-        }
-
-        setupUpload('aov-drop', 'aov-file', file => {
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: res => renderAOV(res.data, res.meta.fields, file.name)
-            });
-        });
-
-        function renderAOV(data, headers, filename) {
-            const cols = detectAOVCols(headers);
-            if (cols.employee < 0 || cols.total < 0) {
-                document.getElementById('aov-results').style.display = 'block';
-                document.getElementById('aov-stats').innerHTML =
-                    `<div class="notice notice-err">Could not detect Employee or Total columns. Headers found: ${headers.join(', ')}</div>`;
-                return;
-            }
-
-            const empKey = headers[cols.employee];
-            const totalKey = headers[cols.total];
-            const timeKey = cols.time >= 0 ? headers[cols.time] : null;
-            const addOnKey = cols.addOn >= 0 ? headers[cols.addOn] : null;
-            const deptKey = cols.dept >= 0 ? headers[cols.dept] : null;
-
-            const empData = {};
-            let storeTotal = 0,
-                storeTxns = 0;
-            let dayTotal = 0,
-                dayTxns = 0,
-                nightTotal = 0,
-                nightTxns = 0;
-
-            data.forEach(row => {
-                const name = (row[empKey] || '').trim();
-                if (!name) return;
-                const amount = parseFloat((row[totalKey] || '0').replace(/[$,]/g, '')) || 0;
-                const shift = timeKey ? getShiftType(row[timeKey]) : 'unknown';
-                const addOn = addOnKey ? (parseFloat((row[addOnKey] || '0').replace(/[$,]/g, '')) || 0) : 0;
-                const dept = deptKey ? (row[deptKey] || '').toLowerCase() : '';
-
-                if (!empData[name]) empData[name] = { name, txns: 0, total: 0, day: { txns: 0, total: 0 },
-                    night: { txns: 0, total: 0 }, addOns: 0, dept };
-                empData[name].txns++;
-                empData[name].total += amount;
-                empData[name].addOns += addOn;
-                if (shift === 'day') { empData[name].day.txns++;
-                    empData[name].day.total += amount;
-                    dayTotal += amount;
-                    dayTxns++; } else if (shift === 'night') { empData[name].night.txns++;
-                    empData[name].night.total += amount;
-                    nightTotal += amount;
-                    nightTxns++; }
-                storeTotal += amount;
-                storeTxns++;
-            });
-
-            const employees = Object.values(empData).sort((a, b) => b.total / b.txns - a.total / a.txns);
-            const storeAOV = storeTxns > 0 ? storeTotal / storeTxns : 0;
-            const dayAOV = dayTxns > 0 ? dayTotal / dayTxns : 0;
-            const nightAOV = nightTxns > 0 ? nightTotal / nightTxns : 0;
-
-            document.getElementById('aov-stats').innerHTML = `
-                <div class="stat"><div class="stat-lbl">Store AOV</div><div class="stat-val ${storeAOV>=63?'green':storeAOV>=55?'amber':'red'}">${fmt$(storeAOV)}</div><div class="stat-sub">${storeTxns} transactions</div></div>
-                <div class="stat"><div class="stat-lbl">Total Sales</div><div class="stat-val">${fmt$k(storeTotal)}</div><div class="stat-sub">today</div></div>
-                <div class="stat"><div class="stat-lbl">Day Shift AOV</div><div class="stat-val ${dayAOV>=63?'green':'amber'}">${fmt$(dayAOV)}</div><div class="stat-sub">${dayTxns} txns · before 2pm</div></div>
-                <div class="stat"><div class="stat-lbl">Night Shift AOV</div><div class="stat-val ${nightAOV>=63?'green':'amber'}">${fmt$(nightAOV)}</div><div class="stat-sub">${nightTxns} txns · 2pm+</div></div>
-                <div class="stat"><div class="stat-lbl">Employees</div><div class="stat-val">${employees.length}</div><div class="stat-sub">on report</div></div>
-            `;
-
-            const tbody = document.getElementById('aov-tbody');
-            tbody.innerHTML = employees.map(e => {
-                const aov = e.txns > 0 ? e.total / e.txns : 0;
-                const isDelivery = e.dept.includes('deliver');
-                const target = isDelivery ? AOV_TARGETS.delivery : AOV_TARGETS.floor;
-                const shiftBadge = e.day.txns > 0 && e.night.txns > 0 ?
-                    `<span class="badge badge-both">Both</span>` :
-                    e.day.txns > 0 ? `<span class="badge badge-day">Day</span>` :
-                    `<span class="badge badge-night">Night</span>`;
-                return `<tr>
-                    <td><strong>${e.name}</strong></td>
-                    <td class="center">${shiftBadge}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${e.txns}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(e.total)}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmt$(aov)}</td>
-                    <td class="right" style="color:var(--text-muted)">${fmt$(target)}</td>
-                    <td class="center" style="font-family:'JetBrains Mono',monospace;font-size:11px">${fmtPct(aov,target)}</td>
-                    <td class="center">${statusBadge(aov,target)}</td>
-                </tr>`;
-            }).join('');
-
-            const dnBody = document.getElementById('daynite-tbody');
-            const dayEmps = employees.filter(e => e.day.txns > 0).length;
-            const nightEmps = employees.filter(e => e.night.txns > 0).length;
-            dnBody.innerHTML = `
-                <tr>
-                    <td><span class="badge badge-day">Day Shift</span> <span style="font-size:11px;color:var(--text-muted)">Open – 2:00 PM</span></td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${dayTxns}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(dayTotal)}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmt$(dayAOV)}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${dayEmps > 0 ? fmt$(dayTotal/dayEmps) : '—'}</td>
-                </tr>
-                <tr>
-                    <td><span class="badge badge-night">Night Shift</span> <span style="font-size:11px;color:var(--text-muted)">2:00 PM – Close</span></td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${nightTxns}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(nightTotal)}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmt$(nightAOV)}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${nightEmps > 0 ? fmt$(nightTotal/nightEmps) : '—'}</td>
-                </tr>
-                <tr style="background:#F6F9F5;font-weight:700">
-                    <td>Total</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${storeTxns}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(storeTotal)}</td>
-                    <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(storeAOV)}</td>
-                    <td class="right">—</td>
-                </tr>
-            `;
-
-            const cgrid = document.getElementById('coaching-grid');
-            cgrid.innerHTML = employees.map(e => {
-                const aov = e.txns > 0 ? e.total / e.txns : 0;
-                const isDelivery = e.dept.includes('deliver');
-                const target = isDelivery ? AOV_TARGETS.delivery : AOV_TARGETS.floor;
-                const sc = statusClass(aov, target);
-                const diff = aov - target;
-                let note = '';
-                if (sc === 'above') {
-                    note =
-                        `Solid day — ${e.name} is ${fmt$(Math.abs(diff))} above target. Keep the same energy and push add-ons to widen the gap further.`;
-                } else if (sc === 'close') {
-                    note =
-                        `${e.name} is close — just ${fmt$(Math.abs(diff))} away from target. One more add-on per transaction would put them over. Remind them to offer a pairing on every ticket.`;
-                } else {
-                    note =
-                        `${e.name} needs a refocus — currently ${fmt$(Math.abs(diff))} below target. Coach on upselling basics: lead with a suggestion, offer a complementary product, and aim for at least one add-on per customer.`;
-                }
-                const isDeliveryBadge = isDelivery ?
-                    `<span class="badge badge-delivery" style="margin-right:4px">Delivery</span>` :
-                    `<span class="badge badge-day" style="margin-right:4px">Floor</span>`;
-                return `<div class="coaching-card ${sc}">
-                    <div class="cc-name">${e.name}</div>
-                    <div class="cc-meta">${isDeliveryBadge} AOV: ${fmt$(aov)} &nbsp;|&nbsp; Target: ${fmt$(target)} &nbsp;|&nbsp; ${e.txns} txns</div>
-                    <div class="cc-note">${note}</div>
-                </div>`;
-            }).join('');
-
-            document.getElementById('aov-date-label').textContent = filename;
-            document.getElementById('aov-results').style.display = 'block';
-            autoUpdateContest(empData);
-        }
-
-        // ============================================================
-        // 1V1 CONTEST (unchanged)
-        // ============================================================
-        let contestData = JSON.parse(localStorage.getItem('sanctuary_1v1') || 'null') || {
-            month: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
-            p1: { name: 'Player 1', dept: 'Sales Floor', aov: 0, txns: 0 },
-            p2: { name: 'Player 2', dept: 'Sales Floor', aov: 0, txns: 0 }
-        };
-
-        function renderContest() {
-            const { p1, p2, month } = contestData;
-            document.getElementById('c-month').textContent = month;
-            document.getElementById('c-p1-name').textContent = p1.name;
-            document.getElementById('c-p2-name').textContent = p2.name;
-            document.getElementById('c-p1-dept').textContent = p1.dept;
-            document.getElementById('c-p2-dept').textContent = p2.dept;
-            document.getElementById('c-p1-aov').textContent = p1.aov > 0 ? fmt$(p1.aov) : '—';
-            document.getElementById('c-p2-aov').textContent = p2.aov > 0 ? fmt$(p2.aov) : '—';
-            document.getElementById('c-p1-txns').textContent = (p1.txns || 0) + ' transactions';
-            document.getElementById('c-p2-txns').textContent = (p2.txns || 0) + ' transactions';
-            document.getElementById('c-bar-l1').textContent = p1.name;
-            document.getElementById('c-bar-l2').textContent = p2.name;
-            const total = (p1.aov || 0) + (p2.aov || 0);
-            const pct = total > 0 ? (p1.aov / total * 100) : 50;
-            document.getElementById('c-bar-fill').style.width = pct + '%';
-            document.getElementById('c-p1').classList.toggle('c-winner', p1.aov > p2.aov && p1.aov > 0);
-            document.getElementById('c-p2').classList.toggle('c-winner', p2.aov > p1.aov && p2.aov > 0);
-        }
-
-        function openContest() {
-            const { p1, p2, month } = contestData;
-            document.getElementById('c-month-input').value = month;
-            document.getElementById('c-p1-name-input').value = p1.name;
-            document.getElementById('c-p2-name-input').value = p2.name;
-            document.getElementById('c-p1-dept-input').value = p1.dept;
-            document.getElementById('c-p2-dept-input').value = p2.dept;
-            document.getElementById('c-p1-aov-input').value = p1.aov || '';
-            document.getElementById('c-p2-aov-input').value = p2.aov || '';
-            document.getElementById('c-p1-txns-input').value = p1.txns || '';
-            document.getElementById('c-p2-txns-input').value = p2.txns || '';
-            document.getElementById('contest-modal').classList.add('open');
-        }
-
-        function closeContest() {
-            document.getElementById('contest-modal').classList.remove('open');
-        }
-
-        function saveContest() {
-            contestData = {
-                month: document.getElementById('c-month-input').value || contestData.month,
-                p1: {
-                    name: document.getElementById('c-p1-name-input').value || 'Player 1',
-                    dept: document.getElementById('c-p1-dept-input').value,
-                    aov: parseFloat(document.getElementById('c-p1-aov-input').value) || 0,
-                    txns: parseInt(document.getElementById('c-p1-txns-input').value) || 0
-                },
-                p2: {
-                    name: document.getElementById('c-p2-name-input').value || 'Player 2',
-                    dept: document.getElementById('c-p2-dept-input').value,
-                    aov: parseFloat(document.getElementById('c-p2-aov-input').value) || 0,
-                    txns: parseInt(document.getElementById('c-p2-txns-input').value) || 0
-                }
-            };
-            localStorage.setItem('sanctuary_1v1', JSON.stringify(contestData));
-            renderContest();
-            closeContest();
-        }
-
-        function autoUpdateContest(empData) {
-            const p1match = Object.values(empData).find(e => e.name.toLowerCase().includes(contestData.p1.name.toLowerCase()) ||
-                contestData.p1.name.toLowerCase().includes(e.name.toLowerCase()));
-            const p2match = Object.values(empData).find(e => e.name.toLowerCase().includes(contestData.p2.name.toLowerCase()) ||
-                contestData.p2.name.toLowerCase().includes(e.name.toLowerCase()));
-            if (p1match) { contestData.p1.aov = p1match.total / p1match.txns;
-                contestData.p1.txns = p1match.txns; }
-            if (p2match) { contestData.p2.aov = p2match.total / p2match.txns;
-                contestData.p2.txns = p2match.txns; }
-            if (p1match || p2match) renderContest();
-        }
-        renderContest();
-
-        // ============================================================
-        // MODULE 2: DRIVER SAFETY (UPDATED with SAMPLE DATA)
-        // ============================================================
-        const INCIDENT_CATS = ['Accelerating', 'Braking', 'Cell Phone', 'Close Following', 'Cornering', 'Distraction',
-            'Seat Belt', 'Speeding', 'Stop Sign'
-        ];
-
-        function scoreToTier(s) {
-            if (s >= 90) return { label: 'Excellent', cls: 'tier-exc' };
-            if (s >= 75) return { label: 'Good', cls: 'tier-good' };
-            if (s >= 60) return { label: 'Fair', cls: 'tier-fair' };
-            return { label: 'Poor', cls: 'tier-poor' };
-        }
-
-        function findCol(headers, keywords) {
-            const hLow = headers.map(h => String(h).toLowerCase().trim());
-            for (const kw of keywords) {
-                const idx = hLow.findIndex(h => h.includes(kw));
-                if (idx >= 0) return idx;
-            }
-            return -1;
-        }
-
-        function parseDriverFile(data, headers) {
-            const nameIdx = findCol(headers, ['driver', 'name', 'employee']);
-            const scoreIdx = findCol(headers, ['safety score', 'score']);
-            const milesIdx = findCol(headers, ['miles driven', 'miles', 'mileage']);
-            const changeIdx = findCol(headers, ['score change', 'change', 'delta']);
-
-            const catIdxs = INCIDENT_CATS.map(cat => findCol(headers, ['total ' + cat.toLowerCase(), cat.toLowerCase()]));
-
-            const drivers = [];
-            for (const row of data) {
-                const name = String(row[nameIdx] || '').trim();
-                if (!name) continue;
-                const score = parseFloat(row[scoreIdx]) || 0;
-                const miles = parseFloat(row[milesIdx]) || 0;
-                const change = parseFloat(row[changeIdx]) || 0;
-                const incidents = {};
-                let totalInc = 0;
-                INCIDENT_CATS.forEach((cat, i) => {
-                    const v = catIdxs[i] >= 0 ? (parseInt(row[catIdxs[i]]) || 0) : 0;
-                    incidents[cat] = v;
-                    totalInc += v;
-                });
-                const topIssue = Object.entries(incidents).sort((a, b) => b[1] - a[1])[0];
-                drivers.push({ name, score, miles, change, incidents, totalInc, topIssue: topIssue[1] > 0 ? topIssue :
-                        null });
-            }
-            return drivers.sort((a, b) => b.score - a.score);
-        }
-
-        function handleDriverUpload(file) {
-            const ext = file.name.split('.').pop().toLowerCase();
-            const processData = (data, headers) => {
-                const drivers = parseDriverFile(data, headers);
-                if (!drivers || drivers.length === 0) {
-                    document.getElementById('drv-results').style.display = 'block';
-                    document.getElementById('drv-stats').innerHTML =
-                        '<div class="notice notice-err">No driver data found. Check column headers.</div>';
-                    return;
-                }
-                window.driverData = drivers;
-                renderDriverDashboard(drivers, file.name);
-            };
-
-            if (ext === 'csv') {
-                Papa.parse(file, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: res => processData(res.data, res.meta.fields)
-                });
-            } else {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const wb = XLSX.read(e.target.result, { type: 'binary' });
-                    const ws = wb.Sheets[wb.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
-                    if (json.length > 0) {
-                        const headers = Object.keys(json[0]);
-                        processData(json, headers);
-                    } else {
-                        document.getElementById('drv-results').style.display = 'block';
-                        document.getElementById('drv-stats').innerHTML =
-                            '<div class="notice notice-err">The uploaded file appears to be empty.</div>';
-                    }
-                };
-                reader.readAsBinaryString(file);
-            }
-        }
-
-        setupUpload('drv-drop', 'drv-file', handleDriverUpload);
-
-        // --- SAMPLE DATA (from your prompt) ---
-        const SAMPLE_DRIVER_DATA = [{
-            name: 'Lee McNabb',
-            score: 71,
-            miles: 2586.7,
-            change: 0,
-            incidents: { 'Accelerating': 6, 'Braking': 0, 'Cell Phone': 1, 'Close Following': 8, 'Cornering': 1,
-                'Distraction': 3, 'Seat Belt': 0, 'Speeding': 11, 'Stop Sign': 7 }
-        }, {
-            name: 'Justin Cabreros',
-            score: 69,
-            miles: 1696.1,
-            change: -1,
-            incidents: { 'Accelerating': 3, 'Braking': 3, 'Cell Phone': 2, 'Close Following': 3, 'Cornering': 3,
-                'Distraction': 10, 'Seat Belt': 0, 'Speeding': 16, 'Stop Sign': 1 }
-        }, {
-            name: 'Michael Senus',
-            score: 77,
-            miles: 1733.4,
-            change: -2,
-            incidents: { 'Accelerating': 2, 'Braking': 1, 'Cell Phone': 0, 'Close Following': 13, 'Cornering': 2,
-                'Distraction': 0, 'Seat Belt': 1, 'Speeding': 1, 'Stop Sign': 0 }
-        }, {
-            name: 'Scott King',
-            score: 83,
-            miles: 2484.8,
-            change: 0,
-            incidents: { 'Accelerating': 6, 'Braking': 0, 'Cell Phone': 0, 'Close Following': 6, 'Cornering': 0,
-                'Distraction': 1, 'Seat Belt': 0, 'Speeding': 6, 'Stop Sign': 0 }
-        }, {
-            name: 'Carlos Dabdoub',
-            score: 71,
-            miles: 2648.2,
-            change: -3,
-            incidents: { 'Accelerating': 0, 'Braking': 0, 'Cell Phone': 5, 'Close Following': 1, 'Cornering': 4,
-                'Distraction': 4, 'Seat Belt': 0, 'Speeding': 6, 'Stop Sign': 11 }
-        }, {
-            name: 'Norma Barajas',
-            score: 73,
-            miles: 295.2,
-            change: 0,
-            incidents: { 'Accelerating': 0, 'Braking': 0, 'Cell Phone': 0, 'Close Following': 6, 'Cornering': 2,
-                'Distraction': 2, 'Seat Belt': 0, 'Speeding': 7, 'Stop Sign': 3 }
-        }, {
-            name: 'Cameron Ward',
-            score: 82,
-            miles: 1297.7,
-            change: 3,
-            incidents: { 'Accelerating': 5, 'Braking': 0, 'Cell Phone': 2, 'Close Following': 0, 'Cornering': 1,
-                'Distraction': 0, 'Seat Belt': 0, 'Speeding': 0, 'Stop Sign': 1 }
-        }, {
-            name: 'Benjamin Rodriguez',
-            score: 76,
-            miles: 1498.4,
-            change: 9,
-            incidents: { 'Accelerating': 1, 'Braking': 0, 'Cell Phone': 10, 'Close Following': 1, 'Cornering': 1,
-                'Distraction': 0, 'Seat Belt': 0, 'Speeding': 10, 'Stop Sign': 4 }
-        }, {
-            name: 'Trevor Haynes',
-            score: 58,
-            miles: 2066.5,
-            change: 0,
-            incidents: { 'Accelerating': 2, 'Braking': 8, 'Cell Phone': 3, 'Close Following': 9, 'Cornering': 8,
-                'Distraction': 7, 'Seat Belt': 0, 'Speeding': 17, 'Stop Sign': 12 }
-        }];
-
-        // Compute totalInc and topIssue for sample
-        SAMPLE_DRIVER_DATA.forEach(d => {
-            d.totalInc = Object.values(d.incidents).reduce((a, b) => a + b, 0);
-            const sorted = Object.entries(d.incidents).sort((a, b) => b[1] - a[1]);
-            d.topIssue = sorted[0][1] > 0 ? sorted[0] : null;
-        });
-        window.driverData = SAMPLE_DRIVER_DATA;
-
-        // --- Render Driver Dashboard ---
-        function renderDriverDashboard(drivers, filename) {
-            document.getElementById('drv-results').style.display = 'block';
-            document.getElementById('drv-date-label').textContent = filename;
-
-            // KPI Stats
-            const avgScore = drivers.reduce((s, d) => s + d.score, 0) / drivers.length;
-            const totalMiles = drivers.reduce((s, d) => s + d.miles, 0);
-            const totalInc = drivers.reduce((s, d) => s + d.totalInc, 0);
-            const catCounts = {};
-            INCIDENT_CATS.forEach(c => catCounts[c] = 0);
-            drivers.forEach(d => INCIDENT_CATS.forEach(c => catCounts[c] += d.incidents[c] || 0));
-            const topCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0];
-
-            document.getElementById('drv-stats').innerHTML = `
-                <div class="stat"><div class="stat-lbl">Team Average</div><div class="stat-val ${avgScore>=75?'green':avgScore>=60?'amber':'red'}">${avgScore.toFixed(0)}</div><div class="stat-sub">safety score</div></div>
-                <div class="stat"><div class="stat-lbl">Total Miles</div><div class="stat-val">${totalMiles.toFixed(0)}</div><div class="stat-sub">fleet-wide</div></div>
-                <div class="stat"><div class="stat-lbl">Total Incidents</div><div class="stat-val ${totalInc<20?'amber':'red'}">${totalInc}</div><div class="stat-sub">across all drivers</div></div>
-                <div class="stat"><div class="stat-lbl">Top Issue</div><div class="stat-val amber" style="font-size:14px;line-height:1.3">${topCat[0]}</div><div class="stat-sub">${topCat[1]} incidents</div></div>
-            `;
-
-            // --- Overview Charts ---
-            const ctxBar = document.getElementById('safetyScoreChart').getContext('2d');
-            if (window.safetyBarChart) window.safetyBarChart.destroy();
-            window.safetyBarChart = new Chart(ctxBar, {
-                type: 'bar',
-                data: {
-                    labels: drivers.map(d => d.name.split(' ')[0]),
-                    datasets: [{
-                        label: 'Safety Score',
-                        data: drivers.map(d => d.score),
-                        backgroundColor: drivers.map(d => d.score >= 85 ? '#1B7B3C' : (d.score >= 70 ?
-                            '#C8981E' : '#B91C1C')),
-                        borderRadius: 6,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            const ctxCat = document.getElementById('categoryTotalChart').getContext('2d');
-            if (window.categoryTotalChart) window.categoryTotalChart.destroy();
-            window.categoryTotalChart = new Chart(ctxCat, {
-                type: 'bar',
-                data: {
-                    labels: INCIDENT_CATS,
-                    datasets: [{
-                        label: 'Total incidents (fleet)',
-                        data: INCIDENT_CATS.map(c => catCounts[c]),
-                        backgroundColor: '#2D6A4F',
-                        borderRadius: 6,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    indexAxis: 'y',
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            // Summary Table
-            const tbody = document.querySelector('#driverSummaryTable tbody');
-            tbody.innerHTML = drivers.map((d, idx) => {
-                const band = scoreToTier(d.score);
-                const rate = d.miles > 0 ? (d.totalInc / d.miles * 100).toFixed(1) : '0.0';
-                const changeHtml = d.change > 0 ? `<span class="dc-change up">▲ ${d.change}</span>` : d.change < 0 ?
-                    `<span class="dc-change down">▼ ${Math.abs(d.change)}</span>` :
-                    `<span class="dc-change same">—</span>`;
-                return `<tr>
-                    <td style="font-weight:600">${d.name}</td>
-                    <td><strong>${d.score}</strong></td>
-                    <td><span class="badge ${band.cls}">${band.label}</span></td>
-                    <td>${changeHtml}</td>
-                    <td>${d.miles.toFixed(0)} mi</td>
-                    <td>${d.totalInc}</td>
-                    <td>${rate}</td>
-                </tr>`;
-            }).join('');
-
-            // --- Deep Dive ---
-            const select = document.getElementById('driverSelect');
-            select.innerHTML = '';
-            drivers.forEach((d, i) => {
-                const opt = document.createElement('option');
-                opt.value = i;
-                opt.textContent = `${d.name} (Score: ${d.score})`;
-                select.appendChild(opt);
-            });
-            select.onchange = () => updateDriverDetail(drivers, parseInt(select.value));
-            if (drivers.length > 0) {
-                select.value = 0;
-                updateDriverDetail(drivers, 0);
-            }
-
-            // Tab switching
-            document.querySelectorAll('#drv-dashboard-tabs .tab-btn').forEach(btn => {
-                btn.onclick = function() {
-                    document.querySelectorAll('#drv-dashboard-tabs .tab-btn').forEach(b => b.classList.remove(
-                        'active'));
-                    this.classList.add('active');
-                    const paneId = this.dataset.tab;
-                    document.querySelectorAll('#drv-results .tab-pane').forEach(p => p.classList.remove(
-                    'active'));
-                    document.getElementById(paneId).classList.add('active');
-                    if (window.safetyBarChart) window.safetyBarChart.resize();
-                    if (window.categoryTotalChart) window.categoryTotalChart.resize();
-                    if (window.radarChart) window.radarChart.resize();
-                };
-            });
-        }
-
-        // --- Deep Dive Update ---
-        function updateDriverDetail(drivers, idx) {
-            const d = drivers[idx];
-            if (!d) return;
-
-            document.getElementById('detailScore').textContent = d.score;
-            document.getElementById('detailChange').textContent = d.change !== 0 ? (d.change > 0 ? `▲ +${d.change} vs prev` :
-                `▼ ${d.change} vs prev`) : 'no change';
-            document.getElementById('detailMiles').textContent = d.miles.toFixed(0) + ' mi';
-            document.getElementById('detailMilesChange').textContent = d.miles > 0 ? `${d.miles.toFixed(0)} mi driven` :
-            '—';
-
-            const radarCtx = document.getElementById('radarIncidentRate').getContext('2d');
-            if (window.radarChart) window.radarChart.destroy();
-
-            const driverRates = INCIDENT_CATS.map(cat => d.miles > 0 ? (d.incidents[cat] / d.miles * 100) : 0);
-            const fleetAvg = {};
-            INCIDENT_CATS.forEach(c => fleetAvg[c] = 0);
-            drivers.forEach(drv => INCIDENT_CATS.forEach(c => fleetAvg[c] += drv.incidents[c]));
-            const totalMiles = drivers.reduce((s, drv) => s + drv.miles, 0);
-            const fleetRates = INCIDENT_CATS.map(c => totalMiles > 0 ? (fleetAvg[c] / totalMiles * 100) : 0);
-
-            window.radarChart = new Chart(radarCtx, {
-                type: 'radar',
-                data: {
-                    labels: INCIDENT_CATS,
-                    datasets: [{
-                        label: `${d.name.split(' ')[0]} (per 100mi)`,
-                        data: driverRates,
-                        borderColor: '#B91C1C',
-                        backgroundColor: 'rgba(185,28,28,0.1)',
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        tension: 0.2
-                    }, {
-                        label: 'Fleet average rate',
-                        data: fleetRates,
-                        borderColor: '#2D6A4F',
-                        backgroundColor: 'rgba(45,106,79,0.1)',
-                        borderWidth: 2,
-                        borderDash: [6, 6],
-                        pointRadius: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: { r: { beginAtZero: true, title: { display: true, text: 'events / 100mi',
-                                font: { size: 9 } } } }
-                }
-            });
-
-            const tbody = document.querySelector('#driverBreakdownTable tbody');
-            tbody.innerHTML = INCIDENT_CATS.map((cat, i) => {
-                const ev = d.incidents[cat] || 0;
-                const rate = d.miles > 0 ? (ev / d.miles * 100).toFixed(1) : '0.0';
-                return `<tr>
-                    <td style="font-weight:500">${cat}</td>
-                    <td style="font-family:'JetBrains Mono',monospace">${ev}</td>
-                    <td style="font-family:'JetBrains Mono',monospace;color:var(--text-muted)">—</td>
-                    <td style="font-family:'JetBrains Mono',monospace;color:var(--text-muted)">—</td>
-                    <td style="font-family:'JetBrains Mono',monospace">${rate}</td>
-                </tr>`;
-            }).join('');
-
-            const topRisks = INCIDENT_CATS.map(cat => ({ cat, rate: d.miles > 0 ? (d.incidents[cat] / d.miles * 100) :
-                    0 }))
-                .sort((a, b) => b.rate - a.rate)
-                .filter(r => r.rate > 0.2)
-                .slice(0, 3);
-
-            let tip = '';
-            if (topRisks.length > 0) {
-                tip = `⚠️ Focus areas: ${topRisks.map(r=>r.cat).join(', ')}. `;
-                if (topRisks[0].cat === 'Speeding') tip += `Speeding is high. Smooth acceleration & speed compliance improves score.`;
-                else if (topRisks[0].cat === 'Close Following') tip += `Maintain safer following distance.`;
-                else if (topRisks[0].cat === 'Cell Phone') tip += `Hands-free usage is mandatory.`;
-                else tip += `Reducing ${topRisks[0].cat.toLowerCase()} events will directly raise safety score.`;
-            } else {
-                tip = `👍 Great job! Low incident rates. Continue maintaining awareness.`;
-            }
-            if (d.score < 70) tip += ` Current score (${d.score}) is below target. Prioritize top violations.`;
-            document.getElementById('coachingTip').innerHTML = `🎯 ${tip}`;
-        }
-
-        // --- Load sample data on page load ---
-        window.onload = function() {
-            renderDriverDashboard(SAMPLE_DRIVER_DATA, 'Sample Data (May 4 – May 31, 2026)');
-        };
-
-        // ============================================================
-        // MODULE 3: SCHEDULE + BREAKSHEET (unchanged)
-        // ============================================================
-        const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-        function parseSchedHTML(html) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const employees = [];
-            let weekLabel = '';
-
-            const titleEl = doc.querySelector('title,h1,h2,.schedule-title,.week-title');
-            if (titleEl) weekLabel = titleEl.textContent.trim();
-
-            const tables = doc.querySelectorAll('table');
-            let bestTable = null,
-                bestScore = 0;
-            for (const table of tables) {
-                const rows = table.querySelectorAll('tr');
-                if (rows.length < 3) continue;
-                const headerText = rows[0].textContent.toLowerCase();
-                const score = (['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'monday', 'employee', 'name', 'staff']
-                    .filter(k => headerText.includes(k))).length;
-                if (score > bestScore) { bestScore = score;
-                    bestTable = table; }
-            }
-
-            if (bestTable) {
-                const rows = Array.from(bestTable.querySelectorAll('tr'));
-                const headers = Array.from(rows[0].querySelectorAll('th,td')).map(c => c.textContent.trim());
-                const dayIndices = [];
-                headers.forEach((h, i) => {
-                    const hl = h.toLowerCase();
-                    DAYS.forEach((d, di) => { if (hl.includes(d.toLowerCase())) dayIndices[di] = i; });
-                    ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach((d,
-                    di) => { if (hl.includes(d)) dayIndices[di] = i; });
-                });
-                const nameCol = headers.findIndex(h => /name|employee|staff/i.test(h));
-                const deptCol = headers.findIndex(h => /dept|department|role|position/i.test(h));
-
-                for (let ri = 1; ri < rows.length; ri++) {
-                    const cells = Array.from(rows[ri].querySelectorAll('td,th'));
-                    if (cells.length < 2) continue;
-                    const name = cells[nameCol >= 0 ? nameCol : 0].textContent.trim();
-                    if (!name || name.toLowerCase().includes('total') || name.toLowerCase().includes('average'))
-                        continue;
-                    const dept = deptCol >= 0 ? cells[deptCol].textContent.trim() : '';
-                    const shifts = DAYS.map((d, di) => {
-                        const colI = dayIndices[di];
-                        if (colI === undefined || !cells[colI]) return '';
-                        return cells[colI].textContent.trim();
-                    });
-                    if (shifts.some(s => s)) employees.push({ name, dept, shifts });
-                }
-            }
-
-            if (employees.length === 0) {
-                const preEls = doc.querySelectorAll('pre, code, [class*="schedule"]');
-                preEls.forEach(el => {
-                    const text = el.textContent;
-                    const lines = text.split('\n').filter(l => l.trim());
-                    lines.forEach(line => {
-                        const m = line.match(/^([A-Z][a-zA-Z\s]+?)\s{2,}(.+)/);
-                        if (m) employees.push({ name: m[1].trim(), dept: '', shifts: Array(7).fill(
-                            '') });
-                    });
-                });
-            }
-            return { employees, weekLabel };
-        }
-
-        function parseShiftText(text) {
-            if (!text) return null;
-            const t = text.toLowerCase().trim();
-            if (!t || t === 'off' || t === 'day off' || t === 'x' || t === '-') return null;
-            const m = text.match(
-                /(\d{1,2}):?(\d{2})?\s*(a|am|p|pm)?\s*[-–]\s*(\d{1,2}):?(\d{2})?\s*(a|am|p|pm)?(?:[|\s]+(.+))?/i);
-            if (!m) return { display: text, dept: 'Sales', startHour: 8, endHour: 16, duration: 8 };
-            const toHour = (h, m2, ampm) => {
-                let hr = parseInt(h),
-                    mn = parseInt(m2 || 0);
-                if (ampm && (ampm.toLowerCase() === 'p' || ampm.toLowerCase() === 'pm') && hr < 12) hr += 12;
-                if (ampm && (ampm.toLowerCase() === 'a' || ampm.toLowerCase() === 'am') && hr === 12) hr = 0;
-                return hr + mn / 60;
-            };
-            const start = toHour(m[1], m[2], m[3]);
-            const end = toHour(m[4], m[5], m[6]);
-            const dept = (m[7] || 'Sales').trim().replace(/\|/g, '').trim();
-            const duration = end > start ? end - start : 24 - start + end;
-            const displayText =
-                `${m[1]}:${m[2]||'00'}${(m[3]||'').replace('am','a').replace('pm','p')||''} – ${m[4]}:${m[5]||'00'}${(m[6]||'').replace('am','a').replace('pm','p')||''}`;
-            return { display: displayText, dept, startHour: start, endHour: end, duration };
-        }
-
-        function getDeptClass(dept) {
-            const d = (dept || '').toLowerCase();
-            if (d.includes('deliver')) return 'sp-delivery';
-            if (d.includes('inventor')) return 'sp-inventory';
-            if (d.includes('sanctuary')) return 'sp-sanctuary';
-            return 'sp-sales';
-        }
-
-        function calcBreaks(shift) {
-            if (!shift) return [];
-            const { startHour, duration, dept } = shift;
-            const breaks = [];
-            if (duration < 3.5) return breaks;
-            if (duration >= 3.5) {
-                const restTime = startHour + Math.min(2, duration * 0.4);
-                breaks.push({ type: 'rest', time: restTime, label: '10 min rest' });
-            }
-            if (duration > 5) {
-                const mealTime = startHour + Math.min(4.5, duration * 0.5);
-                breaks.push({ type: 'meal', time: mealTime, label: '30 min meal' });
-            }
-            if (duration > 10) {
-                const rest2Time = startHour + Math.min(8, duration * 0.75);
-                breaks.push({ type: 'rest', time: rest2Time, label: '10 min rest' });
-            }
-            return breaks.sort((a, b) => a.time - b.time);
-        }
-
-        function fmtHour(h) {
-            const hr = Math.floor(h);
-            const mn = Math.round((h - hr) * 60);
-            const period = hr >= 12 ? 'PM' : 'AM';
-            const disp = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
-            return `${disp}:${mn.toString().padStart(2,'0')} ${period}`;
-        }
-
-        setupUpload('sched-drop', 'sched-file', file => {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const { employees, weekLabel } = parseSchedHTML(e.target.result);
-                if (employees.length === 0) {
-                    document.getElementById('sched-results').style.display = 'block';
-                    document.getElementById('sched-date-label').textContent = file.name;
-                    document.getElementById('sched-table').innerHTML =
-                        '<tr><td colspan="8" style="padding:24px;color:var(--text-muted);text-align:center">Could not parse schedule structure.</td></tr>';
-                    document.getElementById('breaks-container').innerHTML =
-                        '<div class="notice">No shift data could be extracted.</div>';
-                    document.getElementById('sched-results').style.display = 'block';
-                    return;
-                }
-                renderSchedule(employees, file.name, weekLabel);
-            };
-            reader.readAsText(file);
-        });
-
-        function renderSchedule(employees, filename, weekLabel) {
-            const parsed = employees.map(e => ({
-                ...e,
-                parsedShifts: e.shifts.map(parseShiftText)
-            }));
-
-            const table = document.getElementById('sched-table');
-            const headerRow =
-                `<tr><th class="emp-col">Employee</th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr>`;
-            const bodyRows = parsed.map(e => {
-                const cells = e.parsedShifts.map((s, di) => {
-                    if (!s) return `<td><span class="shift-pill sp-off">Off</span></td>`;
-                    const cls = getDeptClass(s.dept);
-                    return `<td><span class="shift-pill ${cls}">${s.display}</span></td>`;
-                }).join('');
-                return `<tr><td style="font-weight:600;font-size:12px">${e.name}${e.dept?`<br><span style="font-size:10px;color:var(--text-muted)">${e.dept}</span>`:''}</td>${cells}</tr>`;
-            }).join('');
-            table.innerHTML = `<thead>${headerRow}</thead><tbody>${bodyRows}</tbody>`;
-
-            const container = document.getElementById('breaks-container');
-            container.innerHTML = DAYS.map((day, di) => {
-                const dayEmps = parsed.filter(e => e.parsedShifts[di]).map(e => ({
-                    name: e.name,
-                    shift: e.parsedShifts[di]
-                })).sort((a, b) => (a.shift.startHour || 0) - (b.shift.startHour || 0));
-
-                if (dayEmps.length === 0) return `<div class="bs-day"><div class="bs-day-head">${day}<span class="bs-day-count">No shifts</span></div></div>`;
-
-                const rows = dayEmps.map(({ name, shift }) => {
-                    const breaks = calcBreaks(shift);
-                    const breakTags = breaks.map(b =>
-                        b.type === 'rest' ?
-                        `<span class="break-tag">${fmtHour(b.time)}</span>` :
-                        `<span class="meal-tag">${fmtHour(b.time)}</span>`
-                    ).join('');
-                    const deptCls = getDeptClass(shift.dept);
-                    return `<tr>
-                        <td style="font-weight:600">${name}</td>
-                        <td><span class="shift-pill ${deptCls}">${shift.display}</span></td>
-                        <td style="font-size:11px;color:var(--text-muted)">${shift.dept||'Sales Floor'}</td>
-                        <td>${breakTags || '<span style="color:var(--text-muted);font-size:11px">No breaks</span>'}</td>
-                    </tr>`;
-                }).join('');
-
-                return `<div class="bs-day">
-                    <div class="bs-day-head">${day} <span class="bs-day-count">${dayEmps.length} employees</span></div>
-                    <table class="bs-tbl">
-                        <thead><tr><th>Employee</th><th>Shift</th><th>Department</th><th>Breaks <span style="font-weight:400;opacity:.7">(🟡 rest · 🔵 meal)</span></th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>`;
-            }).join('');
-
-            document.getElementById('sched-date-label').textContent = weekLabel || filename;
-            document.getElementById('sched-results').style.display = 'block';
-        }
-
-        // ============================================================
-        // MODULE 4: RESTOCK LIST (unchanged)
-        // ============================================================
-        const ALWAYS_RESTOCK = ['onit', 'another world', 'wyld'];
-        const RESTOCK_CATS = ['Prerolls', 'Cartridges', 'Edibles', 'Flower', 'Beverages', 'Extracts'];
-        const CAT_ICONS = { Prerolls: '🌿', Cartridges: '💨', Edibles: '🍬', Flower: '🌸', Beverages: '🧃',
-            Extracts: '💎' };
-
-        setupUpload('rst-drop', 'rst-file', file => {
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                complete: res => renderRestock(res.data, res.meta.fields, file.name)
-            });
-        });
-
-        function renderRestock(data, headers, filename) {
-            const hLow = headers.map(h => (h || '').toLowerCase().trim());
-            const findH = (...cands) => { for (const c of cands) { const i = hLow.findIndex(h => h.includes(c)); if (i >=
-                    0) return headers[i]; } return null; };
-
-            const actKey = findH('activity', 'action', 'type', 'transaction');
-            const changeKey = findH('change', 'qty change', 'quantity change', 'units', 'amount');
-            const ptKey = findH('product type', 'type', 'category', 'class');
-            const brandKey = findH('brand', 'manufacturer', 'vendor');
-            const nameKey = findH('product name', 'name', 'description', 'item name', 'product');
-
-            if (!actKey || !changeKey || !nameKey) {
-                document.getElementById('rst-results').style.display = 'block';
-                document.getElementById('rst-categories').innerHTML =
-                    '<div class="notice notice-err">Could not detect required columns.</div>';
-                return;
-            }
-
-            const sales = data.filter(row => (row[actKey] || '').trim().toLowerCase() === 'pos sale');
-            if (sales.length === 0) {
-                document.getElementById('rst-results').style.display = 'block';
-                document.getElementById('rst-categories').innerHTML =
-                    '<div class="notice notice-err">No "POS Sale" activity found.</div>';
-                return;
-            }
-
-            const agg = {};
-            sales.forEach(row => {
-                const name = (row[nameKey] || '').trim();
-                if (/(promo|add on|add-on)/i.test(name)) return;
-                const brand = (row[brandKey] || 'Unknown').trim();
-                if (ALWAYS_RESTOCK.some(ar => brand.toLowerCase().includes(ar) || name.toLowerCase().includes(ar)))
-                    return;
-
-                const rawType = (row[ptKey] || 'Other').trim();
-                const ptLow = rawType.toLowerCase();
-                let cat = 'Other';
-                if (ptLow.includes('preroll') || ptLow.includes('pre-roll') || ptLow.includes('joint')) cat =
-                'Prerolls';
-                else if (ptLow.includes('cart') || ptLow.includes('vape') && ptLow.includes('concentrate')) cat =
-                    'Cartridges';
-                else if (ptLow.includes('edible') || ptLow.includes('gummy') || ptLow.includes('chocolate') || ptLow
-                    .includes('capsule') || ptLow.includes('tincture')) cat = 'Edibles';
-                else if (ptLow.includes('flower') || ptLow.includes('bud') || ptLow.includes('eighth') || ptLow
-                    .includes('ounce')) cat = 'Flower';
-                else if (ptLow.includes('bev') || ptLow.includes('drink') || ptLow.includes('soda') || ptLow.includes(
-                    'water')) cat = 'Beverages';
-                else if (ptLow.includes('extract') || ptLow.includes('concentrate') || ptLow.includes('wax') || ptLow
-                    .includes('shatter') || ptLow.includes('rosin') || ptLow.includes('live resin') || ptLow.includes(
-                    'dab')) cat = 'Extracts';
-                else cat = rawType;
-
-                const units = Math.abs(parseFloat((row[changeKey] || '0').replace(/,/g, '')) || 0);
-                const key = `${cat}|||${brand}|||${name}`;
-                if (!agg[key]) agg[key] = { cat, brand, name, units: 0 };
-                agg[key].units += units;
-            });
-
-            const byCat = {};
-            RESTOCK_CATS.forEach(c => byCat[c] = []);
-            Object.values(agg).forEach(item => {
-                if (byCat[item.cat]) byCat[item.cat].push(item);
-                else {
-                    if (!byCat['Other']) byCat['Other'] = [];
-                    byCat['Other'].push(item);
-                }
-            });
-
-            const html = RESTOCK_CATS.map(cat => {
-                const items = (byCat[cat] || []).sort((a, b) => b.units - a.units);
-                if (items.length === 0) return '';
-                const itemsHTML = items.map((item, idx) => `
-                    <div class="restock-item">
-                        <div class="ri-rank">${idx+1}</div>
-                        <div class="ri-info">
-                            <div class="ri-name">${item.name}</div>
-                            <div class="ri-brand">${item.brand}</div>
-                        </div>
-                        <div class="ri-units">${item.units.toFixed(0)} sold</div>
-                    </div>
-                `).join('');
-                return `<div class="restock-cat">
-                    <div class="rc-head">
-                        <div class="rc-title">${CAT_ICONS[cat]||''} ${cat}</div>
-                        <div class="rc-count">${items.length} items</div>
-                    </div>
-                    ${itemsHTML}
-                </div>`;
-            }).join('');
-
-            const extraCatHTML = Object.entries(byCat)
-                .filter(([c]) => !RESTOCK_CATS.includes(c) && c !== 'Other')
-                .map(([c, items]) => {
-                    if (!items.length) return '';
-                    items.sort((a, b) => b.units - a.units);
-                    const rows = items.map((item, idx) =>
-                        `<div class="restock-item"><div class="ri-rank">${idx+1}</div><div class="ri-info"><div class="ri-name">${item.name}</div><div class="ri-brand">${item.brand}</div></div><div class="ri-units">${item.units.toFixed(0)} sold</div></div>`
-                        ).join('');
-                    return `<div class="restock-cat"><div class="rc-head"><div class="rc-title">${c}</div><div class="rc-count">${items.length} items</div></div>${rows}</div>`;
-                }).join('');
-
-            document.getElementById('rst-categories').innerHTML = html + extraCatHTML ||
-                '<div class="empty"><div class="empty-icon">✅</div><p>No restock items found.</p></div>';
-            const dateMatch = filename.match(/\d{8}/);
-            const dateLabel = dateMatch ? dateMatch[0].replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3') : filename;
-            document.getElementById('rst-date-label').textContent = dateLabel;
-            document.getElementById('rst-results').style.display = 'block';
-        }
-    </script>
+    <div class="upload-area" id="aov-drop" onclick="document.getElementById('aov-file').click()">
+      <input type="file" id="aov-file" accept=".csv">
+      <div class="ui">📊</div>
+      <h3>Drop sales CSV here</h3>
+      <p>Standard Treez CSV export</p>
+    </div>
+    <div class="contest-wrap" id="contest-wrap">
+      <div class="contest-head">
+        <div class="contest-title">🏆 1v1 Contest</div>
+        <div class="contest-month" id="c-month">—</div>
+      </div>
+      <div class="contest-match" id="c-match">
+        <div class="c-player" id="c-p1">
+          <div class="c-player-dept" id="c-p1-dept">—</div>
+          <div class="c-player-name" id="c-p1-name">—</div>
+          <div class="c-player-aov" id="c-p1-aov">—</div>
+          <div class="c-player-txns" id="c-p1-txns">— transactions</div>
+        </div>
+        <div class="c-vs">VS</div>
+        <div class="c-player" id="c-p2">
+          <div class="c-player-dept" id="c-p2-dept">—</div>
+          <div class="c-player-name" id="c-p2-name">—</div>
+          <div class="c-player-aov" id="c-p2-aov">—</div>
+          <div class="c-player-txns" id="c-p2-txns">— transactions</div>
+        </div>
+      </div>
+      <div class="contest-bar-wrap">
+        <div class="contest-bar-labels">
+          <span id="c-bar-l1">Player 1</span>
+          <span id="c-bar-l2">Player 2</span>
+        </div>
+        <div class="contest-bar-bg"><div class="contest-bar-fill" id="c-bar-fill" style="width:50%"></div></div>
+      </div>
+      <button class="contest-edit-btn" onclick="openContest()">Edit Contest</button>
+    </div>
+    <div id="aov-results" style="display:none">
+      <div class="action-bar">
+        <button class="btn-print" onclick="printSection('aov')">🖨 Print Report</button>
+        <button class="btn-clear" onclick="clearSection('aov')">✕ Clear</button>
+        <span class="res-date" id="aov-date-label"></span>
+      </div>
+      <div class="stats-row" id="aov-stats"></div>
+      <div class="card">
+        <div class="card-head"><h2>Sales Floor Performance</h2></div>
+        <div class="card-body" style="padding:0">
+          <table class="tbl" id="aov-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th class="center">Shift</th>
+                <th class="right">Transactions</th>
+                <th class="right">Total Sales</th>
+                <th class="right">AOV</th>
+                <th class="right">Target</th>
+                <th class="center">vs Target</th>
+                <th class="center">Status</th>
+              </tr>
+            </thead>
+            <tbody id="aov-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Day vs Night Breakdown</h2></div>
+        <div class="card-body" style="padding:0">
+          <table class="tbl" id="daynite-table">
+            <thead><tr><th>Shift</th><th class="right">Transactions</th><th class="right">Total Sales</th><th class="right">AOV</th><th class="right">Avg per Employee</th></tr></thead>
+            <tbody id="daynite-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Coaching Notes</h2></div>
+        <div class="card-body">
+          <div class="coaching-grid" id="coaching-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DRIVER SAFETY ===== -->
+  <section class="section" id="drivers">
+    <div class="sec-head">
+      <h1>Driver Safety</h1>
+      <p>Upload the safety data Excel file to generate the full performance scorecard with charts. Sample data is pre-loaded.</p>
+    </div>
+    <div class="upload-area" id="drv-drop" onclick="document.getElementById('drv-file').click()">
+      <input type="file" id="drv-file" accept=".xlsx,.xls,.csv">
+      <div class="ui">🚗</div>
+      <h3>Drop safety data Excel here</h3>
+      <p>.xlsx / .xls / .csv · Same format as before</p>
+    </div>
+    <div id="drv-results" style="display:block">
+      <div class="action-bar">
+        <button class="btn-print" onclick="printSection('drivers')">🖨 Print Report</button>
+        <button class="btn-clear" onclick="clearSection('drivers')">✕ Clear</button>
+        <span class="res-date" id="drv-date-label">Sample Data (May 4 – May 31, 2026)</span>
+      </div>
+      <div class="stats-row" id="drv-stats"></div>
+      <div id="drv-dashboard-tabs">
+        <button class="tab-btn active" data-tab="drv-overview">📊 Overall Safety & Rankings</button>
+        <button class="tab-btn" data-tab="drv-deepdive">🧑‍✈️ Driver Deep Dive & Coaching</button>
+      </div>
+      <div class="tab-pane active" id="drv-overview">
+        <div class="two-charts">
+          <div class="chart-card"><canvas id="safetyScoreChart"></canvas></div>
+          <div class="chart-card"><canvas id="categoryTotalChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>Driver Performance & Risk Overview</h2></div>
+          <div class="card-body" style="padding:0; overflow-x:auto">
+            <table class="tbl" id="driverSummaryTable">
+              <thead><tr><th>Driver</th><th>Safety Score</th><th>Band</th><th>Score Δ</th><th>Miles</th><th>Total Incidents</th><th>Incidents / 100mi</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="insight-text" style="margin-top:10px;">💡 <span class="highlight">Safety bands:</span> Excellent (96-100) | Good (85-95) | Fair (50-84). Lower safety scores indicate higher risk. Focus on Speeding + Close Following = top fleet-wide challenges.</div>
+      </div>
+      <div class="tab-pane" id="drv-deepdive">
+        <div class="driver-detail-panel">
+          <div class="flex-between">
+            <h2>🔍 Individual driver profile</h2>
+            <select id="driverSelect"></select>
+          </div>
+          <div class="detail-grid">
+            <div class="kpi-card">
+              <div class="kpi-title">👤 Safety Score</div>
+              <div class="kpi-value" id="detailScore">—</div>
+              <div class="stat-sub" id="detailChange"></div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">📆 Miles driven (4w)</div>
+              <div class="kpi-value" id="detailMiles">—</div>
+              <div class="stat-sub" id="detailMilesChange"></div>
+            </div>
+            <div class="chart-card" style="min-width:200px; padding:10px;">
+              <canvas id="radarIncidentRate" style="max-height:200px; width:100%;"></canvas>
+              <div class="stat-sub" style="text-align:center;font-size:9px;">⛑️ Incidents per 100 miles vs Fleet avg</div>
+            </div>
+          </div>
+          <div style="margin-top:16px; overflow-x:auto;">
+            <table class="tbl" id="driverBreakdownTable">
+              <thead><tr><th>Behavior</th><th>Events count</th><th>Points earned/available</th><th>Impact (score loss)</th><th>Per 100mi rate</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="coachingTip" class="insight-text" style="margin-top:20px;">🎯 Select a driver to see targeted coaching insights based on highest risk behaviors.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCHEDULE ===== -->
+  <section class="section" id="schedule">
+    <div class="sec-head">
+      <h1>Schedule + Breaksheet</h1>
+      <p>Upload your schedule HTML export — get the full weekly view plus daily breaksheets.</p>
+    </div>
+    <div class="upload-area" id="sched-drop" onclick="document.getElementById('sched-file').click()">
+      <input type="file" id="sched-file" accept=".html,.htm">
+      <div class="ui">📅</div>
+      <h3>Drop schedule HTML here</h3>
+      <p>HTML export from your scheduling system</p>
+    </div>
+    <div id="sched-results" style="display:none">
+      <div class="action-bar">
+        <button class="btn-print" onclick="printSection('schedule')">🖨 Print</button>
+        <button class="btn-clear" onclick="clearSection('schedule')">✕ Clear</button>
+        <span class="res-date" id="sched-date-label"></span>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="sched-weekly" onclick="switchTab(this,'sched-weekly')">Weekly Schedule</button>
+        <button class="tab-btn" data-tab="sched-breaks" onclick="switchTab(this,'sched-breaks')">Breaksheet</button>
+      </div>
+      <div class="tab-pane active" id="sched-weekly">
+        <div class="card" style="overflow-x:auto">
+          <div class="card-body" style="padding:0; overflow-x:auto">
+            <table class="sched-tbl" id="sched-table"></table>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane" id="sched-breaks">
+        <div id="breaks-container"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RESTOCK LIST ===== -->
+  <section class="section" id="restock">
+    <div class="sec-head">
+      <h1>Restock List</h1>
+      <p>Upload tonight's inventory log CSV — get a prioritized restock list by category.</p>
+    </div>
+    <div class="upload-area" id="rst-drop" onclick="document.getElementById('rst-file').click()">
+      <input type="file" id="rst-file" accept=".csv">
+      <div class="ui">📋</div>
+      <h3>Drop inventory log CSV here</h3>
+      <p>Inventory_Report_Log_MMDDYYYY_HHMMSS.csv</p>
+    </div>
+    <div id="rst-results" style="display:none">
+      <div class="action-bar">
+        <button class="btn-print" onclick="printSection('restock')">🖨 Print List</button>
+        <button class="btn-clear" onclick="clearSection('restock')">✕ Clear</button>
+        <span class="res-date" id="rst-date-label"></span>
+      </div>
+      <div class="restock-always">
+        <div class="ra-head">Always Full Restock Every Night</div>
+        <div class="ra-body"><strong>ONIT · Another World · Wyld</strong> — pull and fully restock all available units for these three brands regardless of sales volume.</div>
+      </div>
+      <div id="rst-categories"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Contest Modal -->
+<div class="modal-bg" id="contest-modal">
+  <div class="modal">
+    <h2>🏆 Edit 1v1 Contest</h2>
+    <div class="modal-grid">
+      <div class="fg full"><label>Contest Month</label><input type="text" id="c-month-input" placeholder="e.g. June 2026"></div>
+      <div class="fg"><label>Player 1 Name</label><input type="text" id="c-p1-name-input" placeholder="Employee name"></div>
+      <div class="fg"><label>Player 2 Name</label><input type="text" id="c-p2-name-input" placeholder="Employee name"></div>
+      <div class="fg"><label>P1 Department</label><select id="c-p1-dept-input"><option>Sales Floor</option><option>Delivery</option><option>Inventory</option></select></div>
+      <div class="fg"><label>P2 Department</label><select id="c-p2-dept-input"><option>Sales Floor</option><option>Delivery</option><option>Inventory</option></select></div>
+      <div class="fg"><label>P1 MTD AOV ($)</label><input type="number" id="c-p1-aov-input" step="0.01" placeholder="0.00"></div>
+      <div class="fg"><label>P2 MTD AOV ($)</label><input type="number" id="c-p2-aov-input" step="0.01" placeholder="0.00"></div>
+      <div class="fg"><label>P1 Transactions</label><input type="number" id="c-p1-txns-input" placeholder="0"></div>
+      <div class="fg"><label>P2 Transactions</label><input type="number" id="c-p2-txns-input" placeholder="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeContest()">Cancel</button>
+      <button class="btn-save" onclick="saveContest()">Save Contest</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 1. NAVIGATION, UTILITIES, AND RESET (same as before)
+// ============================================================
+document.querySelectorAll('.sb-nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const sec = a.dataset.sec;
+    document.querySelectorAll('.sb-nav a').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    document.getElementById(sec).classList.add('active');
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('print-target'));
+    document.getElementById(sec).classList.add('print-target');
+    if (sec === 'drivers' && window.driverData) {
+      renderDriverDashboard(window.driverData, document.getElementById('drv-date-label').textContent);
+    }
+  });
+});
+document.getElementById('aov').classList.add('print-target');
+
+function switchTab(btn, paneId) {
+  const bar = btn.closest('.tab-bar');
+  bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const wrapper = btn.closest('.section') || document.body;
+  wrapper.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(paneId).classList.add('active');
+}
+
+function printSection(sec) {
+  document.querySelectorAll('.section').forEach(x => x.classList.remove('print-target'));
+  document.getElementById(sec).classList.add('print-target');
+  window.print();
+}
+
+function clearSection(sec) {
+  if (sec === 'aov') { document.getElementById('aov-results').style.display = 'none'; document.getElementById('aov-drop').classList.remove('upload-loaded'); }
+  if (sec === 'drivers') {
+    document.getElementById('drv-results').style.display = 'none';
+    document.getElementById('drv-drop').classList.remove('upload-loaded');
+    if (window.safetyBarChart) { window.safetyBarChart.destroy(); window.safetyBarChart = null; }
+    if (window.categoryTotalChart) { window.categoryTotalChart.destroy(); window.categoryTotalChart = null; }
+    if (window.radarChart) { window.radarChart.destroy(); window.radarChart = null; }
+    window.driverData = null;
+    document.getElementById('drv-date-label').textContent = '—';
+  }
+  if (sec === 'schedule') { document.getElementById('sched-results').style.display = 'none'; document.getElementById('sched-drop').classList.remove('upload-loaded'); }
+  if (sec === 'restock') { document.getElementById('rst-results').style.display = 'none'; document.getElementById('rst-drop').classList.remove('upload-loaded'); }
+}
+
+function resetAll() {
+  ['aov-drop','drv-drop','sched-drop','rst-drop'].forEach(id => { document.getElementById(id).classList.remove('upload-loaded'); });
+  ['aov-results','drv-results','sched-results','rst-results'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+  document.getElementById('aov-stats').innerHTML = '';
+  document.getElementById('aov-tbody').innerHTML = '';
+  document.getElementById('daynite-tbody').innerHTML = '';
+  document.getElementById('coaching-grid').innerHTML = '';
+  document.getElementById('aov-date-label').textContent = '';
+  document.getElementById('sched-table').innerHTML = '';
+  document.getElementById('breaks-container').innerHTML = '';
+  document.getElementById('sched-date-label').textContent = '';
+  document.getElementById('rst-categories').innerHTML = '';
+  document.getElementById('rst-date-label').textContent = '';
+  window.driverData = SAMPLE_DRIVER_DATA;
+  renderDriverDashboard(SAMPLE_DRIVER_DATA, 'Sample Data (May 4 – May 31, 2026)');
+  document.getElementById('drv-results').style.display = 'block';
+  document.querySelector('.sb-nav a[data-sec="drivers"]').click();
+  renderContest();
+}
+
+const fmt$ = v => '$' + parseFloat(v || 0).toFixed(2);
+const fmt$k = v => v >= 1000 ? '$' + (v/1000).toFixed(1)+'k' : '$' + parseFloat(v||0).toFixed(0);
+const fmtPct = (v, target) => { const d = ((v-target)/target*100); return (d>=0?'+':'')+d.toFixed(1)+'%'; };
+const statusBadge = (aov, target) => {
+  const pct = (aov - target) / target * 100;
+  if (pct >= 0) return `<span class="badge badge-above">Above</span>`;
+  if (pct >= -8) return `<span class="badge badge-close">Close</span>`;
+  return `<span class="badge badge-below">Below</span>`;
+};
+const statusClass = (aov, target) => { const p=(aov-target)/target*100; return p>=0?'above':p>=-8?'close':'below'; };
+
+function setupUpload(dropId, fileId, handler) {
+  const drop = document.getElementById(dropId);
+  const inp = document.getElementById(fileId);
+  inp.addEventListener('change', e => { if (e.target.files[0]) { handler(e.target.files[0]); drop.classList.add('upload-loaded'); } });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) { handler(e.dataTransfer.files[0]); drop.classList.add('upload-loaded'); }
+  });
+}
+
+// ============================================================
+// 2. AOV REPORT – FULL PYTHON LOGIC PORTED TO JS
+// ============================================================
+const SF_AOV_GOAL = 65.0;
+const SF_ADDON_GOAL = 4.0;
+const DL_AOV_GOAL = 100.0;
+const FLOOR_TYPES = new Set(['POS','PICKUP']);
+const IGNORE_CASHIER_PATTERN = /register|sanctuary/i;
+const ADDON_PRODUCT_PATTERN = /add.?on/i;
+const NAME_PATTERNS = [
+  [/\bashtyn\b|\bashyn\b|\bash\b/i, 'Ashtyn'],
+  [/\brayven\b/i, 'Rayven'],
+  [/\bdonavn\b|\bdonavan\b/i, 'Donavan'],
+  [/\bdenelle\b/i, 'Denelle'],
+  [/\bparit\b/i, 'Parit'],
+  [/\bkathleen\b|\bkat\b/i, 'Kat / Kathleen'],
+  [/\brichard\b|\brich\b/i, 'Richard'],
+  [/\bstas\b/i, 'Stas'],
+  [/\bjosh(?:ua)?\b/i, 'Josh'],
+  [/\bnorma\b/i, 'Norma'],
+  [/\balyssa\b/i, 'Alyssa'],
+  [/\bcassie\b/i, 'Cassie'],
+];
+
+function normaliseDispatcher(note) {
+  const n = note.toLowerCase();
+  for (const [pattern, name] of NAME_PATTERNS) {
+    if (pattern.test(n)) return name;
+  }
+  return 'No Dispatcher Listed';
+}
+
+function parseAOV(data, headers) {
+  // data: array of objects, headers: array of strings
+  const h = headers.map(h => h.trim());
+  const find = (...candidates) => {
+    const low = h.map(x => x.toLowerCase());
+    for (const c of candidates) {
+      const idx = low.findIndex(x => x.includes(c.toLowerCase()));
+      if (idx >= 0) return idx;
+    }
+    return -1;
+  };
+  const idxDate = find('Date Open');
+  const idxTicketType = find('Ticket Type');
+  const idxType = find('Type');
+  const idxTicketID = find('Ticket ID');
+  const idxCashier = find('Cashier');
+  const idxNet = find('Net Sales');
+  const idxGross = find('Gross Receipts');
+  const idxProduct = find('Product Name');
+  const idxNotes = find('Ticket Notes');
+
+  if (idxDate < 0 || idxTicketType < 0 || idxType < 0 || idxTicketID < 0 || idxNet < 0) {
+    throw new Error('Missing required columns: Date Open, Ticket Type, Type, Ticket ID, Net Sales');
+  }
+
+  const dateKey = h[idxDate];
+  const ticketTypeKey = h[idxTicketType];
+  const typeKey = h[idxType];
+  const ticketIDKey = h[idxTicketID];
+  const cashierKey = idxCashier >= 0 ? h[idxCashier] : null;
+  const netKey = h[idxNet];
+  const grossKey = idxGross >= 0 ? h[idxGross] : null;
+  const productKey = idxProduct >= 0 ? h[idxProduct] : null;
+  const notesKey = idxNotes >= 0 ? h[idxNotes] : null;
+
+  const dates = [];
+
+  // ---- Sales Floor: group by (date, cashier) and dedup ticket IDs ----
+  const sfTickets = {}; // key: date|cashier|ticketId
+  const sfKeys = new Set(); // for dedup
+  for (const row of data) {
+    const tt = (row[ticketTypeKey] || '').trim().toUpperCase();
+    if (!FLOOR_TYPES.has(tt)) continue;
+    if ((row[typeKey] || '').trim() !== 'Sale') continue;
+    const tid = (row[ticketIDKey] || '').trim();
+    const ch = cashierKey ? (row[cashierKey] || '').trim() : '';
+    const dt = (row[dateKey] || '').trim();
+    if (!tid || !ch) continue;
+    if (IGNORE_CASHIER_PATTERN.test(ch)) continue;
+    const net = parseFloat(row[netKey]) || 0;
+    const gross = grossKey ? (parseFloat(row[grossKey]) || 0) : net;
+    const isAddon = productKey ? ADDON_PRODUCT_PATTERN.test(row[productKey] || '') : false;
+    const key = `${dt}|||${ch}|||${tid}`;
+    if (!sfTickets[key]) {
+      sfTickets[key] = { net: 0, gross: 0, addon: 0, dt, cashier: ch, tid };
+    }
+    sfTickets[key].net += net;
+    sfTickets[key].gross += gross;
+    if (isAddon) sfTickets[key].addon += net;
+    if (dt) dates.push(dt);
+  }
+
+  // Aggregate per employee per day
+  const empDays = {}; // emp -> { date: { aov, txns, net, gross, addon } }
+  for (const [key, val] of Object.entries(sfTickets)) {
+    const { dt, cashier, net, gross, addon } = val;
+    if (net <= 0) continue;
+    if (!empDays[cashier]) empDays[cashier] = {};
+    if (!empDays[cashier][dt]) empDays[cashier][dt] = { net: 0, gross: 0, addon: 0, txns: 0 };
+    empDays[cashier][dt].net += net;
+    empDays[cashier][dt].gross += gross;
+    empDays[cashier][dt].addon += addon;
+    empDays[cashier][dt].txns += 1;
+  }
+
+  // Build emp_stats
+  const empStats = [];
+  for (const [name, days] of Object.entries(empDays)) {
+    const sortedDates = Object.keys(days).sort();
+    if (sortedDates.length === 0) continue;
+    const lastDay = sortedDates[sortedDates.length - 1];
+    const last = days[lastDay];
+    const mtdDays = sortedDates.slice(0, -1);
+    let mn = 0, mt = 0, ma = 0;
+    for (const d of mtdDays) {
+      mn += days[d].net;
+      mt += days[d].txns;
+      ma += days[d].addon;
+    }
+    let fn = 0, ft = 0, fa = 0, fg = 0;
+    for (const d of sortedDates) {
+      fn += days[d].net;
+      ft += days[d].txns;
+      fa += days[d].addon;
+      fg += days[d].gross;
+    }
+    const lastAov = last.txns > 0 ? last.net / last.txns : 0;
+    const mtdAov = mt > 0 ? mn / mt : lastAov;
+    const mtdAdd = mn > 0 ? (ma / mn) * 100 : 0;
+    const fullAov = ft > 0 ? fn / ft : 0;
+    const fullAdd = fn > 0 ? (fa / fn) * 100 : 0;
+    empStats.push({
+      name,
+      last_day: lastDay,
+      last_aov: lastAov,
+      last_txns: last.txns,
+      mtd_aov: mtdAov,
+      mtd_add: mtdAdd,
+      mtd_txns: mt,
+      full_aov: fullAov,
+      full_add: fullAdd,
+      full_txns: ft,
+      full_net: fn,
+      full_gross: fg,
+    });
+  }
+
+  // ---- Delivery ----
+  const dlTickets = {}; // ticketId -> { date, dispatcher, net, gross, addon }
+  for (const row of data) {
+    const tt = (row[ticketTypeKey] || '').trim().toUpperCase();
+    if (tt !== 'DELIVERY') continue;
+    if ((row[typeKey] || '').trim() !== 'Sale') continue;
+    const tid = (row[ticketIDKey] || '').trim();
+    const dt = (row[dateKey] || '').trim();
+    if (!tid) continue;
+    const net = parseFloat(row[netKey]) || 0;
+    const gross = grossKey ? (parseFloat(row[grossKey]) || 0) : net;
+    const isAddon = productKey ? ADDON_PRODUCT_PATTERN.test(row[productKey] || '') : false;
+    const note = notesKey ? (row[notesKey] || '').trim() : '';
+    const dispatcher = normaliseDispatcher(note);
+    if (!dlTickets[tid]) {
+      dlTickets[tid] = { date: dt, dispatcher, net: 0, gross: 0, addon: 0 };
+    }
+    dlTickets[tid].net += net;
+    dlTickets[tid].gross += gross;
+    if (isAddon) dlTickets[tid].addon += net;
+    if (dt) dates.push(dt);
+  }
+
+  // Per-day per-dispatcher for coaching
+  const dlDayEmp = {}; // dispatcher -> { date: { net, addon, txns } }
+  for (const [tid, val] of Object.entries(dlTickets)) {
+    if (val.net <= 0 || val.dispatcher === 'No Dispatcher Listed') continue;
+    const nm = val.dispatcher;
+    const dt = val.date;
+    if (!dlDayEmp[nm]) dlDayEmp[nm] = {};
+    if (!dlDayEmp[nm][dt]) dlDayEmp[nm][dt] = { net: 0, addon: 0, txns: 0 };
+    dlDayEmp[nm][dt].net += val.net;
+    dlDayEmp[nm][dt].addon += val.addon;
+    dlDayEmp[nm][dt].txns += 1;
+  }
+
+  const dlStats = [];
+  for (const [name, days] of Object.entries(dlDayEmp)) {
+    const sortedDates = Object.keys(days).sort();
+    if (sortedDates.length === 0) continue;
+    const lastDay = sortedDates[sortedDates.length - 1];
+    const last = days[lastDay];
+    const mtdDays = sortedDates.slice(0, -1);
+    let mn = 0, mt = 0, ma = 0;
+    for (const d of mtdDays) {
+      mn += days[d].net;
+      mt += days[d].txns;
+      ma += days[d].addon;
+    }
+    let fn = 0, ft = 0, fa = 0;
+    for (const d of sortedDates) {
+      fn += days[d].net;
+      ft += days[d].txns;
+      fa += days[d].addon;
+    }
+    const lastAov = last.txns > 0 ? last.net / last.txns : 0;
+    const mtdAov = mt > 0 ? mn / mt : lastAov;
+    const mtdAdd = mn > 0 ? (ma / mn) * 100 : 0;
+    const fullAov = ft > 0 ? fn / ft : 0;
+    const fullAdd = fn > 0 ? (fa / fn) * 100 : 0;
+    dlStats.push({
+      name,
+      last_day: lastDay,
+      last_aov: lastAov,
+      last_txns: last.txns,
+      mtd_aov: mtdAov,
+      mtd_add: mtdAdd,
+      mtd_txns: mt,
+      full_aov: fullAov,
+      full_add: fullAdd,
+      full_txns: ft,
+      full_net: fn,
+    });
+  }
+
+  // DL AOV stats (full period)
+  const dlAovAgg = {};
+  for (const [tid, val] of Object.entries(dlTickets)) {
+    if (val.net <= 0) continue;
+    const nm = val.dispatcher;
+    if (!dlAovAgg[nm]) dlAovAgg[nm] = { net: 0, gross: 0, addon: 0, txns: 0 };
+    dlAovAgg[nm].net += val.net;
+    dlAovAgg[nm].gross += val.gross;
+    dlAovAgg[nm].addon += val.addon;
+    dlAovAgg[nm].txns += 1;
+  }
+  const dlAovStats = Object.entries(dlAovAgg)
+    .filter(([nm, d]) => d.txns > 0)
+    .map(([nm, d]) => ({
+      name: nm,
+      aov: d.net / d.txns,
+      txns: d.txns,
+      addon_pct: d.net > 0 ? (d.addon / d.net) * 100 : 0,
+      net: d.net,
+      gross: d.gross,
+    }))
+    .sort((a,b) => b.aov - a.aov);
+
+  // Store aggregates
+  const storeNet = empStats.reduce((s, e) => s + e.full_net, 0);
+  const storeTxns = empStats.reduce((s, e) => s + e.full_txns, 0);
+  const storeAov = storeTxns > 0 ? storeNet / storeTxns : 0;
+  const storeAdd = storeNet > 0 ? (empStats.reduce((s,e) => s + e.full_net * e.full_add / 100, 0) / storeNet) * 100 : 0;
+
+  const namedDL = dlAovStats.filter(d => d.name !== 'No Dispatcher Listed');
+  const dlNet = namedDL.reduce((s,d) => s + d.net, 0);
+  const dlTxns = namedDL.reduce((s,d) => s + d.txns, 0);
+  const dlAov = dlTxns > 0 ? dlNet / dlTxns : 0;
+  const dlAdd = dlNet > 0 ? (namedDL.reduce((s,d) => s + d.net * d.addon_pct / 100, 0) / dlNet) * 100 : 0;
+
+  // unique dates
+  const uniqueDates = [...new Set(dates)].filter(d => d).sort();
+
+  return {
+    empStats,
+    dlStats,
+    dlAovStats,
+    storeAov,
+    storeAdd,
+    storeTxns,
+    dlChannelAov: dlAov,
+    dlChannelAdd: dlAdd,
+    dlChannelTxns: dlTxns,
+    dates: uniqueDates,
+  };
+}
+
+// ---- Classification and notes (matching Python) ----
+function classifySF(s) {
+  if (s.last_txns < 6 || s.mtd_txns < 5) return 'small';
+  const diff = s.last_aov - s.mtd_aov;
+  if (s.last_aov >= SF_AOV_GOAL && s.full_add >= SF_ADDON_GOAL) return 'star';
+  if (s.last_aov >= SF_AOV_GOAL) return 'aov_good';
+  if (diff >= 4) return 'trending';
+  if (diff <= -4 && s.mtd_aov >= SF_AOV_GOAL) return 'dropping_hi';
+  if (diff <= -4) return 'dropping';
+  if (s.mtd_aov >= 62) return 'close';
+  return 'push';
+}
+
+function classifyDL(s) {
+  if (s.last_txns < 4 || s.mtd_txns < 4) return 'small';
+  const diff = s.last_aov - s.mtd_aov;
+  if (s.last_aov >= DL_AOV_GOAL) return 'aov_good';
+  if (diff >= 8) return 'trending';
+  if (diff <= -8 && s.mtd_aov >= DL_AOV_GOAL) return 'dropping_hi';
+  if (diff <= -8) return 'dropping';
+  if (s.mtd_aov >= 90) return 'close';
+  return 'push';
+}
+
+function noteSF(s, t) {
+  const fn = s.name.split(' ')[0];
+  const diff = s.last_aov - s.mtd_aov;
+  const gap = SF_AOV_GOAL - s.mtd_aov;
+  const lbl = `${s.last_day.replace('/2026','')} (${s.last_txns} txns)`;
+  const at = (s.mtd_aov >= SF_AOV_GOAL) ? 'AOV above goal — stay consistent.' :
+             (gap <= 2.5) ? `$${gap.toFixed(2)} from goal — one trade-up per ticket.` :
+             'Bundle or complementary product every transaction.';
+  const adt = (s.full_add >= SF_ADDON_GOAL) ? `Add-on ${s.full_add.toFixed(1)}% — above 4%.` :
+              `Add-on ${s.full_add.toFixed(1)}% — one offer per ticket.`;
+  if (t === 'small') return `${fn} — ${s.last_txns} txns last shift, ${s.mtd_txns} MTD. Monitor a full shift.`;
+  if (t === 'star') return `${fn} hit both goals last shift ($${s.last_aov.toFixed(2)} on ${lbl}). ${adt} Call it out.`;
+  if (t === 'aov_good') return `${fn} hit $65 last shift ($${s.last_aov.toFixed(2)} on ${lbl}). ${adt}`;
+  if (t === 'trending') return `${fn} ran $${diff.toFixed(2)} above their June avg ($${s.last_aov.toFixed(2)} vs $${s.mtd_aov.toFixed(2)}). Acknowledge it. ${at}`;
+  if (t === 'dropping_hi' || t === 'dropping') return `${fn} dropped $${Math.abs(diff).toFixed(2)} below avg ($${s.last_aov.toFixed(2)} vs $${s.mtd_aov.toFixed(2)} on ${lbl}). Check-in today. ${at}`;
+  if (t === 'close') return `${fn} at $${s.last_aov.toFixed(2)} last shift — $${gap.toFixed(2)} from $65. ${at}`;
+  return `${fn} at $${s.last_aov.toFixed(2)} last shift, $${gap.toFixed(2)} below goal. ${at} ${adt}`;
+}
+
+function noteDL(s, t) {
+  const fn = s.name.split(' ')[0];
+  const diff = s.last_aov - s.mtd_aov;
+  const gap = DL_AOV_GOAL - s.mtd_aov;
+  const lbl = `${s.last_day.replace('/2026','')} (${s.last_txns} deliveries)`;
+  const at = (s.mtd_aov >= DL_AOV_GOAL) ? 'Above $100 target — keep it going.' :
+             (gap <= 8) ? `$${gap.toFixed(2)} from $100 target.` :
+             'Push higher-value items and bundles on every order.';
+  if (t === 'small') return `${fn} — ${s.last_txns} deliveries last shift, ${s.mtd_txns} MTD. Too small to read.`;
+  if (t === 'aov_good') return `${fn} above $100 — $${s.last_aov.toFixed(2)} last shift (${lbl}). ${at}`;
+  if (t === 'trending') return `${fn} ran $${diff.toFixed(2)} above their avg (${s.last_aov.toFixed(2)} vs $${s.mtd_aov.toFixed(2)}). Good momentum.`;
+  if (t === 'dropping_hi' || t === 'dropping') return `${fn} dropped $${Math.abs(diff).toFixed(2)} from avg ($${s.last_aov.toFixed(2)} vs $${s.mtd_aov.toFixed(2)} on ${lbl}). Check in. ${at}`;
+  if (t === 'close') return `${fn} at $${s.last_aov.toFixed(2)} last shift — $${gap.toFixed(2)} from $100. ${at}`;
+  return `${fn} at $${s.last_aov.toFixed(2)} last shift, $${gap.toFixed(2)} below $100 target. ${at}`;
+}
+
+// ---- Render AOV results ----
+function renderAOV(data, headers, filename) {
+  try {
+    const parsed = parseAOV(data, headers);
+    // Update stats
+    const statsHtml = `
+      <div class="stat"><div class="stat-lbl">Store AOV</div><div class="stat-val ${parsed.storeAov >= 63 ? 'green' : 'amber'}">${fmt$(parsed.storeAov)}</div><div class="stat-sub">${parsed.storeTxns} transactions</div></div>
+      <div class="stat"><div class="stat-lbl">Store Add-On %</div><div class="stat-val">${parsed.storeAdd.toFixed(1)}%</div><div class="stat-sub">add-on sales</div></div>
+      <div class="stat"><div class="stat-lbl">Delivery AOV</div><div class="stat-val ${parsed.dlChannelAov >= 90 ? 'green' : 'amber'}">${fmt$(parsed.dlChannelAov)}</div><div class="stat-sub">${parsed.dlChannelTxns} deliveries</div></div>
+      <div class="stat"><div class="stat-lbl">Delivery Add-On</div><div class="stat-val">${parsed.dlChannelAdd.toFixed(1)}%</div><div class="stat-sub">add-on sales</div></div>
+    `;
+    document.getElementById('aov-stats').innerHTML = statsHtml;
+
+    // Sales Floor table (sorted by AOV)
+    const sfSorted = [...parsed.empStats].sort((a,b) => b.full_aov - a.full_aov);
+    const sfBody = document.getElementById('aov-tbody');
+    sfBody.innerHTML = sfSorted.map(e => {
+      const aov = e.full_aov;
+      const target = SF_AOV_GOAL;
+      return `<tr>
+        <td><strong>${e.name}</strong></td>
+        <td class="center">—</td>
+        <td class="right" style="font-family:'JetBrains Mono',monospace">${e.full_txns}</td>
+        <td class="right" style="font-family:'JetBrains Mono',monospace">${fmt$(e.full_net)}</td>
+        <td class="right" style="font-family:'JetBrains Mono',monospace;font-weight:700">${fmt$(aov)}</td>
+        <td class="right" style="color:var(--text-muted)">${fmt$(target)}</td>
+        <td class="center" style="font-family:'JetBrains Mono',monospace;font-size:11px">${fmtPct(aov,target)}</td>
+        <td class="center">${statusBadge(aov,target)}</td>
+      </tr>`;
+    }).join('');
+
+    // Day/Night placeholder – we don't have shift data, so we show overall
+    const dnBody = document.getElementById('daynite-tbody');
+    dnBody.innerHTML = `
+      <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:12px;">Day/Night breakdown requires time data; not available in this CSV format.</td></tr>
+    `;
+
+    // Coaching notes (Sales Floor)
+    const cgrid = document.getElementById('coaching-grid');
+    cgrid.innerHTML = sfSorted.map(e => {
+      const t = classifySF(e);
+      const sc = t === 'star' || t === 'aov_good' ? 'above' : (t === 'close' ? 'close' : 'below');
+      const note = noteSF(e, t);
+      return `<div class="coaching-card ${sc}">
+        <div class="cc-name">${e.name}</div>
+        <div class="cc-meta">AOV: ${fmt$(e.full_aov)} · Txns: ${e.full_txns} · Add-On: ${e.full_add.toFixed(1)}%</div>
+        <div class="cc-note">${note}</div>
+      </div>`;
+    }).join('');
+
+    // Also add delivery coaching notes (optional, we can add a separate section, but we'll append)
+    const dlSorted = [...parsed.dlStats].sort((a,b) => b.full_aov - a.full_aov);
+    if (dlSorted.length > 0) {
+      const dlNotes = dlSorted.map(e => {
+        const t = classifyDL(e);
+        const sc = t === 'aov_good' ? 'above' : (t === 'close' ? 'close' : 'below');
+        const note = noteDL(e, t);
+        return `<div class="coaching-card ${sc}">
+          <div class="cc-name">🚚 ${e.name}</div>
+          <div class="cc-meta">AOV: ${fmt$(e.full_aov)} · Txns: ${e.full_txns}</div>
+          <div class="cc-note">${note}</div>
+        </div>`;
+      }).join('');
+      cgrid.innerHTML += `<div style="grid-column:1/-1;margin-top:8px;font-weight:700;color:var(--primary);">Delivery Coaching Notes</div>` + dlNotes;
+    }
+
+    document.getElementById('aov-date-label').textContent = filename;
+    document.getElementById('aov-results').style.display = 'block';
+
+    // Auto-update contest (if names match)
+    const empMap = {};
+    parsed.empStats.forEach(e => { empMap[e.name] = { aov: e.full_aov, txns: e.full_txns }; });
+    autoUpdateContest(empMap);
+
+  } catch (err) {
+    document.getElementById('aov-results').style.display = 'block';
+    document.getElementById('aov-stats').innerHTML = `<div class="notice notice-err">${err.message}</div>`;
+  }
+}
+
+setupUpload('aov-drop', 'aov-file', file => {
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: res => renderAOV(res.data, res.meta.fields, file.name)
+  });
+});
+
+// ============================================================
+// 3. 1V1 CONTEST (unchanged)
+// ============================================================
+let contestData = JSON.parse(localStorage.getItem('sanctuary_1v1') || 'null') || {
+  month: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+  p1: { name: 'Player 1', dept: 'Sales Floor', aov: 0, txns: 0 },
+  p2: { name: 'Player 2', dept: 'Sales Floor', aov: 0, txns: 0 }
+};
+
+function renderContest() {
+  const { p1, p2, month } = contestData;
+  document.getElementById('c-month').textContent = month;
+  document.getElementById('c-p1-name').textContent = p1.name;
+  document.getElementById('c-p2-name').textContent = p2.name;
+  document.getElementById('c-p1-dept').textContent = p1.dept;
+  document.getElementById('c-p2-dept').textContent = p2.dept;
+  document.getElementById('c-p1-aov').textContent = p1.aov > 0 ? fmt$(p1.aov) : '—';
+  document.getElementById('c-p2-aov').textContent = p2.aov > 0 ? fmt$(p2.aov) : '—';
+  document.getElementById('c-p1-txns').textContent = (p1.txns||0) + ' transactions';
+  document.getElementById('c-p2-txns').textContent = (p2.txns||0) + ' transactions';
+  document.getElementById('c-bar-l1').textContent = p1.name;
+  document.getElementById('c-bar-l2').textContent = p2.name;
+  const total = (p1.aov||0) + (p2.aov||0);
+  const pct = total > 0 ? (p1.aov / total * 100) : 50;
+  document.getElementById('c-bar-fill').style.width = pct + '%';
+  document.getElementById('c-p1').classList.toggle('c-winner', p1.aov > p2.aov && p1.aov > 0);
+  document.getElementById('c-p2').classList.toggle('c-winner', p2.aov > p1.aov && p2.aov > 0);
+}
+
+function openContest() {
+  const { p1, p2, month } = contestData;
+  document.getElementById('c-month-input').value = month;
+  document.getElementById('c-p1-name-input').value = p1.name;
+  document.getElementById('c-p2-name-input').value = p2.name;
+  document.getElementById('c-p1-dept-input').value = p1.dept;
+  document.getElementById('c-p2-dept-input').value = p2.dept;
+  document.getElementById('c-p1-aov-input').value = p1.aov || '';
+  document.getElementById('c-p2-aov-input').value = p2.aov || '';
+  document.getElementById('c-p1-txns-input').value = p1.txns || '';
+  document.getElementById('c-p2-txns-input').value = p2.txns || '';
+  document.getElementById('contest-modal').classList.add('open');
+}
+
+function closeContest() { document.getElementById('contest-modal').classList.remove('open'); }
+
+function saveContest() {
+  contestData = {
+    month: document.getElementById('c-month-input').value || contestData.month,
+    p1: {
+      name: document.getElementById('c-p1-name-input').value || 'Player 1',
+      dept: document.getElementById('c-p1-dept-input').value,
+      aov: parseFloat(document.getElementById('c-p1-aov-input').value) || 0,
+      txns: parseInt(document.getElementById('c-p1-txns-input').value) || 0
+    },
+    p2: {
+      name: document.getElementById('c-p2-name-input').value || 'Player 2',
+      dept: document.getElementById('c-p2-dept-input').value,
+      aov: parseFloat(document.getElementById('c-p2-aov-input').value) || 0,
+      txns: parseInt(document.getElementById('c-p2-txns-input').value) || 0
+    }
+  };
+  localStorage.setItem('sanctuary_1v1', JSON.stringify(contestData));
+  renderContest();
+  closeContest();
+}
+
+function autoUpdateContest(empData) {
+  const p1match = Object.values(empData).find(e => e.name.toLowerCase().includes(contestData.p1.name.toLowerCase()) || contestData.p1.name.toLowerCase().includes(e.name.toLowerCase()));
+  const p2match = Object.values(empData).find(e => e.name.toLowerCase().includes(contestData.p2.name.toLowerCase()) || contestData.p2.name.toLowerCase().includes(e.name.toLowerCase()));
+  if (p1match) { contestData.p1.aov = p1match.aov; contestData.p1.txns = p1match.txns; }
+  if (p2match) { contestData.p2.aov = p2match.aov; contestData.p2.txns = p2match.txns; }
+  if (p1match || p2match) renderContest();
+}
+renderContest();
+
+// ============================================================
+// 4. DRIVER SAFETY (unchanged from previous – sample data included)
+// ============================================================
+const INCIDENT_CATS = ['Accelerating','Braking','Cell Phone','Close Following','Cornering','Distraction','Seat Belt','Speeding','Stop Sign'];
+
+function scoreToTier(s) {
+  if (s >= 90) return {label:'Excellent', cls:'tier-exc'};
+  if (s >= 75) return {label:'Good', cls:'tier-good'};
+  if (s >= 60) return {label:'Fair', cls:'tier-fair'};
+  return {label:'Poor', cls:'tier-poor'};
+}
+
+function findCol(headers, keywords) {
+  const hLow = headers.map(h => String(h).toLowerCase().trim());
+  for (const kw of keywords) {
+    const idx = hLow.findIndex(h => h.includes(kw));
+    if (idx >= 0) return idx;
+  }
+  return -1;
+}
+
+function parseDriverFile(data, headers) {
+  const nameIdx = findCol(headers, ['driver','name','employee']);
+  const scoreIdx = findCol(headers, ['safety score','score']);
+  const milesIdx = findCol(headers, ['miles driven','miles','mileage']);
+  const changeIdx = findCol(headers, ['score change','change','delta']);
+  const catIdxs = INCIDENT_CATS.map(cat => findCol(headers, ['total '+cat.toLowerCase(), cat.toLowerCase()]));
+
+  const drivers = [];
+  for (const row of data) {
+    const name = String(row[nameIdx] || '').trim();
+    if (!name) continue;
+    const score = parseFloat(row[scoreIdx]) || 0;
+    const miles = parseFloat(row[milesIdx]) || 0;
+    const change = parseFloat(row[changeIdx]) || 0;
+    const incidents = {};
+    let totalInc = 0;
+    INCIDENT_CATS.forEach((cat, i) => {
+      const v = catIdxs[i] >= 0 ? (parseInt(row[catIdxs[i]]) || 0) : 0;
+      incidents[cat] = v;
+      totalInc += v;
+    });
+    const topIssue = Object.entries(incidents).sort((a,b) => b[1]-a[1])[0];
+    drivers.push({ name, score, miles, change, incidents, totalInc, topIssue: topIssue[1] > 0 ? topIssue : null });
+  }
+  return drivers.sort((a,b) => b.score - a.score);
+}
+
+function handleDriverUpload(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const processData = (data, headers) => {
+    const drivers = parseDriverFile(data, headers);
+    if (!drivers || drivers.length === 0) {
+      document.getElementById('drv-results').style.display = 'block';
+      document.getElementById('drv-stats').innerHTML = '<div class="notice notice-err">No driver data found. Check column headers.</div>';
+      return;
+    }
+    window.driverData = drivers;
+    renderDriverDashboard(drivers, file.name);
+  };
+
+  if (ext === 'csv') {
+    Papa.parse(file, { header: true, skipEmptyLines: true, complete: res => processData(res.data, res.meta.fields) });
+  } else {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result, { type: 'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      if (json.length > 0) {
+        const headers = Object.keys(json[0]);
+        processData(json, headers);
+      } else {
+        document.getElementById('drv-results').style.display = 'block';
+        document.getElementById('drv-stats').innerHTML = '<div class="notice notice-err">The uploaded file appears to be empty.</div>';
+      }
+    };
+    reader.readAsBinaryString(file);
+  }
+}
+
+setupUpload('drv-drop', 'drv-file', handleDriverUpload);
+
+const SAMPLE_DRIVER_DATA = [
+  { name:'Lee McNabb', score:71, miles:2586.7, change:0, incidents:{'Accelerating':6,'Braking':0,'Cell Phone':1,'Close Following':8,'Cornering':1,'Distraction':3,'Seat Belt':0,'Speeding':11,'Stop Sign':7} },
+  { name:'Justin Cabreros', score:69, miles:1696.1, change:-1, incidents:{'Accelerating':3,'Braking':3,'Cell Phone':2,'Close Following':3,'Cornering':3,'Distraction':10,'Seat Belt':0,'Speeding':16,'Stop Sign':1} },
+  { name:'Michael Senus', score:77, miles:1733.4, change:-2, incidents:{'Accelerating':2,'Braking':1,'Cell Phone':0,'Close Following':13,'Cornering':2,'Distraction':0,'Seat Belt':1,'Speeding':1,'Stop Sign':0} },
+  { name:'Scott King', score:83, miles:2484.8, change:0, incidents:{'Accelerating':6,'Braking':0,'Cell Phone':0,'Close Following':6,'Cornering':0,'Distraction':1,'Seat Belt':0,'Speeding':6,'Stop Sign':0} },
+  { name:'Carlos Dabdoub', score:71, miles:2648.2, change:-3, incidents:{'Accelerating':0,'Braking':0,'Cell Phone':5,'Close Following':1,'Cornering':4,'Distraction':4,'Seat Belt':0,'Speeding':6,'Stop Sign':11} },
+  { name:'Norma Barajas', score:73, miles:295.2, change:0, incidents:{'Accelerating':0,'Braking':0,'Cell Phone':0,'Close Following':6,'Cornering':2,'Distraction':2,'Seat Belt':0,'Speeding':7,'Stop Sign':3} },
+  { name:'Cameron Ward', score:82, miles:1297.7, change:3, incidents:{'Accelerating':5,'Braking':0,'Cell Phone':2,'Close Following':0,'Cornering':1,'Distraction':0,'Seat Belt':0,'Speeding':0,'Stop Sign':1} },
+  { name:'Benjamin Rodriguez', score:76, miles:1498.4, change:9, incidents:{'Accelerating':1,'Braking':0,'Cell Phone':10,'Close Following':1,'Cornering':1,'Distraction':0,'Seat Belt':0,'Speeding':10,'Stop Sign':4} },
+  { name:'Trevor Haynes', score:58, miles:2066.5, change:0, incidents:{'Accelerating':2,'Braking':8,'Cell Phone':3,'Close Following':9,'Cornering':8,'Distraction':7,'Seat Belt':0,'Speeding':17,'Stop Sign':12} }
+];
+
+SAMPLE_DRIVER_DATA.forEach(d => {
+  d.totalInc = Object.values(d.incidents).reduce((a,b) => a+b, 0);
+  const sorted = Object.entries(d.incidents).sort((a,b) => b[1]-a[1]);
+  d.topIssue = sorted[0][1] > 0 ? sorted[0] : null;
+});
+window.driverData = SAMPLE_DRIVER_DATA;
+
+function renderDriverDashboard(drivers, filename) {
+  document.getElementById('drv-results').style.display = 'block';
+  document.getElementById('drv-date-label').textContent = filename;
+
+  const avgScore = drivers.reduce((s,d) => s+d.score, 0) / drivers.length;
+  const totalMiles = drivers.reduce((s,d) => s+d.miles, 0);
+  const totalInc = drivers.reduce((s,d) => s+d.totalInc, 0);
+  const catCounts = {};
+  INCIDENT_CATS.forEach(c => catCounts[c] = 0);
+  drivers.forEach(d => INCIDENT_CATS.forEach(c => catCounts[c] += d.incidents[c] || 0));
+  const topCat = Object.entries(catCounts).sort((a,b) => b[1]-a[1])[0];
+
+  document.getElementById('drv-stats').innerHTML = `
+    <div class="stat"><div class="stat-lbl">Team Average</div><div class="stat-val ${avgScore>=75?'green':avgScore>=60?'amber':'red'}">${avgScore.toFixed(0)}</div><div class="stat-sub">safety score</div></div>
+    <div class="stat"><div class="stat-lbl">Total Miles</div><div class="stat-val">${totalMiles.toFixed(0)}</div><div class="stat-sub">fleet-wide</div></div>
+    <div class="stat"><div class="stat-lbl">Total Incidents</div><div class="stat-val ${totalInc<20?'amber':'red'}">${totalInc}</div><div class="stat-sub">across all drivers</div></div>
+    <div class="stat"><div class="stat-lbl">Top Issue</div><div class="stat-val amber" style="font-size:14px;line-height:1.3">${topCat[0]}</div><div class="stat-sub">${topCat[1]} incidents</div></div>
+  `;
+
+  const ctxBar = document.getElementById('safetyScoreChart').getContext('2d');
+  if (window.safetyBarChart) window.safetyBarChart.destroy();
+  window.safetyBarChart = new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+      labels: drivers.map(d => d.name.split(' ')[0]),
+      datasets: [{
+        label: 'Safety Score',
+        data: drivers.map(d => d.score),
+        backgroundColor: drivers.map(d => d.score >= 85 ? '#1B7B3C' : (d.score >= 70 ? '#C8981E' : '#B91C1C')),
+        borderRadius: 6,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
+  });
+
+  const ctxCat = document.getElementById('categoryTotalChart').getContext('2d');
+  if (window.categoryTotalChart) window.categoryTotalChart.destroy();
+  window.categoryTotalChart = new Chart(ctxCat, {
+    type: 'bar',
+    data: {
+      labels: INCIDENT_CATS,
+      datasets: [{
+        label: 'Total incidents (fleet)',
+        data: INCIDENT_CATS.map(c => catCounts[c]),
+        backgroundColor: '#2D6A4F',
+        borderRadius: 6,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: true, indexAxis: 'y', plugins: { legend: { display: false } } }
+  });
+
+  const tbody = document.querySelector('#driverSummaryTable tbody');
+  tbody.innerHTML = drivers.map((d, idx) => {
+    const band = scoreToTier(d.score);
+    const rate = d.miles > 0 ? (d.totalInc / d.miles * 100).toFixed(1) : '0.0';
+    const changeHtml = d.change > 0 ? `<span class="dc-change up">▲ ${d.change}</span>` : d.change < 0 ? `<span class="dc-change down">▼ ${Math.abs(d.change)}</span>` : `<span class="dc-change same">—</span>`;
+    return `<tr>
+      <td style="font-weight:600">${d.name}</td>
+      <td><strong>${d.score}</strong></td>
+      <td><span class="badge ${band.cls}">${band.label}</span></td>
+      <td>${changeHtml}</td>
+      <td>${d.miles.toFixed(0)} mi</td>
+      <td>${d.totalInc}</td>
+      <td>${rate}</td>
+    </tr>`;
+  }).join('');
+
+  const select = document.getElementById('driverSelect');
+  select.innerHTML = '';
+  drivers.forEach((d, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${d.name} (Score: ${d.score})`;
+    select.appendChild(opt);
+  });
+  select.onchange = () => updateDriverDetail(drivers, parseInt(select.value));
+  if (drivers.length > 0) {
+    select.value = 0;
+    updateDriverDetail(drivers, 0);
+  }
+
+  document.querySelectorAll('#drv-dashboard-tabs .tab-btn').forEach(btn => {
+    btn.onclick = function() {
+      document.querySelectorAll('#drv-dashboard-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      const paneId = this.dataset.tab;
+      document.querySelectorAll('#drv-results .tab-pane').forEach(p => p.classList.remove('active'));
+      document.getElementById(paneId).classList.add('active');
+      if (window.safetyBarChart) window.safetyBarChart.resize();
+      if (window.categoryTotalChart) window.categoryTotalChart.resize();
+      if (window.radarChart) window.radarChart.resize();
+    };
+  });
+}
+
+function updateDriverDetail(drivers, idx) {
+  const d = drivers[idx];
+  if (!d) return;
+  document.getElementById('detailScore').textContent = d.score;
+  document.getElementById('detailChange').textContent = d.change !== 0 ? (d.change > 0 ? `▲ +${d.change} vs prev` : `▼ ${d.change} vs prev`) : 'no change';
+  document.getElementById('detailMiles').textContent = d.miles.toFixed(0) + ' mi';
+  document.getElementById('detailMilesChange').textContent = d.miles > 0 ? `${d.miles.toFixed(0)} mi driven` : '—';
+
+  const radarCtx = document.getElementById('radarIncidentRate').getContext('2d');
+  if (window.radarChart) window.radarChart.destroy();
+  const driverRates = INCIDENT_CATS.map(cat => d.miles > 0 ? (d.incidents[cat] / d.miles * 100) : 0);
+  const fleetAvg = {};
+  INCIDENT_CATS.forEach(c => fleetAvg[c] = 0);
+  drivers.forEach(drv => INCIDENT_CATS.forEach(c => fleetAvg[c] += drv.incidents[c]));
+  const totalMiles = drivers.reduce((s, drv) => s + drv.miles, 0);
+  const fleetRates = INCIDENT_CATS.map(c => totalMiles > 0 ? (fleetAvg[c] / totalMiles * 100) : 0);
+
+  window.radarChart = new Chart(radarCtx, {
+    type: 'radar',
+    data: {
+      labels: INCIDENT_CATS,
+      datasets: [
+        { label: `${d.name.split(' ')[0]} (per 100mi)`, data: driverRates, borderColor: '#B91C1C', backgroundColor: 'rgba(185,28,28,0.1)', borderWidth: 2, pointRadius: 4, tension: 0.2 },
+        { label: 'Fleet average rate', data: fleetRates, borderColor: '#2D6A4F', backgroundColor: 'rgba(45,106,79,0.1)', borderWidth: 2, borderDash: [6,6], pointRadius: 3 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: true, scales: { r: { beginAtZero: true, title: { display: true, text: 'events / 100mi', font: { size: 9 } } } } }
+  });
+
+  const tbody = document.querySelector('#driverBreakdownTable tbody');
+  tbody.innerHTML = INCIDENT_CATS.map((cat, i) => {
+    const ev = d.incidents[cat] || 0;
+    const rate = d.miles > 0 ? (ev / d.miles * 100).toFixed(1) : '0.0';
+    return `<tr>
+      <td style="font-weight:500">${cat}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${ev}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text-muted)">—</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--text-muted)">—</td>
+      <td style="font-family:'JetBrains Mono',monospace">${rate}</td>
+    </tr>`;
+  }).join('');
+
+  const topRisks = INCIDENT_CATS.map(cat => ({ cat, rate: d.miles > 0 ? (d.incidents[cat] / d.miles * 100) : 0 }))
+    .sort((a,b) => b.rate - a.rate)
+    .filter(r => r.rate > 0.2)
+    .slice(0,3);
+  let tip = '';
+  if (topRisks.length > 0) {
+    tip = `⚠️ Focus areas: ${topRisks.map(r=>r.cat).join(', ')}. `;
+    if (topRisks[0].cat === 'Speeding') tip += `Speeding is high. Smooth acceleration & speed compliance improves score.`;
+    else if (topRisks[0].cat === 'Close Following') tip += `Maintain safer following distance.`;
+    else if (topRisks[0].cat === 'Cell Phone') tip += `Hands-free usage is mandatory.`;
+    else tip += `Reducing ${topRisks[0].cat.toLowerCase()} events will directly raise safety score.`;
+  } else {
+    tip = `👍 Great job! Low incident rates. Continue maintaining awareness.`;
+  }
+  if (d.score < 70) tip += ` Current score (${d.score}) is below target. Prioritize top violations.`;
+  document.getElementById('coachingTip').innerHTML = `🎯 ${tip}`;
+}
+
+window.onload = function() {
+  renderDriverDashboard(SAMPLE_DRIVER_DATA, 'Sample Data (May 4 – May 31, 2026)');
+};
+
+// ============================================================
+// 5. SCHEDULE + BREAKSHEET (unchanged)
+// ============================================================
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function parseSchedHTML(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const employees = [];
+  let weekLabel = '';
+
+  const titleEl = doc.querySelector('title,h1,h2,.schedule-title,.week-title');
+  if (titleEl) weekLabel = titleEl.textContent.trim();
+
+  const tables = doc.querySelectorAll('table');
+  let bestTable = null, bestScore = 0;
+  for (const table of tables) {
+    const rows = table.querySelectorAll('tr');
+    if (rows.length < 3) continue;
+    const headerText = rows[0].textContent.toLowerCase();
+    const score = (['mon','tue','wed','thu','fri','sat','sun','monday','employee','name','staff'].filter(k => headerText.includes(k))).length;
+    if (score > bestScore) { bestScore = score; bestTable = table; }
+  }
+
+  if (bestTable) {
+    const rows = Array.from(bestTable.querySelectorAll('tr'));
+    const headers = Array.from(rows[0].querySelectorAll('th,td')).map(c => c.textContent.trim());
+    const dayIndices = [];
+    headers.forEach((h, i) => {
+      const hl = h.toLowerCase();
+      DAYS.forEach((d, di) => { if (hl.includes(d.toLowerCase())) dayIndices[di] = i; });
+      ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].forEach((d, di) => { if (hl.includes(d)) dayIndices[di] = i; });
+    });
+    const nameCol = headers.findIndex(h => /name|employee|staff/i.test(h));
+    const deptCol = headers.findIndex(h => /dept|department|role|position/i.test(h));
+
+    for (let ri = 1; ri < rows.length; ri++) {
+      const cells = Array.from(rows[ri].querySelectorAll('td,th'));
+      if (cells.length < 2) continue;
+      const name = cells[nameCol >= 0 ? nameCol : 0].textContent.trim();
+      if (!name || name.toLowerCase().includes('total') || name.toLowerCase().includes('average')) continue;
+      const dept = deptCol >= 0 ? cells[deptCol].textContent.trim() : '';
+      const shifts = DAYS.map((d, di) => {
+        const colI = dayIndices[di];
+        if (colI === undefined || !cells[colI]) return '';
+        return cells[colI].textContent.trim();
+      });
+      if (shifts.some(s => s)) employees.push({ name, dept, shifts });
+    }
+  }
+
+  if (employees.length === 0) {
+    const preEls = doc.querySelectorAll('pre, code, [class*="schedule"]');
+    preEls.forEach(el => {
+      const text = el.textContent;
+      const lines = text.split('\n').filter(l => l.trim());
+      lines.forEach(line => {
+        const m = line.match(/^([A-Z][a-zA-Z\s]+?)\s{2,}(.+)/);
+        if (m) employees.push({ name: m[1].trim(), dept: '', shifts: Array(7).fill('') });
+      });
+    });
+  }
+  return { employees, weekLabel };
+}
+
+function parseShiftText(text) {
+  if (!text) return null;
+  const t = text.toLowerCase().trim();
+  if (!t || t === 'off' || t === 'day off' || t === 'x' || t === '-') return null;
+  const m = text.match(/(\d{1,2}):?(\d{2})?\s*(a|am|p|pm)?\s*[-–]\s*(\d{1,2}):?(\d{2})?\s*(a|am|p|pm)?(?:[|\s]+(.+))?/i);
+  if (!m) return { display: text, dept: 'Sales', startHour: 8, endHour: 16, duration: 8 };
+  const toHour = (h, m2, ampm) => {
+    let hr = parseInt(h), mn = parseInt(m2||0);
+    if (ampm && (ampm.toLowerCase() === 'p' || ampm.toLowerCase() === 'pm') && hr < 12) hr += 12;
+    if (ampm && (ampm.toLowerCase() === 'a' || ampm.toLowerCase() === 'am') && hr === 12) hr = 0;
+    return hr + mn/60;
+  };
+  const start = toHour(m[1], m[2], m[3]);
+  const end = toHour(m[4], m[5], m[6]);
+  const dept = (m[7] || 'Sales').trim().replace(/\|/g,'').trim();
+  const duration = end > start ? end - start : 24 - start + end;
+  const displayText = `${m[1]}:${m[2]||'00'}${(m[3]||'').replace('am','a').replace('pm','p')||''} – ${m[4]}:${m[5]||'00'}${(m[6]||'').replace('am','a').replace('pm','p')||''}`;
+  return { display: displayText, dept, startHour: start, endHour: end, duration };
+}
+
+function getDeptClass(dept) {
+  const d = (dept||'').toLowerCase();
+  if (d.includes('deliver')) return 'sp-delivery';
+  if (d.includes('inventor')) return 'sp-inventory';
+  if (d.includes('sanctuary')) return 'sp-sanctuary';
+  return 'sp-sales';
+}
+
+function calcBreaks(shift) {
+  if (!shift) return [];
+  const { startHour, duration, dept } = shift;
+  const breaks = [];
+  if (duration < 3.5) return breaks;
+  if (duration >= 3.5) {
+    const restTime = startHour + Math.min(2, duration * 0.4);
+    breaks.push({ type: 'rest', time: restTime, label: '10 min rest' });
+  }
+  if (duration > 5) {
+    const mealTime = startHour + Math.min(4.5, duration * 0.5);
+    breaks.push({ type: 'meal', time: mealTime, label: '30 min meal' });
+  }
+  if (duration > 10) {
+    const rest2Time = startHour + Math.min(8, duration * 0.75);
+    breaks.push({ type: 'rest', time: rest2Time, label: '10 min rest' });
+  }
+  return breaks.sort((a,b) => a.time - b.time);
+}
+
+function fmtHour(h) {
+  const hr = Math.floor(h);
+  const mn = Math.round((h - hr) * 60);
+  const period = hr >= 12 ? 'PM' : 'AM';
+  const disp = hr > 12 ? hr - 12 : hr === 0 ? 12 : hr;
+  return `${disp}:${mn.toString().padStart(2,'0')} ${period}`;
+}
+
+setupUpload('sched-drop', 'sched-file', file => {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const { employees, weekLabel } = parseSchedHTML(e.target.result);
+    if (employees.length === 0) {
+      document.getElementById('sched-results').style.display = 'block';
+      document.getElementById('sched-date-label').textContent = file.name;
+      document.getElementById('sched-table').innerHTML = '<tr><td colspan="8" style="padding:24px;color:var(--text-muted);text-align:center">Could not parse schedule structure.</td></tr>';
+      document.getElementById('breaks-container').innerHTML = '<div class="notice">No shift data could be extracted.</div>';
+      document.getElementById('sched-results').style.display = 'block';
+      return;
+    }
+    renderSchedule(employees, file.name, weekLabel);
+  };
+  reader.readAsText(file);
+});
+
+function renderSchedule(employees, filename, weekLabel) {
+  const parsed = employees.map(e => ({ ...e, parsedShifts: e.shifts.map(parseShiftText) }));
+
+  const table = document.getElementById('sched-table');
+  const headerRow = `<tr><th class="emp-col">Employee</th>${DAYS.map(d=>`<th>${d}</th>`).join('')}</tr>`;
+  const bodyRows = parsed.map(e => {
+    const cells = e.parsedShifts.map((s, di) => {
+      if (!s) return `<td><span class="shift-pill sp-off">Off</span></td>`;
+      const cls = getDeptClass(s.dept);
+      return `<td><span class="shift-pill ${cls}">${s.display}</span></td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600;font-size:12px">${e.name}${e.dept?`<br><span style="font-size:10px;color:var(--text-muted)">${e.dept}</span>`:''}</td>${cells}</tr>`;
+  }).join('');
+  table.innerHTML = `<thead>${headerRow}</thead><tbody>${bodyRows}</tbody>`;
+
+  const container = document.getElementById('breaks-container');
+  container.innerHTML = DAYS.map((day, di) => {
+    const dayEmps = parsed.filter(e => e.parsedShifts[di]).map(e => ({ name: e.name, shift: e.parsedShifts[di] }))
+      .sort((a,b) => (a.shift.startHour||0) - (b.shift.startHour||0));
+
+    if (dayEmps.length === 0) return `<div class="bs-day"><div class="bs-day-head">${day}<span class="bs-day-count">No shifts</span></div></div>`;
+
+    const rows = dayEmps.map(({name, shift}) => {
+      const breaks = calcBreaks(shift);
+      const breakTags = breaks.map(b => b.type === 'rest' ? `<span class="break-tag">${fmtHour(b.time)}</span>` : `<span class="meal-tag">${fmtHour(b.time)}</span>`).join('');
+      const deptCls = getDeptClass(shift.dept);
+      return `<tr>
+        <td style="font-weight:600">${name}</td>
+        <td><span class="shift-pill ${deptCls}">${shift.display}</span></td>
+        <td style="font-size:11px;color:var(--text-muted)">${shift.dept||'Sales Floor'}</td>
+        <td>${breakTags || '<span style="color:var(--text-muted);font-size:11px">No breaks</span>'}</td>
+      </tr>`;
+    }).join('');
+
+    return `<div class="bs-day">
+      <div class="bs-day-head">${day} <span class="bs-day-count">${dayEmps.length} employees</span></div>
+      <table class="bs-tbl">
+        <thead><tr><th>Employee</th><th>Shift</th><th>Department</th><th>Breaks <span style="font-weight:400;opacity:.7">(🟡 rest · 🔵 meal)</span></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+
+  document.getElementById('sched-date-label').textContent = weekLabel || filename;
+  document.getElementById('sched-results').style.display = 'block';
+}
+
+// ============================================================
+// 6. RESTOCK LIST (unchanged)
+// ============================================================
+const ALWAYS_RESTOCK = ['onit','another world','wyld'];
+const RESTOCK_CATS = ['Prerolls','Cartridges','Edibles','Flower','Beverages','Extracts'];
+const CAT_ICONS = { Prerolls:'🌿', Cartridges:'💨', Edibles:'🍬', Flower:'🌸', Beverages:'🧃', Extracts:'💎' };
+
+setupUpload('rst-drop', 'rst-file', file => {
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: res => renderRestock(res.data, res.meta.fields, file.name)
+  });
+});
+
+function renderRestock(data, headers, filename) {
+  const hLow = headers.map(h => (h||'').toLowerCase().trim());
+  const findH = (...cands) => { for (const c of cands) { const i = hLow.findIndex(h => h.includes(c)); if (i >= 0) return headers[i]; } return null; };
+
+  const actKey = findH('activity','action','type','transaction');
+  const changeKey = findH('change','qty change','quantity change','units','amount');
+  const ptKey = findH('product type','type','category','class');
+  const brandKey = findH('brand','manufacturer','vendor');
+  const nameKey = findH('product name','name','description','item name','product');
+
+  if (!actKey || !changeKey || !nameKey) {
+    document.getElementById('rst-results').style.display = 'block';
+    document.getElementById('rst-categories').innerHTML = '<div class="notice notice-err">Could not detect required columns.</div>';
+    return;
+  }
+
+  const sales = data.filter(row => (row[actKey]||'').trim().toLowerCase() === 'pos sale');
+  if (sales.length === 0) {
+    document.getElementById('rst-results').style.display = 'block';
+    document.getElementById('rst-categories').innerHTML = '<div class="notice notice-err">No "POS Sale" activity found.</div>';
+    return;
+  }
+
+  const agg = {};
+  sales.forEach(row => {
+    const name = (row[nameKey]||'').trim();
+    if (/(promo|add on|add-on)/i.test(name)) return;
+    const brand = (row[brandKey]||'Unknown').trim();
+    if (ALWAYS_RESTOCK.some(ar => brand.toLowerCase().includes(ar) || name.toLowerCase().includes(ar))) return;
+
+    const rawType = (row[ptKey]||'Other').trim();
+    const ptLow = rawType.toLowerCase();
+    let cat = 'Other';
+    if (ptLow.includes('preroll') || ptLow.includes('pre-roll') || ptLow.includes('joint')) cat = 'Prerolls';
+    else if (ptLow.includes('cart') || ptLow.includes('vape') && ptLow.includes('concentrate')) cat = 'Cartridges';
+    else if (ptLow.includes('edible') || ptLow.includes('gummy') || ptLow.includes('chocolate') || ptLow.includes('capsule') || ptLow.includes('tincture')) cat = 'Edibles';
+    else if (ptLow.includes('flower') || ptLow.includes('bud') || ptLow.includes('eighth') || ptLow.includes('ounce')) cat = 'Flower';
+    else if (ptLow.includes('bev') || ptLow.includes('drink') || ptLow.includes('soda') || ptLow.includes('water')) cat = 'Beverages';
+    else if (ptLow.includes('extract') || ptLow.includes('concentrate') || ptLow.includes('wax') || ptLow.includes('shatter') || ptLow.includes('rosin') || ptLow.includes('live resin') || ptLow.includes('dab')) cat = 'Extracts';
+    else cat = rawType;
+
+    const units = Math.abs(parseFloat((row[changeKey]||'0').replace(/,/g,'')) || 0);
+    const key = `${cat}|||${brand}|||${name}`;
+    if (!agg[key]) agg[key] = { cat, brand, name, units: 0 };
+    agg[key].units += units;
+  });
+
+  const byCat = {};
+  RESTOCK_CATS.forEach(c => byCat[c] = []);
+  Object.values(agg).forEach(item => {
+    if (byCat[item.cat]) byCat[item.cat].push(item);
+    else {
+      if (!byCat['Other']) byCat['Other'] = [];
+      byCat['Other'].push(item);
+    }
+  });
+
+  const html = RESTOCK_CATS.map(cat => {
+    const items = (byCat[cat]||[]).sort((a,b) => b.units - a.units);
+    if (items.length === 0) return '';
+    const itemsHTML = items.map((item, idx) => `
+      <div class="restock-item">
+        <div class="ri-rank">${idx+1}</div>
+        <div class="ri-info">
+          <div class="ri-name">${item.name}</div>
+          <div class="ri-brand">${item.brand}</div>
+        </div>
+        <div class="ri-units">${item.units.toFixed(0)} sold</div>
+      </div>
+    `).join('');
+    return `<div class="restock-cat">
+      <div class="rc-head">
+        <div class="rc-title">${CAT_ICONS[cat]||''} ${cat}</div>
+        <div class="rc-count">${items.length} items</div>
+      </div>
+      ${itemsHTML}
+    </div>`;
+  }).join('');
+
+  const extraCatHTML = Object.entries(byCat)
+    .filter(([c]) => !RESTOCK_CATS.includes(c) && c !== 'Other')
+    .map(([c, items]) => {
+      if (!items.length) return '';
+      items.sort((a,b) => b.units - a.units);
+      const rows = items.map((item,idx) => `<div class="restock-item"><div class="ri-rank">${idx+1}</div><div class="ri-info"><div class="ri-name">${item.name}</div><div class="ri-brand">${item.brand}</div></div><div class="ri-units">${item.units.toFixed(0)} sold</div></div>`).join('');
+      return `<div class="restock-cat"><div class="rc-head"><div class="rc-title">${c}</div><div class="rc-count">${items.length} items</div></div>${rows}</div>`;
+    }).join('');
+
+  document.getElementById('rst-categories').innerHTML = html + extraCatHTML || '<div class="empty"><div class="empty-icon">✅</div><p>No restock items found.</p></div>';
+  const dateMatch = filename.match(/\d{8}/);
+  const dateLabel = dateMatch ? dateMatch[0].replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3') : filename;
+  document.getElementById('rst-date-label').textContent = dateLabel;
+  document.getElementById('rst-results').style.display = 'block';
+}
+
+</script>
 </body>
 </html>
