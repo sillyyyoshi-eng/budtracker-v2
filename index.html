@@ -463,7 +463,7 @@ function parseCSV(text) {
   for (let r = 1; r < rows.length; r++) {
     const line = rows[r];
     if (line.length === 1 && line[0] === '') continue;
-    const obj = {};
+    const obj = Object.create(null); // no prototype chain: CSV headers are attacker-controlled, this fully eliminates any __proto__/constructor interaction
     for (let c = 0; c < headers.length; c++) obj[headers[c]] = line[c] !== undefined ? line[c] : '';
     out.push(obj);
   }
@@ -643,8 +643,16 @@ function renderTable(tbodyEl, list, channelAvgAov, channelAvgAdd, isDl) {
 }
 
 function renderReport(data, filename) {
-  document.getElementById('range-label').innerHTML =
-    `<strong>${fmtRange(data.first, data.last)}</strong> &middot; ${filename}`;
+  // Build this node safely — the uploaded filename is attacker-controlled
+  // (a CSV can be named anything ending in .csv) and must never be passed
+  // through innerHTML. textContent on a real DOM node cannot execute markup.
+  const rangeLabel = document.getElementById('range-label');
+  rangeLabel.textContent = '';
+  const strong = document.createElement('strong');
+  strong.textContent = fmtRange(data.first, data.last);
+  rangeLabel.appendChild(strong);
+  rangeLabel.appendChild(document.createTextNode(' \u00b7 ' + filename));
+
   document.getElementById('masthead-sub').innerHTML =
     `Showing <strong>${fmtRange(data.first, data.last)}</strong>.`;
 
